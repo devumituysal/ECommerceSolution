@@ -18,7 +18,7 @@ namespace App.Data.Entities
         public bool Enabled { get; set; } = true;
         public bool HasSellerRequest { get; set; } = false;
 
-        // Navigation properties
+        
         public RoleEntity Role { get; set; } = null!;
 
     }

@@ -5,12 +5,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace App.Data
+namespace App.Data.Entities
 {
-    public class CategoryEntity : BaseEntity
+    public class ContactMessageEntity : BaseEntity
     {
         public string Name { get; set; } = null!;
-        public string Color { get; set; } = null!;
-        public string IconCssClass { get; set; } = null!;
+        public string Email { get; set; } = null!;
+        public string Message { get; set; } = null!;
     }
 }
