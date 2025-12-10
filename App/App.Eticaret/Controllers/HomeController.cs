@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using App.Data.Contexts;
 using App.Data.Entities;
-using App.Eticaret.Models;
 using App.Eticaret.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
