@@ -19,7 +19,7 @@
     @RenderBody()
     <partial name="Partials/Footer.cshtml" />
     <partial name="Partials/PageScripts.cshtml" />
-
+    @RenderSection("Scripts", required: false)
 </body>
 
 </html>

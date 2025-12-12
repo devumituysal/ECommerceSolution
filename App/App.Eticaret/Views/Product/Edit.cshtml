@@ -1,0 +1,100 @@
+﻿@using Microsoft.AspNetCore.Mvc.Rendering
+@model App.Eticaret.Models.ViewModels.ProductSaveViewModel
+
+@{
+    ViewData["Title"] = "Ürünü Düzenle";
+
+    // Controller tarafında ViewBag.CategoryList = await _dbContext.Categories.ToListAsync();
+    var categorySelectList = ViewBag.CategoryList != null
+        ? new SelectList((IEnumerable<dynamic>)ViewBag.CategoryList, "Id", "Name", Model?.CategoryId)
+        : Enumerable.Empty<SelectListItem>();
+
+    // Rota üzerindeki productId değerini almak için:
+    var routeProductId = Context.GetRouteValue("productId");
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-8 col-lg-6 mx-auto">
+            <h2 class="mb-3">Ürünü Düzenle</h2>
+
+            @* Basit mesaj alanı (eğer Partials/ViewMessages yoksa sorun çıkarmasın diye inline) *@
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @TempData["Success"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @TempData["Error"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            @* Validation summary *@
+            @Html.ValidationSummary(true, "", new { @class = "alert alert-danger" })
+
+            <form asp-action="Edit" asp-route-productId="@(routeProductId)" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+
+                <!-- Kategori -->
+                <div class="form-group mb-3">
+                    <label asp-for="CategoryId" class="form-label">Kategori <span class="text-danger">*</span></label>
+                    <select asp-for="CategoryId" class="form-control" asp-items="categorySelectList">
+                        <option value="">Kategori Seçin</option>
+                    </select>
+                    <span asp-validation-for="CategoryId" class="text-danger"></span>
+                </div>
+
+                <!-- Ürün Adı -->
+                <div class="form-group mb-3">
+                    <label asp-for="Name" class="form-label">Ürün Adı <span class="text-danger">*</span></label>
+                    <input asp-for="Name" class="form-control" placeholder="Ürün adı" />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+
+                <!-- Fiyat -->
+                <div class="form-group mb-3">
+                    <label asp-for="Price" class="form-label">Fiyat <span class="text-danger">*</span></label>
+                    <input asp-for="Price" class="form-control" type="number" step="0.01" placeholder="0.00" />
+                    <span asp-validation-for="Price" class="text-danger"></span>
+                </div>
+
+                <!-- Stok -->
+                <div class="form-group mb-3">
+                    <label asp-for="StockAmount" class="form-label">Stok Adedi <span class="text-danger">*</span></label>
+                    <input asp-for="StockAmount" class="form-control" type="number" min="0" />
+                    <span asp-validation-for="StockAmount" class="text-danger"></span>
+                </div>
+
+                <!-- Açıklama -->
+                <div class="form-group mb-3">
+                    <label asp-for="Details" class="form-label">Açıklama</label>
+                    <textarea asp-for="Details" class="form-control" rows="5"></textarea>
+                    <span asp-validation-for="Details" class="text-danger"></span>
+                </div>
+
+                @* Eğer görselleri düzenleme/ekleme desteği istersen bu input'u açabilirsin *@
+                @* 
+                <div class="form-group mb-3">
+                    <label class="form-label">Ürün Fotoğrafları</label>
+                    <input asp-for="Images" type="file" class="form-control" multiple accept="image/png, image/jpeg" />
+                    <span asp-validation-for="Images" class="text-danger"></span>
+                </div>
+                *@
+
+                <div class="d-flex justify-content-between">
+                    <a asp-action="Index" class="btn btn-outline-secondary">Geri</a>
+                    <button type="submit" class="btn btn-primary">Kaydet</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
