@@ -19,15 +19,16 @@ namespace App.Eticaret.Controllers
             _dbContext=dbContext;
         }
 
-        [HttpGet("")]
-        [Authorize(Roles = "seller")]
-        public IActionResult Create()
+        [HttpGet("create")]
+        //[Authorize(Roles = "seller")]
+        public async Task<IActionResult> Create()
         {
-            return View();
+            ViewBag.CategoryList = await _dbContext.Categories.ToListAsync();
+            return View(new ProductSaveViewModel());
         }
 
-        [HttpPost("")]
-        [Authorize(Roles = "seller")]
+        [HttpPost("create")]
+        //[Authorize(Roles = "seller")]
         public async Task<IActionResult> Create([FromForm] ProductSaveViewModel newProductModel)
         {
             if (!ModelState.IsValid)
@@ -51,12 +52,12 @@ namespace App.Eticaret.Controllers
             await _dbContext.SaveChangesAsync();
 
             await SaveProductImages(product.Id, newProductModel.Images);
-
+            ViewBag.CategoryList = await _dbContext.Categories.ToListAsync();
             return View();
         }
 
         [HttpGet("{productId:int}/edit")]
-        [Authorize(Roles = "seller")]
+        //[Authorize(Roles = "seller")]
         public async Task<IActionResult> Edit([FromRoute] int productId)
         {
             var productEntity = await _dbContext.Products.FirstOrDefaultAsync(p=>p.Id == productId);
@@ -64,6 +65,7 @@ namespace App.Eticaret.Controllers
             {
                 return NotFound();
             }
+            ViewBag.CategoryList = await _dbContext.Categories.ToListAsync();
 
             var viewModel = new ProductSaveViewModel
             {
@@ -78,9 +80,10 @@ namespace App.Eticaret.Controllers
         }
 
         [HttpPost("{productId:int}/edit")]
-        [Authorize(Roles = "seller")]
+        //[Authorize(Roles = "seller")]
         public async Task<IActionResult> Edit([FromRoute] int productId, [FromForm] ProductSaveViewModel editProductModel)
         {
+            ViewBag.CategoryList = await _dbContext.Categories.ToListAsync();
             if (!ModelState.IsValid)
             {
                 return View(editProductModel);
