@@ -76,8 +76,54 @@ namespace App.Eticaret.Controllers
 
             return View(cartItem);
         }
+        [HttpPost("/cart/update")]
+        public async Task<IActionResult> UpdateCart(int cartItemId, byte quantity)
+        {
+            var userId = "1"; // login olmuş kullanıcının id si yazılmalı.
 
+            if (userId is null)
+            {
+                return RedirectToAction(nameof(AuthController.Login), "Auth");
+            }
 
+            var cartItem = await _dbContext.CartItems
+                .Include(ci => ci.Product.Images)
+                .FirstOrDefaultAsync(ci => ci.UserId == int.Parse(userId) && ci.Id == cartItemId);
+
+            if (cartItem is null)
+            {
+                return NotFound();
+            }
+
+            cartItem.Quantity = quantity;
+            await _dbContext.SaveChangesAsync();
+
+            var model = new CartItemViewModel
+            {
+                Id = cartItem.Id,
+                ProductName = cartItem.Product.Name,
+                ProductImage = cartItem.Product.Images.Count != 0 ? cartItem.Product.Images.First().Url : null,
+                Quantity = cartItem.Quantity,
+                Price = cartItem.Product.Price
+            };
+
+            return View(model);
+        }
+
+        [HttpGet("/checkout")]
+        public async Task<IActionResult> Checkout()
+        {
+            var userId = "1"; // login olmuş kullanıcının id si yazılmalı.
+
+            if (userId is null)
+            {
+                return RedirectToAction(nameof(AuthController.Login), "Auth");
+            }
+
+            List<CartItemViewModel> cartItems = await GetCartItemsAsync();
+
+            return View(cartItems);
+        }
 
         private async Task<List<CartItemViewModel>> GetCartItemsAsync()
         {
