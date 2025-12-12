@@ -9,7 +9,7 @@ using System.Collections.Generic;
 namespace App.Admin.Controllers
 {
     [Route("/categories")]
-    [Authorize(Roles = "admin")]
+    //[Authorize(Roles = "admin")]
     public class CategoryController : Controller
     {
         private readonly AppDbContext _dbContext;
