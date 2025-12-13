@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using App.Data.Contexts;
 using App.Data.Entities;
+using App.Data.Repositories.Abstractions;
 using App.Eticaret.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -9,11 +10,11 @@ namespace App.Eticaret.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly AppDbContext _dbContext;
+        private readonly IDataRepository _repo;
 
-        public HomeController(AppDbContext dbContext)
+        public HomeController(IDataRepository repo)
         {
-            _dbContext= dbContext;
+            _repo = repo;
         }
 
         public IActionResult Index()
@@ -48,8 +49,7 @@ namespace App.Eticaret.Controllers
                 Message = contactViewModel.Message,
             };
 
-            _dbContext.ContactMessages.Add(contactMessage);
-            await _dbContext.SaveChangesAsync();
+            await _repo.AddAsync(contactMessage);
 
             TempData["SuccessMessage"] = "Your message has been successfully sent!";
             return RedirectToAction("Contact");
@@ -66,7 +66,7 @@ namespace App.Eticaret.Controllers
         [HttpGet("/product/{productId:int}/details")]
         public async Task<IActionResult> ProductDetail([FromRoute] int productId)
         {
-            var product = await _dbContext.Products
+            var product = await _repo.GetAll<ProductEntity>()
                 .Include(p => p.Category)
                 .Include(p => p.Images)
                 .FirstOrDefaultAsync(p=>p.Id == productId);

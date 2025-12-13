@@ -1,5 +1,6 @@
 ﻿using App.Data.Contexts;
 using App.Data.Entities;
+using App.Data.Repositories.Abstractions;
 using App.Eticaret.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -8,11 +9,11 @@ namespace App.Eticaret.Controllers
 {
     public class CartController : Controller
     {
-        private readonly AppDbContext _dbContext;
+        private readonly IDataRepository _repo;
 
-        public CartController(AppDbContext dbContext)
+        public CartController(IDataRepository repo)
         {
-            _dbContext=dbContext;
+            _repo = repo;
         }
 
         [HttpGet("/add-to-cart/{productId:int}")]
@@ -25,12 +26,12 @@ namespace App.Eticaret.Controllers
                 return RedirectToAction(nameof(AuthController.Login), "Auth");
             }
 
-            if (!await _dbContext.Products.AnyAsync(p => p.Id == productId))
+            if (!await _repo.GetAll<ProductEntity>().AnyAsync(p => p.Id == productId))
             {
                 return NotFound();
             }
 
-            var cartItem = await _dbContext.CartItems
+            var cartItem = await _repo.GetAll<CartItemEntity>()
                 .Include(ci => ci.Product)
                 .Include(ci => ci.User)
                 .FirstOrDefaultAsync(ci => ci.UserId == int.Parse(userId)/*burdaki int parse ı kontrol et*/&& ci.ProductId == productId);
@@ -49,8 +50,7 @@ namespace App.Eticaret.Controllers
                     CreatedAt = DateTime.UtcNow
                 };
 
-                await _dbContext.CartItems.AddAsync(cartItem);
-                await _dbContext.SaveChangesAsync();    
+                await _repo.Add(cartItem);   
             }
 
             var prevUrl = Request.Headers.Referer.FirstOrDefault();
@@ -86,7 +86,7 @@ namespace App.Eticaret.Controllers
                 return RedirectToAction(nameof(AuthController.Login), "Auth");
             }
 
-            var cartItem = await _dbContext.CartItems
+            var cartItem = await _repo.GetAll<CartItemEntity>()
                 .Include(ci => ci.Product.Images)
                 .FirstOrDefaultAsync(ci => ci.UserId == int.Parse(userId) && ci.Id == cartItemId);
 
@@ -96,7 +96,7 @@ namespace App.Eticaret.Controllers
             }
 
             cartItem.Quantity = quantity;
-            await _dbContext.SaveChangesAsync();
+            await _repo.Update(cartItem);
 
             var model = new CartItemViewModel
             {
@@ -131,7 +131,7 @@ namespace App.Eticaret.Controllers
             var userId = 1;// bura değişecek
 
 
-            return await _dbContext.CartItems
+            return await _repo.GetAll<CartItemEntity>()
                 .Include(ci => ci.Product.Images)
                 .Where(ci => ci.UserId == userId)
                 .Select(ci => new CartItemViewModel
