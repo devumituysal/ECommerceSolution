@@ -1,4 +1,6 @@
 ﻿using App.Data.Contexts;
+using App.Data.Entities;
+using App.Data.Repositories.Abstractions;
 using App.Eticaret.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -8,11 +10,11 @@ namespace App.Eticaret.Controllers
 {
     public class ProfileController : Controller
     {
-        private readonly AppDbContext _dbContext;
+        private readonly IDataRepository _repo;
 
-        public ProfileController(AppDbContext dbContext)
+        public ProfileController(IDataRepository repo)
         {
-            _dbContext=dbContext;
+            _repo = repo
         }
 
         [HttpGet("/profile")]
@@ -25,7 +27,7 @@ namespace App.Eticaret.Controllers
                 return RedirectToAction("Login", "Auth");
             }
 
-            var userViewModel = await _dbContext.Users
+            var userViewModel = await _repo.GetAll<UserEntity>()
                 .Where(u => u.Id == int.Parse(userId)) // bu kısımı kontrol et
                 .Select(u => new ProfileDetailsViewModel
                 {
@@ -60,7 +62,7 @@ namespace App.Eticaret.Controllers
 
             //var user = await GetCurrentUserAsync();
 
-            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == 1); // geçici olarak yazıldı...
+            var user = await _repo.GetAll<UserEntity>().FirstOrDefaultAsync(u => u.Id == 1); // geçici olarak yazıldı...
 
             if (user is null)
             {
@@ -81,7 +83,7 @@ namespace App.Eticaret.Controllers
                 user.Password = editMyProfileModel.Password;
             }
 
-            await _dbContext.SaveChangesAsync();    
+            await _repo.Update(user);
 
             TempData["SuccessMessage"] = "Profiliniz başarıyla güncellendi.";
 
@@ -98,7 +100,7 @@ namespace App.Eticaret.Controllers
                 return RedirectToAction("Login", "Auth");
             }
 
-            List<OrderViewModel> orders = await _dbContext.Orders
+            List<OrderViewModel> orders = await _repo.GetAll<OrderEntity>()
                 .Where(o => o.UserId == int.Parse(userId)) // bu kısımı kontrol et
                 .Select(o => new OrderViewModel
                 {
@@ -126,7 +128,7 @@ namespace App.Eticaret.Controllers
                 return RedirectToAction("Login", "Auth");
             }
 
-            List<MyProductsViewModel> products = await _dbContext.Products
+            List<MyProductsViewModel> products = await _repo.GetAll<ProductEntity>()
                 .Where(p => p.SellerId == int.Parse(userId)) // bu kısımı kontrol et
                 .Select(p => new MyProductsViewModel
                 {

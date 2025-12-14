@@ -49,7 +49,7 @@ namespace App.Eticaret.Controllers
                 Message = contactViewModel.Message,
             };
 
-            await _repo.AddAsync(contactMessage);
+            await _repo.Add(contactMessage);
 
             TempData["SuccessMessage"] = "Your message has been successfully sent!";
             return RedirectToAction("Contact");

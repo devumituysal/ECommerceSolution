@@ -1,5 +1,6 @@
 ﻿using App.Data.Contexts;
 using App.Data.Entities;
+using App.Data.Repositories.Abstractions;
 using App.Eticaret.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,18 +13,18 @@ namespace App.Eticaret.Controllers
     [Route("/product")]
     public class ProductController : Controller
     {
-        private readonly AppDbContext _dbContext;
+        private readonly IDataRepository _repo;
 
-        public ProductController(AppDbContext dbContext)
+        public ProductController(IDataRepository repo)
         {
-            _dbContext=dbContext;
+            _repo = repo;
         }
 
         [HttpGet("create")]
         //[Authorize(Roles = "seller")]
         public async Task<IActionResult> Create()
         {
-            ViewBag.CategoryList = await _dbContext.Categories.ToListAsync();
+            ViewBag.CategoryList = await _repo.GetAll<CategoryEntity>().ToListAsync();
             return View(new ProductSaveViewModel());
         }
 
@@ -47,12 +48,11 @@ namespace App.Eticaret.Controllers
 
             };
 
-            await _dbContext.Products.AddAsync(product);
+            await _repo.Add(product);
 
-            await _dbContext.SaveChangesAsync();
 
             await SaveProductImages(product.Id, newProductModel.Images);
-            ViewBag.CategoryList = await _dbContext.Categories.ToListAsync();
+            ViewBag.CategoryList = await _repo.GetAll<CategoryEntity>().ToListAsync();
             return View();
         }
 
@@ -60,12 +60,12 @@ namespace App.Eticaret.Controllers
         //[Authorize(Roles = "seller")]
         public async Task<IActionResult> Edit([FromRoute] int productId)
         {
-            var productEntity = await _dbContext.Products.FirstOrDefaultAsync(p=>p.Id == productId);
+            var productEntity = await _repo.GetAll<ProductEntity>().FirstOrDefaultAsync(p=>p.Id == productId);
             if (productEntity is null)
             {
                 return NotFound();
             }
-            ViewBag.CategoryList = await _dbContext.Categories.ToListAsync();
+            ViewBag.CategoryList = await _repo.GetAll<CategoryEntity>().ToListAsync();
 
             var viewModel = new ProductSaveViewModel
             {
@@ -83,13 +83,13 @@ namespace App.Eticaret.Controllers
         //[Authorize(Roles = "seller")]
         public async Task<IActionResult> Edit([FromRoute] int productId, [FromForm] ProductSaveViewModel editProductModel)
         {
-            ViewBag.CategoryList = await _dbContext.Categories.ToListAsync();
+            ViewBag.CategoryList = await _repo.GetAll<CategoryEntity>().ToListAsync();
             if (!ModelState.IsValid)
             {
                 return View(editProductModel);
             }
 
-            var productEntity = await _dbContext.Products.FirstOrDefaultAsync(p => p.Id == productId);
+            var productEntity = await _repo.GetAll<ProductEntity>().FirstOrDefaultAsync(p => p.Id == productId);
 
             if (productEntity is null)
             {
@@ -102,7 +102,7 @@ namespace App.Eticaret.Controllers
             productEntity.Details = editProductModel.Details;
             productEntity.StockAmount = editProductModel.StockAmount;
 
-            await _dbContext.SaveChangesAsync();
+            await _repo.Update(productEntity);
 
             ViewBag.SuccessMessage = "Ürün başarıyla güncellendi.";
 
@@ -114,12 +114,11 @@ namespace App.Eticaret.Controllers
         public async Task<IActionResult> Delete([FromRoute] int productId)
         {
 
-            var deleteProduct = await _dbContext.Products.FirstOrDefaultAsync(p => p.Id == productId);
+            var deleteProduct = await _repo.GetAll<ProductEntity>().FirstOrDefaultAsync(p => p.Id == productId);
 
             if(deleteProduct is not null)
             {
-                _dbContext.Products.Remove(deleteProduct);
-                await _dbContext.SaveChangesAsync();
+                await _repo.Delete(deleteProduct);
             }
 
             ViewBag.SuccessMessage = "Ürün başarıyla silindi.";
@@ -137,7 +136,7 @@ namespace App.Eticaret.Controllers
                 return BadRequest();
             }
 
-            var product = await _dbContext.Products.FirstOrDefaultAsync(p => p.Id == productId);
+            var product = await _repo.GetAll<ProductEntity>().FirstOrDefaultAsync(p => p.Id == productId);
 
             if (product is null)
             {
@@ -153,8 +152,7 @@ namespace App.Eticaret.Controllers
                 StarCount = newProductCommentModel.StarCount,
             };
 
-            await _dbContext.ProductComments.AddAsync(productCommentEntity);
-            await _dbContext.SaveChangesAsync();
+            await _repo.Add(productCommentEntity);
 
             return Ok();
         }
@@ -178,7 +176,7 @@ namespace App.Eticaret.Controllers
                     ProductId = productId,
                     Url = $"/uploads/{Guid.NewGuid()}{Path.GetExtension(image.FileName)}"
                 };
-                await _dbContext.AddAsync(productImageEntity);
+                await _repo.Add(productImageEntity);
 
                 await using var fileStream = new FileStream($"wwwroot{productImageEntity.Url}", FileMode.Create);
                 await image.CopyToAsync(fileStream);
