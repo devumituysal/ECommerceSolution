@@ -1,18 +1,21 @@
 ﻿using App.Data.Contexts;
 using App.Data.Entities;
+using App.Data.Repositories.Abstractions;
 using App.Eticaret.Models.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace App.Eticaret.Controllers
 {
+    [Authorize(Roles = "buyer, seller")]
     public class OrderController : Controller
     {
-        private readonly AppDbContext _dbContext;
+        private readonly IDataRepository _repo;
 
-        public OrderController(AppDbContext dbContext)
+        public OrderController(IDataRepository repo)
         {
-            _dbContext=dbContext;
+            _repo = repo;
         }
 
         [HttpPost("/order")]
@@ -31,7 +34,7 @@ namespace App.Eticaret.Controllers
                 return View(viewModel);
             }
 
-            var cartItems = await _dbContext.CartItems
+            var cartItems = await _repo.GetAll<CartItemEntity>()
                 .Include(ci => ci.Product)
                 .Where(ci => ci.UserId == int.Parse(userId)) // int parse kontrol et
                 .ToListAsync();
@@ -48,8 +51,7 @@ namespace App.Eticaret.Controllers
                 OrderCode = await CreateOrderCode(),
             };
 
-            await _dbContext.Orders.AddAsync(order);
-            await _dbContext.SaveChangesAsync();
+            await _repo.Add(order);
 
             foreach (var cartItem in cartItems)
             {
@@ -61,8 +63,7 @@ namespace App.Eticaret.Controllers
                     UnitPrice = cartItem.Product.Price,
                 };
 
-                await _dbContext.OrderItems.AddAsync(orderItem);
-                await _dbContext.SaveChangesAsync();
+                await _repo.Add(orderItem);
             }
 
             return RedirectToAction(nameof(Details), new { orderCode = order.OrderCode });
@@ -78,7 +79,7 @@ namespace App.Eticaret.Controllers
                 return RedirectToAction(nameof(AuthController.Login), "Auth");
             }
 
-            var order = await _dbContext.Orders
+            var order = await _repo.GetAll<OrderEntity>()
                 .Where(o => o.UserId == int.Parse(userId) && o.OrderCode == orderCode)
                 .Select(o => new OrderDetailsViewModel
                 {
@@ -105,7 +106,7 @@ namespace App.Eticaret.Controllers
         private async Task<string> CreateOrderCode()
         {
             var orderCode = Guid.NewGuid().ToString("n")[..16].ToUpperInvariant();
-            while (await _dbContext.Orders.AnyAsync(x => x.OrderCode == orderCode))
+            while (await _repo.GetAll<OrderEntity>().AnyAsync(x => x.OrderCode == orderCode))
             {
                 orderCode = Guid.NewGuid().ToString("n")[..16].ToUpperInvariant();
             }
@@ -120,7 +121,7 @@ namespace App.Eticaret.Controllers
             var userId = 1;// bura değişecek
 
 
-            return await _dbContext.CartItems
+            return await _repo.GetAll<CartItemEntity>()
                 .Include(ci => ci.Product.Images)
                 .Where(ci => ci.UserId == userId)
                 .Select(ci => new CartItemViewModel

@@ -1,5 +1,6 @@
 ﻿using App.Data.Contexts;
 using App.Data.Entities;
+using App.Data.Repositories.Abstractions;
 using App.Eticaret.Models.ViewModels;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -8,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Net;
 using System.Net.Mail;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 
@@ -16,12 +18,13 @@ namespace App.Eticaret.Controllers
     [AllowAnonymous]
     public class AuthController : Controller
     {
-        private readonly AppDbContext _dbContext;
+        private readonly IDataRepository _repo;
 
-        public AuthController(AppDbContext dbContext)
+        public AuthController(IDataRepository repo)
         {
-            _dbContext = dbContext;
+            _repo = repo;
         }
+
 
 
         [Route("/register")]
@@ -43,7 +46,7 @@ namespace App.Eticaret.Controllers
             var user = new UserEntity
             {
                 FirstName = newUser.FirstName,
-                LastName = newUser.LastName,    
+                LastName = newUser.LastName,
                 Email = newUser.Email,
                 Password = newUser.Password,
                 RoleId = 2,
@@ -51,8 +54,7 @@ namespace App.Eticaret.Controllers
                 HasSellerRequest = false,
             };
 
-            await _dbContext.Users.AddAsync(user);
-            await _dbContext.SaveChangesAsync();
+            await _repo.Add(user);
 
             return RedirectToAction("Login", "Auth");
         }
@@ -66,15 +68,16 @@ namespace App.Eticaret.Controllers
 
         [Route("/login")]
         [HttpPost]
-        public IActionResult Login([FromForm] LoginViewModel loginModel)
+        public async Task<IActionResult> Login([FromForm] LoginViewModel loginModel)
         {
 
             if (!ModelState.IsValid)
             {
                 return View(loginModel);
             }
-            var user = _dbContext.Users
-                .FirstOrDefault(u => u.Email == loginModel.Email && u.Password == loginModel.Password);
+            var user = await _repo.GetAll<UserEntity>()
+                .Include(u => u.Role)
+                .FirstOrDefaultAsync(u => u.Email == loginModel.Email && u.Password == loginModel.Password);
 
             if (user == null)
             {
@@ -82,8 +85,7 @@ namespace App.Eticaret.Controllers
                 return View(loginModel);
             }
 
-
-            // (Cookie ekle)
+             await LoginUser(user);
 
             return RedirectToAction("Index", "Home");
         }
@@ -104,7 +106,7 @@ namespace App.Eticaret.Controllers
                 return View(model);
             }
 
-            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == model.Email);
+            var user = await _repo.GetAll<UserEntity>().FirstOrDefaultAsync(u => u.Email == model.Email);
 
             if (user == null)
             {
@@ -112,7 +114,7 @@ namespace App.Eticaret.Controllers
                 return View(model);
             }
 
-            
+
             await SendResetPasswordEmailAsync(user);
 
             ViewBag.SuccessMessage = "Şifre sıfırlama maili gönderildi. Lütfen e-posta adresinizi kontrol edin.";
@@ -130,8 +132,9 @@ namespace App.Eticaret.Controllers
             const string password = "şifre";
 
             var resetPasswordToken = Guid.NewGuid().ToString("n");
+
             user.ResetPasswordToken = resetPasswordToken;
-            await _dbContext.SaveChangesAsync();
+            await _repo.Update(user);
 
             using SmtpClient client = new(host, port)
             {
@@ -160,7 +163,7 @@ namespace App.Eticaret.Controllers
                 return RedirectToAction(nameof(ForgotPassword));
             }
 
-            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.ResetPasswordToken == verificationCode);
+            var user = await _repo.GetAll<UserEntity>().FirstOrDefaultAsync(u => u.ResetPasswordToken == verificationCode);
 
             if (user is null)
             {
@@ -189,6 +192,30 @@ namespace App.Eticaret.Controllers
         private async Task LogoutUser()
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        }
+
+        private async Task LoginUser(UserEntity user)
+        {
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim(ClaimTypes.Name, user.FirstName),
+                new Claim(ClaimTypes.Surname, user.LastName),
+                new Claim(ClaimTypes.Sid, user.Id.ToString()),
+                new Claim(ClaimTypes.Role, user.Role.Name),
+                new Claim("login-time" , DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"))
+            };
+
+            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+            var authProperties = new AuthenticationProperties
+            {
+                ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(10),
+                IsPersistent = true // (beni hatırla)
+            };
+
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
+                new ClaimsPrincipal(claimsIdentity), authProperties);
         }
     }
 }

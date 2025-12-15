@@ -1,5 +1,7 @@
 ﻿using App.Admin.Models.ViewModels;
 using App.Data.Contexts;
+using App.Data.Entities;
+using App.Data.Repositories.Abstractions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -9,15 +11,15 @@ namespace App.Admin.Controllers
     [Authorize(Roles = "admin")]
     public class UserController : Controller
     {
-        private readonly AppDbContext _dbContext;
+        private readonly IDataRepository _repo;
 
-        public UserController(AppDbContext dbContext)
+        public UserController(IDataRepository repo)
         {
-            _dbContext = dbContext;
+            _repo = repo;
         }
         public async Task<IActionResult> List()
         {
-            List<UserListItemViewModel> users = await _dbContext.Users
+            List<UserListItemViewModel> users = await _repo.GetAll<UserEntity>()
                .Where(u => u.RoleId != 1)
                .Select(u => new UserListItemViewModel
                {
@@ -39,7 +41,7 @@ namespace App.Admin.Controllers
         [HttpGet]
         public async Task<IActionResult> Approve([FromRoute] int id)
         {
-            var user = await _dbContext.Users.FirstOrDefaultAsync(i=>i.Id == id);
+            var user = await _repo.GetAll<UserEntity>().FirstOrDefaultAsync(i=>i.Id == id);
             if (user == null)
             {
                 return NotFound();
@@ -53,7 +55,7 @@ namespace App.Admin.Controllers
             user.HasSellerRequest = false;
             user.RoleId = 2; // seller
 
-            await _dbContext.SaveChangesAsync();
+            await _repo.Update(user);
 
             return RedirectToAction(nameof(List));
         }

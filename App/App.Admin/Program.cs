@@ -1,12 +1,28 @@
 using App.Data.Contexts;
+using App.Data.Repositories.Extensions;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+
+var connectionString = builder.Configuration.GetConnectionString("SqlServer");
+builder.Services.AddData(connectionString);
+
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.Cookie.Name = "auth-cookie"; 
+        options.Cookie.HttpOnly = true;
+        options.Cookie.IsEssential = true;
+        options.LoginPath = "/Auth/Login"; 
+        options.AccessDeniedPath = "/Auth/AccessDenied";
+    });
+
+
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
-builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("SqlServer")));
 
 var app = builder.Build();
 
@@ -22,6 +38,8 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+
+app.UseAuthentication();
 
 app.UseAuthorization();
 
