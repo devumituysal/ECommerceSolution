@@ -21,7 +21,7 @@ namespace App.Eticaret.Controllers
         }
 
         [HttpGet("create")]
-        //[Authorize(Roles = "seller")]
+        [Authorize(Roles = "seller")]
         public async Task<IActionResult> Create()
         {
             ViewBag.CategoryList = await _repo.GetAll<CategoryEntity>().ToListAsync();
@@ -29,7 +29,7 @@ namespace App.Eticaret.Controllers
         }
 
         [HttpPost("create")]
-        //[Authorize(Roles = "seller")]
+        [Authorize(Roles = "seller")]
         public async Task<IActionResult> Create([FromForm] ProductSaveViewModel newProductModel)
         {
             if (!ModelState.IsValid)
@@ -57,7 +57,7 @@ namespace App.Eticaret.Controllers
         }
 
         [HttpGet("{productId:int}/edit")]
-        //[Authorize(Roles = "seller")]
+        [Authorize(Roles = "seller")]
         public async Task<IActionResult> Edit([FromRoute] int productId)
         {
             var productEntity = await _repo.GetAll<ProductEntity>().FirstOrDefaultAsync(p=>p.Id == productId);
@@ -80,7 +80,7 @@ namespace App.Eticaret.Controllers
         }
 
         [HttpPost("{productId:int}/edit")]
-        //[Authorize(Roles = "seller")]
+        [Authorize(Roles = "seller")]
         public async Task<IActionResult> Edit([FromRoute] int productId, [FromForm] ProductSaveViewModel editProductModel)
         {
             ViewBag.CategoryList = await _repo.GetAll<CategoryEntity>().ToListAsync();

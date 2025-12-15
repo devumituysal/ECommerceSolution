@@ -8,13 +8,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace App.Eticaret.Controllers
 {
+    [Authorize(Roles = "seller, buyer")]
     public class ProfileController : Controller
     {
         private readonly IDataRepository _repo;
 
         public ProfileController(IDataRepository repo)
         {
-            _repo = repo
+            _repo = repo;
         }
 
         [HttpGet("/profile")]

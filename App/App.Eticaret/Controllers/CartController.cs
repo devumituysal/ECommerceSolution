@@ -2,11 +2,13 @@
 using App.Data.Entities;
 using App.Data.Repositories.Abstractions;
 using App.Eticaret.Models.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace App.Eticaret.Controllers
 {
+    [Authorize(Roles = "buyer, seller")]
     public class CartController : Controller
     {
         private readonly IDataRepository _repo;
