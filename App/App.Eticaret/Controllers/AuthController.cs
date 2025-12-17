@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Net;
+using System.Net.Http;
 using System.Net.Mail;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -19,10 +20,12 @@ namespace App.Eticaret.Controllers
     public class AuthController : Controller
     {
         private readonly IDataRepository _repo;
+        private readonly HttpClient _httpClient;
 
-        public AuthController(IDataRepository repo)
+        public AuthController(IDataRepository repo , IHttpClientFactory httpClientFactory)
         {
             _repo = repo;
+            _httpClient = httpClientFactory.CreateClient();
         }
 
 
@@ -75,17 +78,36 @@ namespace App.Eticaret.Controllers
             {
                 return View(loginModel);
             }
-            var user = await _repo.GetAll<UserEntity>()
-                .Include(u => u.Role)
-                .FirstOrDefaultAsync(u => u.Email == loginModel.Email && u.Password == loginModel.Password);
 
-            if (user == null)
+            var response = await _httpClient.PostAsJsonAsync(
+                "https://localhost:7200/api/auth/login",
+                new
+                {
+                    email = loginModel.Email,
+                    password = loginModel.Password,
+                });
+
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
             {
-                ModelState.AddModelError("", "Email veya şifre hatalı.");
+                ModelState.AddModelError("", "Email veya şifre Hatalı");
                 return View(loginModel);
             }
 
-             await LoginUser(user);
+            if (!response.IsSuccessStatusCode)
+            {
+                ModelState.AddModelError("", "Bir hata oluştu.");
+                return View(loginModel);
+            }
+
+            var user = await response.Content.ReadFromJsonAsync<LoginResponseViewModel>();
+
+            if (user is null)
+            {
+                ModelState.AddModelError("", "Giriş işlemi başarısız.");
+                return View(loginModel);
+            }
+
+            await LoginUser(user);
 
             return RedirectToAction("Index", "Home");
         }
@@ -194,7 +216,7 @@ namespace App.Eticaret.Controllers
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         }
 
-        private async Task LoginUser(UserEntity user)
+        private async Task LoginUser(LoginResponseViewModel user)
         {
             var claims = new List<Claim>
             {
@@ -202,7 +224,7 @@ namespace App.Eticaret.Controllers
                 new Claim(ClaimTypes.Name, user.FirstName),
                 new Claim(ClaimTypes.Surname, user.LastName),
                 new Claim(ClaimTypes.Sid, user.Id.ToString()),
-                new Claim(ClaimTypes.Role, user.Role.Name),
+                new Claim(ClaimTypes.Role, user.Role),
                 new Claim("login-time" , DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"))
             };
 
