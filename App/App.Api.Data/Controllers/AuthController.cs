@@ -68,9 +68,46 @@ namespace App.Api.Data.Controllers
 
             return Ok();
         }
+
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequestDto forgotPasswordRequestDto)
+        {
+            var user = await _repo.GetAll<UserEntity>()
+                .FirstOrDefaultAsync(u=>u.Email==forgotPasswordRequestDto.Email);
+
+            if(user is null)
+            {
+                return Ok(); // güvenlik sebebi ile ok dönüyoruz!
+            }
             
+            var resetToken = Guid.NewGuid().ToString("n");
 
+            user.ResetPasswordToken = resetToken;
 
+            await _repo.Update(user);
+
+            // ŞİMDİLİK: mail gönderimi burada olacak
+            // (SMTP kodunu birazdan buraya taşıyacağız)
+
+            return Ok();
+        }
+
+        [HttpPost("renew-password")]
+        public async Task<IActionResult> RenewPassword([FromBody] RenewPasswordRequestDto forgotPasswordRequestDto)
+        {
+            var user = await _repo.GetAll<UserEntity>()
+                .FirstOrDefaultAsync(u=>u.ResetPasswordToken == forgotPasswordRequestDto.Token);
+
+            if(user is null)
+            {
+                return BadRequest("Invalid or expired token");
+            };
+
+            user.Password = forgotPasswordRequestDto.NewPassword;
+            user.ResetPasswordToken = null;
+
+            return Ok();
+        }
 
     }
 }

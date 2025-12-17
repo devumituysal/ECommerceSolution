@@ -46,18 +46,27 @@ namespace App.Eticaret.Controllers
                 return View(newUser);
             }
 
-            var user = new UserEntity
-            {
-                FirstName = newUser.FirstName,
-                LastName = newUser.LastName,
-                Email = newUser.Email,
-                Password = newUser.Password,
-                RoleId = 2,
-                Enabled = true,
-                HasSellerRequest = false,
-            };
+            var response = await _httpClient.PostAsJsonAsync(
+                "https://localhost:7200/api/auth/register",
+                new
+                {
+                    firstName = newUser.FirstName,
+                    lastName = newUser.LastName,
+                    email = newUser.Email,
+                    password = newUser.Password
+                });
 
-            await _repo.Add(user);
+            if(response.StatusCode == HttpStatusCode.BadRequest)
+            {
+                ModelState.AddModelError("", "Bu e-posta adresi zaten kayıtlı.");
+                return View(newUser);
+            }
+
+            if(!response.IsSuccessStatusCode)
+            {
+                ModelState.AddModelError("", "Kayıt sırasında bir hata oluştu.");
+                return View(newUser);
+            }
 
             return RedirectToAction("Login", "Auth");
         }
@@ -73,7 +82,6 @@ namespace App.Eticaret.Controllers
         [HttpPost]
         public async Task<IActionResult> Login([FromForm] LoginViewModel loginModel)
         {
-
             if (!ModelState.IsValid)
             {
                 return View(loginModel);
@@ -128,20 +136,22 @@ namespace App.Eticaret.Controllers
                 return View(model);
             }
 
-            var user = await _repo.GetAll<UserEntity>().FirstOrDefaultAsync(u => u.Email == model.Email);
+            var response = await _httpClient.PostAsJsonAsync(
+                "https://localhost:7200/api/auth/forgot-password",
+                new
+                {
+                    email = model.Email
+                });
 
-            if (user == null)
+            if(!response.IsSuccessStatusCode)
             {
-                ModelState.AddModelError(string.Empty, "Kullanıcı bulunamadı.");
+                ModelState.AddModelError("", "Bir hata oluştu.");
                 return View(model);
             }
 
-
-            await SendResetPasswordEmailAsync(user);
-
             ViewBag.SuccessMessage = "Şifre sıfırlama maili gönderildi. Lütfen e-posta adresinizi kontrol edin.";
-            ModelState.Clear();
 
+            ModelState.Clear();
             return View();
         }
 
@@ -176,30 +186,47 @@ namespace App.Eticaret.Controllers
             await client.SendMailAsync(mail);
         }
 
-        [Route("/renew-password/{verificationCode}")]
+        [Route("/renew-password/{token}")]
         [HttpGet]
-        public async Task<IActionResult> RenewPassword([FromRoute] string verificationCode)
+        public IActionResult RenewPassword([FromRoute] string token)
         {
-            if (string.IsNullOrEmpty(verificationCode))
+            if (string.IsNullOrEmpty(token))
             {
                 return RedirectToAction(nameof(ForgotPassword));
             }
 
-            var user = await _repo.GetAll<UserEntity>().FirstOrDefaultAsync(u => u.ResetPasswordToken == verificationCode);
-
-            if (user is null)
+            var model = new RenewPasswordViewModel
             {
-                return RedirectToAction(nameof(ForgotPassword));
-            }
+                Token = token
+            };
 
-            return View();
+            return View(model);
         }
 
         [Route("/renew-password")]
         [HttpPost]
-        public async Task<IActionResult> RenewPassword([FromForm] object changePasswordModel)
+        public async Task<IActionResult> RenewPassword([FromForm] RenewPasswordViewModel renewPasswordViewModel)
         {
-            return View();
+            if(!ModelState.IsValid)
+            {
+                return View(renewPasswordViewModel);
+            }
+
+            var response = await _httpClient.PostAsJsonAsync(
+                "https://localhost:7200/api/auth/renew-password",
+                new
+                {
+                    token = renewPasswordViewModel.Token,
+                    newPassword = renewPasswordViewModel.NewPassword
+                });
+
+            if(!response.IsSuccessStatusCode)
+            {
+                ModelState.AddModelError("", "Şifre yenileme işlemi başarısız.");
+                return View(renewPasswordViewModel);
+            }
+
+            return RedirectToAction("Login", "Auth");
         }
 
         [Route("/logout")]
