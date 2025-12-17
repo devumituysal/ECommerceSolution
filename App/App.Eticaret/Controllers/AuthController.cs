@@ -19,12 +19,10 @@ namespace App.Eticaret.Controllers
     [AllowAnonymous]
     public class AuthController : Controller
     {
-        private readonly IDataRepository _repo;
         private readonly HttpClient _httpClient;
 
-        public AuthController(IDataRepository repo , IHttpClientFactory httpClientFactory)
+        public AuthController(IHttpClientFactory httpClientFactory)
         {
-            _repo = repo;
             _httpClient = httpClientFactory.CreateClient();
         }
 
@@ -155,36 +153,36 @@ namespace App.Eticaret.Controllers
             return View();
         }
 
-        private async Task SendResetPasswordEmailAsync(UserEntity user)
-        {
-            // Gönderici mail bilgileri güncellenmeli
-            const string host = "smtp.gmail.com";
-            const int port = 587;
-            const string from = "mail";
-            const string password = "şifre";
+        //private async Task SendResetPasswordEmailAsync(UserEntity user)
+        //{
+        //    // Gönderici mail bilgileri güncellenmeli
+        //    const string host = "smtp.gmail.com";
+        //    const int port = 587;
+        //    const string from = "mail";
+        //    const string password = "şifre";
 
-            var resetPasswordToken = Guid.NewGuid().ToString("n");
+        //    var resetPasswordToken = Guid.NewGuid().ToString("n");
 
-            user.ResetPasswordToken = resetPasswordToken;
-            await _repo.Update(user);
+        //    user.ResetPasswordToken = resetPasswordToken;
+        //    await _repo.Update(user);
 
-            using SmtpClient client = new(host, port)
-            {
-                Credentials = new NetworkCredential(from, password)
-            };
+        //    using SmtpClient client = new(host, port)
+        //    {
+        //        Credentials = new NetworkCredential(from, password)
+        //    };
 
-            MailMessage mail = new()
-            {
-                From = new MailAddress(from),
-                Subject = "Şifre Sıfırlama",
-                Body = $"Merhaba {user.FirstName}, <br> Şifrenizi sıfırlamak için <a href='https://localhost:5001/renew-password/{user.ResetPasswordToken}'>tıklayınız</a>.",
-                IsBodyHtml = true,
-            };
+        //    MailMessage mail = new()
+        //    {
+        //        From = new MailAddress(from),
+        //        Subject = "Şifre Sıfırlama",
+        //        Body = $"Merhaba {user.FirstName}, <br> Şifrenizi sıfırlamak için <a href='https://localhost:5001/renew-password/{user.ResetPasswordToken}'>tıklayınız</a>.",
+        //        IsBodyHtml = true,
+        //    };
 
-            mail.To.Add(user.Email);
+        //    mail.To.Add(user.Email);
 
-            await client.SendMailAsync(mail);
-        }
+        //    await client.SendMailAsync(mail);
+        //}
 
         [Route("/renew-password/{token}")]
         [HttpGet]
