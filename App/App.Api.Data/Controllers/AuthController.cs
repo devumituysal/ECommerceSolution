@@ -42,6 +42,35 @@ namespace App.Api.Data.Controllers
             return Ok(response);
         }
 
+        [HttpPost("Register")]
+        public async Task<IActionResult> Register([FromBody] RegisterRequestDto registerRequestDto)
+        {
+            var existingUser = await _repo.GetAll<UserEntity>()
+                .AnyAsync(u=>u.Email == registerRequestDto.Email);
+            
+            if(existingUser)
+            {
+                return BadRequest("Email already exists");
+            }
+
+            var user = new UserEntity
+            {
+                FirstName = registerRequestDto.FirstName,
+                LastName = registerRequestDto.LastName,
+                Email = registerRequestDto.Email,
+                Password = registerRequestDto.Password,
+                RoleId =  2,
+                Enabled = true,
+                HasSellerRequest = false,
+            };
+
+            await _repo.Add(user);
+
+            return Ok();
+        }
+            
+
+
 
     }
 }
