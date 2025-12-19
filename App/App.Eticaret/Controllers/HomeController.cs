@@ -10,12 +10,14 @@ namespace App.Eticaret.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly IDataRepository _repo;
+        private readonly HttpClient _httpClient;
 
-        public HomeController(IDataRepository repo)
+        public HomeController(IDataRepository repo,HttpClient httpClient)
         {
-            _repo = repo;
+            _httpClient = httpClient;
         }
+
+        
 
         public IActionResult Index()
         {
@@ -41,55 +43,50 @@ namespace App.Eticaret.Controllers
             {
                 return View(contactViewModel);
             }
-            
-            var contactMessage = new ContactMessageEntity
+
+            var response = await _httpClient.PostAsJsonAsync(
+                "https://localhost:7200/api/contact",
+                new
+                {
+                    name = contactViewModel.Name,
+                    email = contactViewModel.Email,
+                    message = contactViewModel.Message
+                });
+
+            if (!response.IsSuccessStatusCode)
             {
-                Name = contactViewModel.Name,
-                Email = contactViewModel.Email,
-                Message = contactViewModel.Message,
-            };
+                ModelState.AddModelError("", "Mesaj gönderilemedi.");
+                return View(contactViewModel);
+            }
 
-            await _repo.Add(contactMessage);
-
-            TempData["SuccessMessage"] = "Your message has been successfully sent!";
-            return RedirectToAction("Contact");
+            TempData["SuccessMessage"] = "Mesajýnýz baþarýyla gönderildi!";
+            return RedirectToAction(nameof(Contact));
 
         }
 
         [Route("/products/list")]    
-        public IActionResult Listing()
+        public async Task<IActionResult> Listing()
         {
-            return View();
+            var products = await _httpClient.GetFromJsonAsync<List<ProductListItemViewModel>>(
+                "https://localhost:7200/api/products");
+
+            return View(products);
         }
 
 
         [HttpGet("/product/{productId:int}/details")]
         public async Task<IActionResult> ProductDetail([FromRoute] int productId)
         {
-            var product = await _repo.GetAll<ProductEntity>()
-                .Include(p => p.Category)
-                .Include(p => p.Images)
-                .FirstOrDefaultAsync(p=>p.Id == productId);
+            var product = await _httpClient
+                .GetFromJsonAsync<ProductDetailViewModel>(
+                $"https://localhost:7200/api/products/{productId}");
 
-            if (product is null)
+            if (product == null)
             {
-                return NotFound();      
+                return NotFound();
             }
-
-            var productView = new ProductDetailViewModel
-            {
-                Id = product.Id,
-                Name= product.Name,
-                CategoryName = product.Category.Name,
-                Price = product.Price,
-                ImageUrls = product.Images
-                        .Where(i => !string.IsNullOrWhiteSpace(i.Url))
-                        .OrderBy(i => i.Id)
-                        .Select(i => i.Url)
-                        .ToArray()
-            };
-            
-            return View(productView);
+            return View(product);
+          
         }
     }
 }

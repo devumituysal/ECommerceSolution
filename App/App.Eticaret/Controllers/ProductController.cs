@@ -13,19 +13,25 @@ namespace App.Eticaret.Controllers
     [Route("/product")]
     public class ProductController : Controller
     {
-        private readonly IDataRepository _repo;
+        private readonly HttpClient _httpClient;
 
-        public ProductController(IDataRepository repo)
+        public ProductController(HttpClient httpClient)
         {
-            _repo = repo;
+            _httpClient = httpClient;
         }
 
         [HttpGet("create")]
         [Authorize(Roles = "seller")]
         public async Task<IActionResult> Create()
         {
-            ViewBag.CategoryList = await _repo.GetAll<CategoryEntity>().ToListAsync();
+            var categories = await _httpClient
+                .GetFromJsonAsync<List<CategoryListItemViewModel>>(
+                "https://localhost:7200/api/categories");
+
+            ViewBag.CategoryList = categories;
+
             return View(new ProductSaveViewModel());
+
         }
 
         [HttpPost("create")]
@@ -37,22 +43,59 @@ namespace App.Eticaret.Controllers
                 return View(newProductModel);
             }
 
-            var product = new ProductEntity
+            var sellerIdClaim = User.FindFirst(ClaimTypes.Sid);
+
+            if(sellerIdClaim == null)
             {
-                Name = newProductModel.Name,
-                Price = newProductModel.Price,
-                Details = newProductModel.Details,
-                StockAmount = newProductModel.StockAmount,
-                SellerId = 1, // TODO: login olmuş userId al...
-                CategoryId = newProductModel.CategoryId,
+                return RedirectToAction(nameof(AuthController.Login), "Auth");
+            }
 
-            };
+            var response = await _httpClient.PostAsJsonAsync(
+                "https://localhost:7200/api/product",
+                new
+                {
+                    name = newProductModel.Name,
+                    price = newProductModel.Price,
+                    details = newProductModel.Details,
+                    stockAmount = newProductModel.StockAmount,
+                    categoryId = newProductModel.CategoryId,
+                    sellerId = int.Parse(sellerIdClaim.Value)
+                });
 
-            await _repo.Add(product);
+            if (!response.IsSuccessStatusCode)
+            {
+                ModelState.AddModelError("", "Ürün oluşturulamadı.");
+                return View(newProductModel);
+            }
 
+            var result = await response.Content.ReadFromJsonAsync<ProductCreateResponseViewModel>();
 
-            await SaveProductImages(product.Id, newProductModel.Images);
-            ViewBag.CategoryList = await _repo.GetAll<CategoryEntity>().ToListAsync();
+            if (result == null)
+            {
+                ModelState.AddModelError("", "Ürün oluşturuldu ama cevap okunamadı.");
+                return View(newProductModel);
+            }
+
+            int productId = result.ProductId;
+
+            if (newProductModel.Images != null && newProductModel.Images.Any())
+            {
+                var content = new MultipartFormDataContent();
+
+                foreach (var image in newProductModel.Images)
+                {
+                    content.Add(
+                        new StreamContent(image.OpenReadStream()),
+                        "images",
+                        image.FileName);
+                }
+
+                await _httpClient.PostAsync(
+                    $"https://localhost:7200/api/product/{productId}/images",content);
+            }
+
+                ViewBag.SuccessMessage = "Ürün başarıyla oluşturuldu.";
+
             return View();
         }
 
@@ -60,49 +103,55 @@ namespace App.Eticaret.Controllers
         [Authorize(Roles = "seller")]
         public async Task<IActionResult> Edit([FromRoute] int productId)
         {
-            var productEntity = await _repo.GetAll<ProductEntity>().FirstOrDefaultAsync(p=>p.Id == productId);
-            if (productEntity is null)
+            var product = await _httpClient.GetFromJsonAsync<ProductSaveViewModel>(
+                $"https://localhost:7200/api/products/{productId}");
+
+            if (product == null)
             {
                 return NotFound();
             }
-            ViewBag.CategoryList = await _repo.GetAll<CategoryEntity>().ToListAsync();
 
-            var viewModel = new ProductSaveViewModel
-            {
-                CategoryId = productEntity.CategoryId,
-                Name = productEntity.Name,
-                Price = productEntity.Price,
-                Details = productEntity.Details,
-                StockAmount = productEntity.StockAmount
-            };
+            var categories = await _httpClient
+                .GetFromJsonAsync<List<CategoryListItemViewModel>>(
+                "https://localhost:7200/api/categories");
 
-            return View(viewModel);
+            ViewBag.CategoryList = categories;
+
+            return View(product);
+
         }
 
         [HttpPost("{productId:int}/edit")]
         [Authorize(Roles = "seller")]
         public async Task<IActionResult> Edit([FromRoute] int productId, [FromForm] ProductSaveViewModel editProductModel)
         {
-            ViewBag.CategoryList = await _repo.GetAll<CategoryEntity>().ToListAsync();
+            var categories = await _httpClient
+                .GetFromJsonAsync<List<CategoryListItemViewModel>>(
+                "https://localhost:7200/api/categories");
+
+            ViewBag.CategoryList = categories;
+
             if (!ModelState.IsValid)
             {
                 return View(editProductModel);
             }
 
-            var productEntity = await _repo.GetAll<ProductEntity>().FirstOrDefaultAsync(p => p.Id == productId);
+            var response = await _httpClient.PutAsJsonAsync(
+                $"https://localhost:7200/api/product/{productId}",
+                new
+                {
+                    name = editProductModel.Name,
+                    price = editProductModel.Price,
+                    details = editProductModel.Details,
+                    stockAmount = editProductModel.StockAmount,
+                    categoryId = editProductModel.CategoryId
+                });
 
-            if (productEntity is null)
+            if (!response.IsSuccessStatusCode)
             {
-                return NotFound();
+                ModelState.AddModelError("", "Ürün güncellenemedi.");
+                return View(editProductModel);
             }
-
-            productEntity.CategoryId = editProductModel.CategoryId;
-            productEntity.Name = editProductModel.Name;
-            productEntity.Price = editProductModel.Price;
-            productEntity.Details = editProductModel.Details;
-            productEntity.StockAmount = editProductModel.StockAmount;
-
-            await _repo.Update(productEntity);
 
             ViewBag.SuccessMessage = "Ürün başarıyla güncellendi.";
 
@@ -113,17 +162,18 @@ namespace App.Eticaret.Controllers
         [Authorize(Roles = "seller")]
         public async Task<IActionResult> Delete([FromRoute] int productId)
         {
+            var response = await _httpClient.DeleteAsync(
+                $"https://localhost:7200/api/product/{productId}");
 
-            var deleteProduct = await _repo.GetAll<ProductEntity>().FirstOrDefaultAsync(p => p.Id == productId);
-
-            if(deleteProduct is not null)
+            if (!response.IsSuccessStatusCode)
             {
-                await _repo.Delete(deleteProduct);
+                return BadRequest();
             }
 
             ViewBag.SuccessMessage = "Ürün başarıyla silindi.";
 
             return View();
+
         }
 
         [HttpPost("{productId:int}/comment")]
@@ -136,23 +186,17 @@ namespace App.Eticaret.Controllers
                 return BadRequest();
             }
 
-            var product = await _repo.GetAll<ProductEntity>().FirstOrDefaultAsync(p => p.Id == productId);
+            var response = await _httpClient.PostAsJsonAsync($"https://localhost:7200/api/product/{productId}/comment",
+                new
+                {
+                    starCount = newProductCommentModel.StarCount,
+                    text = newProductCommentModel.Text
+                });
 
-            if (product is null)
+            if (!response.IsSuccessStatusCode)
             {
-                return NotFound();
+                return BadRequest();
             }
-
-
-            var productCommentEntity = new ProductCommentEntity
-            {
-                ProductId = productId,
-                UserId = 1, // TODO: login olmuş userId al...
-                Text = newProductCommentModel.Text,
-                StarCount = newProductCommentModel.StarCount,
-            };
-
-            await _repo.Add(productCommentEntity);
 
             return Ok();
         }
@@ -167,22 +211,22 @@ namespace App.Eticaret.Controllers
         //////////////////////////////////////////TOOLS///////////////////////////////////////////////////////////
 
 
-        public async Task SaveProductImages(int productId , IList<IFormFile> images)
-        {
-            foreach(var image in images)
-            {
-                var productImageEntity = new ProductImageEntity
-                {
-                    ProductId = productId,
-                    Url = $"/uploads/{Guid.NewGuid()}{Path.GetExtension(image.FileName)}"
-                };
-                await _repo.Add(productImageEntity);
+        //public async Task SaveProductImages(int productId , IList<IFormFile> images)
+        //{
+        //    foreach(var image in images)
+        //    {
+        //        var productImageEntity = new ProductImageEntity
+        //        {
+        //            ProductId = productId,
+        //            Url = $"/uploads/{Guid.NewGuid()}{Path.GetExtension(image.FileName)}"
+        //        };
+        //        await _repo.Add(productImageEntity);
 
-                await using var fileStream = new FileStream($"wwwroot{productImageEntity.Url}", FileMode.Create);
-                await image.CopyToAsync(fileStream);
-            }
+        //        await using var fileStream = new FileStream($"wwwroot{productImageEntity.Url}", FileMode.Create);
+        //        await image.CopyToAsync(fileStream);
+        //    }
 
-        }
+        //}
 
     }
 }
