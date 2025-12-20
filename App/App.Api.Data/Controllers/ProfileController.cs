@@ -11,6 +11,7 @@ namespace App.Api.Data.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class ProfileController : ControllerBase
     {
         private readonly IDataRepository _repo;
