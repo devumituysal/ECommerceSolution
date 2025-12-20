@@ -11,140 +11,74 @@ namespace App.Eticaret.Controllers
     [Authorize(Roles = "buyer, seller")]
     public class CartController : Controller
     {
-        private readonly IDataRepository _repo;
+        private readonly HttpClient _httpClient;
 
-        public CartController(IDataRepository repo)
+        public CartController(HttpClient httpClient)
         {
-            _repo = repo;
+            _httpClient = httpClient;
         }
 
         [HttpGet("/add-to-cart/{productId:int}")]
         public async Task<IActionResult> AddProduct([FromRoute] int productId)
         {
-            var userId = "1"; // login olmuş kullanıcının id si yazılmalı.
+            var response = await _httpClient.PostAsync(
+                $"https://localhost:7200/api/cart/add/{productId}", null);
 
-            if (userId is null)
+            if (!response.IsSuccessStatusCode)
             {
-                return RedirectToAction(nameof(AuthController.Login), "Auth");
-            }
-
-            if (!await _repo.GetAll<ProductEntity>().AnyAsync(p => p.Id == productId))
-            {
-                return NotFound();
-            }
-
-            var cartItem = await _repo.GetAll<CartItemEntity>()
-                .Include(ci => ci.Product)
-                .Include(ci => ci.User)
-                .FirstOrDefaultAsync(ci => ci.UserId == int.Parse(userId)/*burdaki int parse ı kontrol et*/&& ci.ProductId == productId);
-
-            if (cartItem is not null)
-            {
-                cartItem.Quantity++;
-            }
-            else
-            {
-                cartItem = new CartItemEntity
-                {
-                    UserId = int.Parse(userId), // burdaki int parse kontrol et
-                    ProductId = productId,
-                    Quantity = 1,
-                    CreatedAt = DateTime.UtcNow
-                };
-
-                await _repo.Add(cartItem);   
+                TempData["ErrorMessage"] = "Product could not be added to cart.";
             }
 
             var prevUrl = Request.Headers.Referer.FirstOrDefault();
 
-            if (prevUrl is null)
-            {
-                return RedirectToAction(nameof(Edit));
-            }
-
-            return Redirect(prevUrl);
+            return prevUrl is null ? RedirectToAction(nameof(Edit)) : Redirect(prevUrl);
         }
         [HttpGet("/cart")]
         public async Task<IActionResult> Edit()
         {
-            var userId = "1"; // login olmuş kullanıcının id si yazılmalı.
+            var response = await _httpClient.GetAsync("https://localhost:7200/api/cart");
 
-            if (userId is null)
+            if (!response.IsSuccessStatusCode)
             {
-                return RedirectToAction(nameof(AuthController.Login), "Auth");
+                TempData["ErrorMessage"] = "Could not load cart items.";
+                return View(new List<CartItemViewModel>());
             }
 
-            List<CartItemViewModel> cartItem = await GetCartItemsAsync();
+            var cartItems = await response.Content.ReadFromJsonAsync<List<CartItemViewModel>>();
 
-            return View(cartItem);
+            return View(cartItems ?? new List<CartItemViewModel>());
         }
         [HttpPost("/cart/update")]
         public async Task<IActionResult> UpdateCart(int cartItemId, byte quantity)
         {
-            var userId = "1"; // login olmuş kullanıcının id si yazılmalı.
+            var response = await _httpClient.PutAsJsonAsync(
+                $"https://localhost:7200/api/cart/{cartItemId}",
+                new { Quantity = quantity });
 
-            if (userId is null)
+            if (!response.IsSuccessStatusCode)
             {
-                return RedirectToAction(nameof(AuthController.Login), "Auth");
+                TempData["ErrorMessage"] = "Cart item could not be updated.";
+                return RedirectToAction(nameof(Edit));
             }
 
-            var cartItem = await _repo.GetAll<CartItemEntity>()
-                .Include(ci => ci.Product.Images)
-                .FirstOrDefaultAsync(ci => ci.UserId == int.Parse(userId) && ci.Id == cartItemId);
-
-            if (cartItem is null)
-            {
-                return NotFound();
-            }
-
-            cartItem.Quantity = quantity;
-            await _repo.Update(cartItem);
-
-            var model = new CartItemViewModel
-            {
-                Id = cartItem.Id,
-                ProductName = cartItem.Product.Name,
-                ProductImage = cartItem.Product.Images.Count != 0 ? cartItem.Product.Images.First().Url : null,
-                Quantity = cartItem.Quantity,
-                Price = cartItem.Product.Price
-            };
-
-            return View(model);
+            return RedirectToAction(nameof(Edit));
         }
 
         [HttpGet("/checkout")]
         public async Task<IActionResult> Checkout()
         {
-            var userId = "1"; // login olmuş kullanıcının id si yazılmalı.
+            var response = await _httpClient.PostAsync("https://localhost:7200/api/cart/checkout", null);
 
-            if (userId is null)
+            if (!response.IsSuccessStatusCode)
             {
-                return RedirectToAction(nameof(AuthController.Login), "Auth");
+                TempData["ErrorMessage"] = "Checkout failed.";
+                return RedirectToAction(nameof(Edit));
             }
 
-            List<CartItemViewModel> cartItems = await GetCartItemsAsync();
+            TempData["SuccessMessage"] = "Checkout successful!";
 
-            return View(cartItems);
+            return RedirectToAction("Index", "Home"); 
         }
 
-        private async Task<List<CartItemViewModel>> GetCartItemsAsync()
-        {
-            //var userId = GetUserId() ?? -1;
-            var userId = 1;// bura değişecek
-
-
-            return await _repo.GetAll<CartItemEntity>()
-                .Include(ci => ci.Product.Images)
-                .Where(ci => ci.UserId == userId)
-                .Select(ci => new CartItemViewModel
-                {
-                    Id = ci.Id,
-                    ProductName = ci.Product.Name,
-                    ProductImage = ci.Product.Images.Count != 0 ? ci.Product.Images.First().Url : null,
-                    Quantity = ci.Quantity,
-                    Price = ci.Product.Price
-                })
-                .ToListAsync();
-        }
     }
 }

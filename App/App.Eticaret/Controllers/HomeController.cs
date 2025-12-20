@@ -12,7 +12,7 @@ namespace App.Eticaret.Controllers
     {
         private readonly HttpClient _httpClient;
 
-        public HomeController(IDataRepository repo,HttpClient httpClient)
+        public HomeController(HttpClient httpClient)
         {
             _httpClient = httpClient;
         }
