@@ -19,17 +19,68 @@ namespace App.Api.Data.Controllers
         }
 
         [HttpGet]
+        [HttpGet]
         public async Task<IActionResult> GetAll()
         {
             var categories = await _repo.GetAll<CategoryEntity>()
                 .Select(c => new CategoryListItemDto
                 {
                     Id = c.Id,
-                    Name = c.Name
+                    Name = c.Name,
+                    Color = c.Color,
+                    IconCssClass = c.IconCssClass
                 })
                 .ToListAsync();
 
             return Ok(categories);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Create([FromBody] SaveCategoryDto newCategory)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var categoryEntity = new CategoryEntity
+            {
+                Name = newCategory.Name,
+                Color = newCategory.Color,
+                IconCssClass = newCategory.IconCssClass
+            };
+
+            await _repo.Add(categoryEntity);
+
+            return Ok(new { message = "Category created successfully." });
+        }
+
+        [HttpPut("{categoryId:int}")]
+        public async Task<IActionResult> Edit(int categoryId, [FromBody] SaveCategoryDto editCategory)
+        {
+            var category = await _repo.GetAll<CategoryEntity>()
+                                      .FirstOrDefaultAsync(c => c.Id == categoryId);
+            if (category == null)
+                return NotFound();
+
+            category.Name = editCategory.Name;
+            category.Color = editCategory.Color;
+            category.IconCssClass = editCategory.IconCssClass;
+
+            await _repo.Update(category);
+
+            return Ok(new { message = "Category updated successfully." });
+        }
+
+        [HttpDelete("{categoryId:int}")]
+        public async Task<IActionResult> Delete(int categoryId)
+        {
+            var category = await _repo.GetAll<CategoryEntity>()
+                                      .FirstOrDefaultAsync(c => c.Id == categoryId);
+            if (category == null)
+                return NotFound();
+
+            await _repo.Delete(category);
+
+            return NoContent();
         }
     }
 }

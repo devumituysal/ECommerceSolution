@@ -13,25 +13,26 @@ namespace App.Admin.Controllers
     [Authorize(Roles = "admin")]
     public class CategoryController : Controller
     {
-        private readonly IDataRepository _repo;
+        private readonly HttpClient _httpClient;
 
-        public CategoryController(IDataRepository repo)
+        public CategoryController(HttpClient httpClient)
         {
-            _repo = repo;
+            _httpClient = httpClient;
         }
 
         [HttpGet]
         public async Task<IActionResult> List()
         {
-            var categories = await _repo.GetAll<CategoryEntity>()
-                .Select(c => new CategoryListViewModel
-                {
-                    Id = c.Id,
-                    Name = c.Name,
-                    Color = c.Color,
-                    IconCssClass = c.IconCssClass
-                })
-                .ToListAsync();
+            var response = await _httpClient.GetAsync("https://localhost:5001/api/categories");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                TempData["ErrorMessage"] = "Categories could not be loaded.";
+                return View(new List<CategoryListViewModel>());
+            }
+
+            var categories = await response.Content.ReadFromJsonAsync<List<CategoryListViewModel>>();
+            categories ??= new List<CategoryListViewModel>();
 
             return View(categories);
         }
@@ -48,22 +49,25 @@ namespace App.Admin.Controllers
         public async Task<IActionResult> Create([FromForm] SaveCategoryViewModel newCategoryModel)
         {
             if (!ModelState.IsValid)
+                return View(newCategoryModel);
+
+            var response = await _httpClient.PostAsJsonAsync(
+                "https://localhost:5001/api/categories",
+                new
+                {
+                    Name = newCategoryModel.Name,
+                    Color = newCategoryModel.Color,
+                    IconCssClass = newCategoryModel.IconCssClass
+                });
+
+            if (!response.IsSuccessStatusCode)
             {
+                TempData["ErrorMessage"] = "Category could not be created.";
                 return View(newCategoryModel);
             }
 
-            var categoryEntity = new CategoryEntity
-            {
-                Name = newCategoryModel.Name,
-                Color = newCategoryModel.Color,
-                IconCssClass = string.Empty,
-            };
-
-            await _repo.Add(categoryEntity);
-
-            ViewBag.SuccessMessage = "Kategori başarıyla oluşturuldu.";
+            TempData["SuccessMessage"] = "Category created successfully.";
             ModelState.Clear();
-
             return View();
         }
 
@@ -71,20 +75,23 @@ namespace App.Admin.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit([FromRoute] int categoryId)
         {
-            var category = await _repo.GetAll<CategoryEntity>().FirstOrDefaultAsync(c => c.Id == categoryId);
-            if (category is null)
-            {
+            var response = await _httpClient.GetAsync("https://localhost:5001/api/categories");
+            if (!response.IsSuccessStatusCode)
                 return NotFound();
-            }
 
-            var editCategoryModel = new SaveCategoryViewModel
+            var categories = await response.Content.ReadFromJsonAsync<List<CategoryListViewModel>>();
+            var category = categories?.FirstOrDefault(c => c.Id == categoryId);
+            if (category == null)
+                return NotFound();
+
+            var editModel = new SaveCategoryViewModel
             {
                 Name = category.Name,
                 Color = category.Color,
                 IconCssClass = category.IconCssClass
             };
 
-            return View(editCategoryModel);
+            return View(editModel);
         }
 
         [Route("{categoryId:int}/edit")]
@@ -92,39 +99,37 @@ namespace App.Admin.Controllers
         public async Task<IActionResult> Edit([FromRoute] int categoryId, [FromForm] SaveCategoryViewModel editCategoryModel)
         {
             if (!ModelState.IsValid)
+                return View(editCategoryModel);
+
+            var response = await _httpClient.PutAsJsonAsync(
+                $"https://localhost:5001/api/categories/{categoryId}",
+                new
+                {
+                    Name = editCategoryModel.Name,
+                    Color = editCategoryModel.Color,
+                    IconCssClass = editCategoryModel.IconCssClass
+                });
+
+            if (!response.IsSuccessStatusCode)
             {
+                TempData["ErrorMessage"] = "Category could not be updated.";
                 return View(editCategoryModel);
             }
 
-            var category = await _repo.GetAll<CategoryEntity>().FirstOrDefaultAsync(c=>c.Id == categoryId);
-            if (category is null)
-            {
-                return NotFound();
-            }
-
-            category.Name = editCategoryModel.Name;
-            category.Color = editCategoryModel.Color;
-
-            await _repo.Update(category);
-
-            ViewBag.SuccessMessage = "Kategori başarıyla güncellendi.";
-            ModelState.Clear();
-
-            return View();
+            TempData["SuccessMessage"] = "Category updated successfully.";
+            return RedirectToAction(nameof(List));
         }
 
         [Route("{categoryId:int}/delete")]
         [HttpGet]
         public async Task<IActionResult> Delete([FromRoute] int categoryId)
         {
-            var category = await _repo.GetAll<CategoryEntity>().FirstOrDefaultAsync(c => c.Id == categoryId);
+            var response = await _httpClient.DeleteAsync($"https://localhost:5001/api/categories/{categoryId}");
 
-            if (category is null)
+            if (!response.IsSuccessStatusCode)
             {
-                return NotFound();
+                TempData["ErrorMessage"] = "Category could not be deleted.";
             }
-
-            await _repo.Delete(category);   
 
             return RedirectToAction(nameof(List));
         }
