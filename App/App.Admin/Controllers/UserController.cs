@@ -5,33 +5,38 @@ using App.Data.Repositories.Abstractions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Text.Json;
 
 namespace App.Admin.Controllers
 {
     [Authorize(Roles = "admin")]
     public class UserController : Controller
     {
-        private readonly IDataRepository _repo;
+        private readonly HttpClient _httpClient;
 
-        public UserController(IDataRepository repo)
+        public UserController(HttpClient httpClient)
         {
-            _repo = repo;
+            _httpClient = httpClient;
         }
         public async Task<IActionResult> List()
         {
-            List<UserListItemViewModel> users = await _repo.GetAll<UserEntity>()
-               .Where(u => u.RoleId != 1)
-               .Select(u => new UserListItemViewModel
-               {
-                   Id = u.Id,
-                   FirstName = u.FirstName,
-                   LastName = u.LastName,
-                   Email = u.Email,
-                   Role = u.Role.Name,
-                   Enabled = u.Enabled,
-                   HasSellerRequest = u.HasSellerRequest
-               })
-               .ToListAsync();
+            if (!User.Identity!.IsAuthenticated)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            var response = await _httpClient.GetAsync("https://localhost:5001/api/users/list");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                TempData["ErrorMessage"] = "Kullanıcılar alınamadı.";
+                return View(new List<UserListItemViewModel>());
+            }
+
+            var users = await response.Content.ReadFromJsonAsync<List<UserListItemViewModel>>();
+
+            users ??= new List<UserListItemViewModel>();
 
             return View(users);
         }
@@ -41,22 +46,20 @@ namespace App.Admin.Controllers
         [HttpGet]
         public async Task<IActionResult> Approve([FromRoute] int id)
         {
-            var user = await _repo.GetAll<UserEntity>().FirstOrDefaultAsync(i=>i.Id == id);
-            if (user == null)
+            if (!User.Identity!.IsAuthenticated)
             {
-                return NotFound();
+                return RedirectToAction("Login", "Auth");
             }
 
-            if (!user.HasSellerRequest)
+            var response = await _httpClient.PostAsync($"https://localhost:5001/api/users/{id}/approve", null);
+
+            if (!response.IsSuccessStatusCode)
             {
-                return BadRequest();
+                TempData["ErrorMessage"] = "Kullanıcı onaylanamadı.";
+                return RedirectToAction(nameof(List));
             }
 
-            user.HasSellerRequest = false;
-            user.RoleId = 2; // seller
-
-            await _repo.Update(user);
-
+            TempData["SuccessMessage"] = "Kullanıcı başarıyla onaylandı.";
             return RedirectToAction(nameof(List));
         }
 

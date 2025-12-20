@@ -20,6 +20,7 @@ namespace App.Data.Entities
 
         
         public RoleEntity Role { get; set; } = null!;
+        public ICollection<CommentEntity> Comments { get; set; } = new List<CommentEntity>();
 
     }
 }

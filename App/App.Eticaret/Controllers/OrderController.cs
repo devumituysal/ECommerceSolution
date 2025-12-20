@@ -5,134 +5,81 @@ using App.Eticaret.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace App.Eticaret.Controllers
 {
     [Authorize(Roles = "buyer, seller")]
     public class OrderController : Controller
     {
-        private readonly IDataRepository _repo;
+        private readonly HttpClient _httpClient;
 
-        public OrderController(IDataRepository repo)
+        public OrderController(HttpClient httpClient)
         {
-            _repo = repo;
+            _httpClient = httpClient;
         }
 
         [HttpPost("/order")]
         public async Task<IActionResult> Create([FromForm] CheckoutViewModel model)
         {
-            var userId = "1"; // login olmuş kullanıcının id si yazılmalı.
+            if(!ModelState.IsValid)
+            {
+                return View(model);
+            }
 
-            if (userId is null)
+            var userIdClaim = User.FindFirst(ClaimTypes.Sid);
+
+            if (userIdClaim == null)
             {
                 return RedirectToAction(nameof(AuthController.Login), "Auth");
             }
 
-            if (!ModelState.IsValid)
-            {
-                var viewModel = await GetCartItemsAsync();
-                return View(viewModel);
-            }
+            var userId = int.Parse(userIdClaim.Value);
+            
 
-            var cartItems = await _repo.GetAll<CartItemEntity>()
-                .Include(ci => ci.Product)
-                .Where(ci => ci.UserId == int.Parse(userId)) // int parse kontrol et
-                .ToListAsync();
-
-            if (cartItems.Count == 0)
-            {
-                return RedirectToAction(nameof(CartController.Edit), "Cart");
-            }
-
-            var order = new OrderEntity
-            {
-                UserId = int.Parse(userId),// int parse kontrol et.
-                Address = model.Address,
-                OrderCode = await CreateOrderCode(),
-            };
-
-            await _repo.Add(order);
-
-            foreach (var cartItem in cartItems)
-            {
-                var orderItem = new OrderItemEntity
+            var response = await _httpClient.PostAsJsonAsync(
+                "https://localhost:7200/api/orders",
+                new
                 {
-                    OrderId = order.Id,
-                    ProductId = cartItem.ProductId,
-                    Quantity = cartItem.Quantity,
-                    UnitPrice = cartItem.Product.Price,
-                };
+                    userId = userId,
+                    address = model.Address
+                });
 
-                await _repo.Add(orderItem);
+            if (!response.IsSuccessStatusCode)
+            {
+                ModelState.AddModelError("", "Sipariş oluşturulamadı.");
+                return View(model);
             }
 
-            return RedirectToAction(nameof(Details), new { orderCode = order.OrderCode });
+            var result = await response.Content.ReadFromJsonAsync<OrderCreateResponseViewModel>();
+
+            return RedirectToAction(nameof(Details), new { orderCode = result!.OrderCode });
         }
 
         [HttpGet("/order/{orderCode}/details")]
         public async Task<IActionResult> Details([FromRoute] string orderCode)
         {
-            var userId = "1"; // login olmuş kullanıcının id si yazılmalı.
+            var userIdClaim = User.FindFirst(ClaimTypes.Sid);
 
-            if (userId is null)
+            if (userIdClaim == null)
             {
                 return RedirectToAction(nameof(AuthController.Login), "Auth");
             }
 
-            var order = await _repo.GetAll<OrderEntity>()
-                .Where(o => o.UserId == int.Parse(userId) && o.OrderCode == orderCode)
-                .Select(o => new OrderDetailsViewModel
-                {
-                    OrderCode = o.OrderCode,
-                    CreatedAt = o.CreatedAt,
-                    Address = o.Address,
-                    Items = o.OrderItems.Select(oi => new OrderItemViewModel
-                    {
-                        ProductName = oi.Product.Name,
-                        Quantity = oi.Quantity,
-                        UnitPrice = oi.UnitPrice,
-                    }).ToList()     
-                })
-                .FirstOrDefaultAsync();
+            var userId = int.Parse(userIdClaim.Value);
 
-            if (order is null)
+            var response = await _httpClient.GetAsync(
+                $"https://localhost:7200/api/orders/{orderCode}?userId={userId}");
+
+            if (!response.IsSuccessStatusCode)
             {
                 return NotFound();
             }
 
+            var order =
+                await response.Content.ReadFromJsonAsync<OrderDetailsViewModel>();
+
             return View(order);
-        }
-
-        private async Task<string> CreateOrderCode()
-        {
-            var orderCode = Guid.NewGuid().ToString("n")[..16].ToUpperInvariant();
-            while (await _repo.GetAll<OrderEntity>().AnyAsync(x => x.OrderCode == orderCode))
-            {
-                orderCode = Guid.NewGuid().ToString("n")[..16].ToUpperInvariant();
-            }
-
-            return orderCode;
-        }
-
-
-        private async Task<List<CartItemViewModel>> GetCartItemsAsync()
-        {
-            //var userId = GetUserId() ?? -1;
-            var userId = 1;// bura değişecek
-
-
-            return await _repo.GetAll<CartItemEntity>()
-                .Include(ci => ci.Product.Images)
-                .Where(ci => ci.UserId == userId)
-                .Select(ci => new CartItemViewModel
-                {
-                    Id = ci.Id,
-                    ProductName = ci.Product.Name,
-                    ProductImage = ci.Product.Images.Count != 0 ? ci.Product.Images.First().Url : null,
-                    Quantity = ci.Quantity,
-                    Price = ci.Product.Price
-                })
-                .ToListAsync();
         }
     }
 }

@@ -12,7 +12,5 @@ namespace App.Eticaret.Models.ViewModels
 
         [Required, MaxLength(256), EmailAddress]
         public string Email { get; set; } = null!;
-
-        public string? Password { get; set; }
     }
 }

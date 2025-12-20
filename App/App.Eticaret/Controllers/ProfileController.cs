@@ -11,137 +11,107 @@ namespace App.Eticaret.Controllers
     [Authorize(Roles = "seller, buyer")]
     public class ProfileController : Controller
     {
-        private readonly IDataRepository _repo;
+        private readonly HttpClient _httpClient;
 
-        public ProfileController(IDataRepository repo)
+        public ProfileController(HttpClient httpClient)
         {
-            _repo = repo;
+            _httpClient = httpClient;
         }
 
         [HttpGet("/profile")]
         public async Task<IActionResult> Details()
         {
-            var userId = "1"; // login olmuş kullanıcının id si yazılmalı.
+            var profile = await _httpClient.GetFromJsonAsync<ProfileDetailsViewModel>
+                ("https://localhost:7200/api/profile");
 
-            if (userId is null)
-            {
-                return RedirectToAction("Login", "Auth");
-            }
-
-            var userViewModel = await _repo.GetAll<UserEntity>()
-                .Where(u => u.Id == int.Parse(userId)) // bu kısımı kontrol et
-                .Select(u => new ProfileDetailsViewModel
-                {
-                    FirstName = u.FirstName,
-                    LastName = u.LastName,
-                    Email = u.Email,
-                })
-                .FirstOrDefaultAsync();
-
-            if (userViewModel is null)
-            {
-                return RedirectToAction("Login", "Auth");
-            }
-
-            string? previousSuccessMessage = TempData["SuccessMessage"]?.ToString();
-
-            if (previousSuccessMessage is not null)
-            {
-                ViewBag.SuccessMessage= previousSuccessMessage;
-            }
-
-            return View(userViewModel);
+            return View(profile);
         }
 
         [HttpPost("/profile")]
         public async Task<IActionResult> Edit([FromForm] ProfileDetailsViewModel editMyProfileModel)
         {
-            //if (User.Identity?.IsAuthenticated)
-            //{
-            //    return RedirectToAction("Login", "Auth");
-            //}
-
-            //var user = await GetCurrentUserAsync();
-
-            var user = await _repo.GetAll<UserEntity>().FirstOrDefaultAsync(u => u.Id == 1); // geçici olarak yazıldı...
-
-            if (user is null)
-            {
-                return RedirectToAction("Login", "Auth");
-            }
-
             if (!ModelState.IsValid)
             {
                 return View(editMyProfileModel);
             }
-            
-         
-            user.FirstName = editMyProfileModel.FirstName;
-            user.LastName = editMyProfileModel.LastName;
 
-            if (!string.IsNullOrWhiteSpace(editMyProfileModel.Password) && editMyProfileModel.Password != "******")
+            var response = await _httpClient.PutAsJsonAsync(
+                "https://localhost:7200/api/profile", editMyProfileModel);
+
+            if (!response.IsSuccessStatusCode)
             {
-                user.Password = editMyProfileModel.Password;
+                // API'den gelen hata mesajını oku (BadRequest durumunda)
+                if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
+                {
+                    var error = await response.Content.ReadFromJsonAsync<Dictionary<string, string>>();
+                    if (error != null && error.ContainsKey("message"))
+                    {
+                        ModelState.AddModelError("", error["message"]);
+                    }
+                    else
+                    {
+                        ModelState.AddModelError("", "Profil güncellenemedi.");
+                    }
+                }
+                else
+                {
+                    ModelState.AddModelError("", "Profil güncellenemedi.");
+                }
+
+                return View(editMyProfileModel);
             }
 
-            await _repo.Update(user);
-
             TempData["SuccessMessage"] = "Profiliniz başarıyla güncellendi.";
-
             return RedirectToAction(nameof(Details));
+
+
+          
         }
 
         [HttpGet("/my-orders")]
         public async Task<IActionResult> MyOrders()
         {
-            var userId = "1"; // login olmuş kullanıcının id si yazılmalı.
-
-            if (userId is null)
+            if (!User.Identity.IsAuthenticated)
             {
                 return RedirectToAction("Login", "Auth");
             }
 
-            List<OrderViewModel> orders = await _repo.GetAll<OrderEntity>()
-                .Where(o => o.UserId == int.Parse(userId)) // bu kısımı kontrol et
-                .Select(o => new OrderViewModel
-                {
-                    OrderCode = o.OrderCode,
-                    Address = o.Address,
-                    CreatedAt = o.CreatedAt,
-                    TotalPrice = o.OrderItems.Sum(oi => oi.UnitPrice * oi.Quantity),
-                    TotalProducts = o.OrderItems.Count,
-                    TotalQuantity = o.OrderItems.Sum(oi => oi.Quantity),
-                })
-                .OrderByDescending(o => o.CreatedAt)
-                .ToListAsync();
+            var response = await _httpClient.GetAsync("https://localhost:7200/api/order/my-orders");
 
-            return View(orders);
+            if (!response.IsSuccessStatusCode)
+            {
+                TempData["ErrorMessage"] = "Siparişler alınamadı.";
+                return View(new List<OrderViewModel>());
+            }
+
+            var orders = await response.Content.ReadFromJsonAsync<List<OrderViewModel>>();
+
+            orders ??= new List<OrderViewModel>();  // null kontrolü
+
+            return View(orders ?? new List<OrderViewModel>());
+
         }
 
         [HttpGet("/my-products")]
         [Authorize(Roles = "seller")]
         public async Task<IActionResult> MyProducts()
         {
-            var userId = "1"; // login olmuş kullanıcının id si yazılmalı.
-
-            if (userId is null)
+            if (!User.Identity.IsAuthenticated)
             {
                 return RedirectToAction("Login", "Auth");
             }
 
-            List<MyProductsViewModel> products = await _repo.GetAll<ProductEntity>()
-                .Where(p => p.SellerId == int.Parse(userId)) // bu kısımı kontrol et
-                .Select(p => new MyProductsViewModel
-                {
-                    Id = p.Id,
-                    Name = p.Name,
-                    Price = p.Price,
-                    Description = p.Details,
-                    Stock = p.StockAmount,
-                    CreatedAt = p.CreatedAt,
-                })
-                .OrderByDescending(p => p.CreatedAt)
-                .ToListAsync();
+            var response = await _httpClient.GetAsync("https://localhost:7200/api/product");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                TempData["ErrorMessage"] = "Ürünler alınamadı.";
+                return View(new List<MyProductsViewModel>());
+            }
+
+            var products = await response.Content.ReadFromJsonAsync<List<MyProductsViewModel>>();
+
+            products ??= new List<MyProductsViewModel>(); // null kontrolü
 
             return View(products);
         }

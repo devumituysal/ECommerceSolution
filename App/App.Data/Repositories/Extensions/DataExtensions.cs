@@ -14,7 +14,7 @@ namespace App.Data.Repositories.Extensions
 {
     public static class DataExtensions
     {
-        public static void AddData(this IServiceCollection services,string connectionString)
+        public static void AddData(this IServiceCollection services, string connectionString)
         {
             services.AddDbContext<DbContext, AppDbContext>(options =>
             {
