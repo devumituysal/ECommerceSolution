@@ -101,48 +101,56 @@ namespace App.Api.Data.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetMyProducts()
         {
+            var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.Sid)!.Value);
+
             var products = await _repo.GetAll<ProductEntity>()
                 .Include(p => p.Images)
                 .Include(p => p.Category)
+                .Where(p => p.SellerId == userId) 
                 .Select(p => new ProductListItemDto
                 {
                     Id = p.Id,
                     Name = p.Name,
                     Price = p.Price,
+                    Details = p.Details,
+                    Stock = p.StockAmount,
+                    CreatedAt = p.CreatedAt,
                     CategoryName = p.Category.Name,
                     ImageUrl = p.Images
-                    .OrderBy(i => i.Id)
-                    .Select(i => i.Url)
-                    .FirstOrDefault()
+                        .OrderBy(i => i.Id)
+                        .Select(i => i.Url)
+                        .FirstOrDefault(),
+                    SellerId = p.SellerId
                 })
+                .OrderByDescending(p => p.CreatedAt)
                 .ToListAsync();
 
             return Ok(products);
         }
 
-        [HttpGet("{id:int}")]
-        public async Task<IActionResult> GetById(int id)
-        {
-            var product = await _repo.GetAll<ProductEntity>()
-                .Where(p => p.Id == id)
-                .Select(p => new ProductDetailDto
-                {
-                    Id = p.Id,
-                    Name = p.Name,
-                    Price = p.Price,
-                    Details = p.Details,
-                    StockAmount = p.StockAmount,
-                    CategoryId = p.CategoryId
-                })
-                .FirstOrDefaultAsync();
+        //[HttpGet("{id:int}")]
+        //public async Task<IActionResult> GetById(int id)
+        //{
+        //    var product = await _repo.GetAll<ProductEntity>()
+        //        .Where(p => p.Id == id)
+        //        .Select(p => new ProductDetailDto
+        //        {
+        //            Id = p.Id,
+        //            Name = p.Name,
+        //            Price = p.Price,
+        //            Details = p.Details,
+        //            StockAmount = p.StockAmount,
+        //            CategoryId = p.CategoryId
+        //        })
+        //        .FirstOrDefaultAsync();
 
-            if (product == null)
-                return NotFound();
+        //    if (product == null)
+        //        return NotFound();
 
-            return Ok(product);
-        }
+        //    return Ok(product);
+        //}
 
         [HttpPost("{productId:int}/images")]
         [Authorize(Roles = "seller")]

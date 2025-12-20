@@ -4,6 +4,7 @@ using App.Data.Repositories.Abstractions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace App.Api.Data.Controllers
 {
@@ -94,5 +95,36 @@ namespace App.Api.Data.Controllers
 
             return Ok(order);
         }
+
+        [HttpGet("my-orders")]
+        public async Task<IActionResult> GetMyOrders()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.Sid)?.Value;
+
+            if (userIdClaim is null)
+            {
+                return NotFound();
+            }
+
+            var userId = int.Parse(userIdClaim);
+
+            var orders = await _repo.GetAll<OrderEntity>()
+                .Where(o => o.UserId == userId)
+                .Select(o => new OrderDto
+                {
+                    OrderCode = o.OrderCode,
+                    Address = o.Address,
+                    CreatedAt = o.CreatedAt,
+                    TotalPrice = o.OrderItems.Sum(oi => oi.UnitPrice * oi.Quantity),
+                    TotalProducts = o.OrderItems.Count,
+                    TotalQuantity = o.OrderItems.Sum(oi => oi.Quantity),
+                })
+                .OrderByDescending(o => o.CreatedAt)
+                .ToListAsync();
+
+            return Ok(orders);
+        }
+
+
     }
 }
