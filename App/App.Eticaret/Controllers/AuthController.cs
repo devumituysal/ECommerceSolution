@@ -17,14 +17,10 @@ using System.Threading.Tasks;
 namespace App.Eticaret.Controllers
 {
     [AllowAnonymous]
-    public class AuthController : Controller
+    public class AuthController : BaseController 
     {
-        private readonly HttpClient _httpClient;
-
-        public AuthController(IHttpClientFactory httpClientFactory)
-        {
-            _httpClient = httpClientFactory.CreateClient();
-        }
+        public AuthController(HttpClient httpClient) : base(httpClient) { }
+        
 
 
 
@@ -84,6 +80,7 @@ namespace App.Eticaret.Controllers
             {
                 return View(loginModel);
             }
+           
 
             var response = await _httpClient.PostAsJsonAsync(
                 "https://localhost:7200/api/auth/login",
@@ -93,7 +90,7 @@ namespace App.Eticaret.Controllers
                     password = loginModel.Password,
                 });
 
-            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            if (response.StatusCode == HttpStatusCode.NotFound)
             {
                 ModelState.AddModelError("", "Email veya şifre Hatalı");
                 return View(loginModel);
@@ -112,6 +109,13 @@ namespace App.Eticaret.Controllers
                 ModelState.AddModelError("", "Giriş işlemi başarısız.");
                 return View(loginModel);
             }
+
+            Response.Cookies.Append("access_token", user.Token, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict
+            });
 
             await LoginUser(user);
 
@@ -231,6 +235,8 @@ namespace App.Eticaret.Controllers
         [HttpGet]
         public async Task<IActionResult> Logout()
         {
+            Response.Cookies.Delete("access_token");
+
             await LogoutUser();
 
             return RedirectToAction(nameof(Login));

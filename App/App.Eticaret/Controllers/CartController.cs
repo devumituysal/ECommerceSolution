@@ -9,18 +9,15 @@ using Microsoft.EntityFrameworkCore;
 namespace App.Eticaret.Controllers
 {
     [Authorize(Roles = "buyer, seller")]
-    public class CartController : Controller
+    public class CartController : BaseController
     {
-        private readonly HttpClient _httpClient;
-
-        public CartController(HttpClient httpClient)
-        {
-            _httpClient = httpClient;
-        }
-
+        public CartController(HttpClient httpClient) : base(httpClient) { }
+        
         [HttpGet("/add-to-cart/{productId:int}")]
         public async Task<IActionResult> AddProduct([FromRoute] int productId)
         {
+            SetJwtHeader();
+
             var response = await _httpClient.PostAsync(
                 $"https://localhost:7200/api/cart/add/{productId}", null);
 
@@ -36,6 +33,8 @@ namespace App.Eticaret.Controllers
         [HttpGet("/cart")]
         public async Task<IActionResult> Edit()
         {
+            SetJwtHeader();
+
             var response = await _httpClient.GetAsync("https://localhost:7200/api/cart");
 
             if (!response.IsSuccessStatusCode)
@@ -51,6 +50,8 @@ namespace App.Eticaret.Controllers
         [HttpPost("/cart/update")]
         public async Task<IActionResult> UpdateCart(int cartItemId, byte quantity)
         {
+            SetJwtHeader();
+
             var response = await _httpClient.PutAsJsonAsync(
                 $"https://localhost:7200/api/cart/{cartItemId}",
                 new { Quantity = quantity });
@@ -67,6 +68,8 @@ namespace App.Eticaret.Controllers
         [HttpGet("/checkout")]
         public async Task<IActionResult> Checkout()
         {
+            SetJwtHeader();
+
             var response = await _httpClient.PostAsync("https://localhost:7200/api/cart/checkout", null);
 
             if (!response.IsSuccessStatusCode)

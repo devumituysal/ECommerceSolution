@@ -11,19 +11,16 @@ using System.Threading.Tasks;
 namespace App.Eticaret.Controllers
 {
     [Route("/product")]
-    public class ProductController : Controller
+    public class ProductController : BaseController
     {
-        private readonly HttpClient _httpClient;
-
-        public ProductController(HttpClient httpClient)
-        {
-            _httpClient = httpClient;
-        }
+        public ProductController(HttpClient httpClient) : base(httpClient) { }
 
         [HttpGet("create")]
         [Authorize(Roles = "seller")]
         public async Task<IActionResult> Create()
         {
+            SetJwtHeader();
+
             var categories = await _httpClient
                 .GetFromJsonAsync<List<CategoryListItemViewModel>>(
                 "https://localhost:7200/api/categories");
@@ -42,6 +39,8 @@ namespace App.Eticaret.Controllers
             {
                 return View(newProductModel);
             }
+
+            SetJwtHeader();
 
             var sellerIdClaim = User.FindFirst(ClaimTypes.Sid);
 
@@ -103,6 +102,8 @@ namespace App.Eticaret.Controllers
         [Authorize(Roles = "seller")]
         public async Task<IActionResult> Edit([FromRoute] int productId)
         {
+            SetJwtHeader();
+
             var product = await _httpClient.GetFromJsonAsync<ProductSaveViewModel>(
                 $"https://localhost:7200/api/products/{productId}");
 
@@ -125,6 +126,8 @@ namespace App.Eticaret.Controllers
         [Authorize(Roles = "seller")]
         public async Task<IActionResult> Edit([FromRoute] int productId, [FromForm] ProductSaveViewModel editProductModel)
         {
+            SetJwtHeader();
+
             var categories = await _httpClient
                 .GetFromJsonAsync<List<CategoryListItemViewModel>>(
                 "https://localhost:7200/api/categories");
@@ -162,6 +165,8 @@ namespace App.Eticaret.Controllers
         [Authorize(Roles = "seller")]
         public async Task<IActionResult> Delete([FromRoute] int productId)
         {
+            SetJwtHeader();
+
             var response = await _httpClient.DeleteAsync(
                 $"https://localhost:7200/api/product/{productId}");
 
@@ -186,6 +191,8 @@ namespace App.Eticaret.Controllers
                 return BadRequest();
             }
 
+            SetJwtHeader();
+
             var response = await _httpClient.PostAsJsonAsync($"https://localhost:7200/api/product/{productId}/comment",
                 new
                 {
@@ -200,33 +207,5 @@ namespace App.Eticaret.Controllers
 
             return Ok();
         }
-
-
-
-
-
-
-
-
-        //////////////////////////////////////////TOOLS///////////////////////////////////////////////////////////
-
-
-        //public async Task SaveProductImages(int productId , IList<IFormFile> images)
-        //{
-        //    foreach(var image in images)
-        //    {
-        //        var productImageEntity = new ProductImageEntity
-        //        {
-        //            ProductId = productId,
-        //            Url = $"/uploads/{Guid.NewGuid()}{Path.GetExtension(image.FileName)}"
-        //        };
-        //        await _repo.Add(productImageEntity);
-
-        //        await using var fileStream = new FileStream($"wwwroot{productImageEntity.Url}", FileMode.Create);
-        //        await image.CopyToAsync(fileStream);
-        //    }
-
-        //}
-
     }
 }

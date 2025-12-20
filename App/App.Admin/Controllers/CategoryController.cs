@@ -11,18 +11,15 @@ namespace App.Admin.Controllers
 {
     [Route("/categories")]
     [Authorize(Roles = "admin")]
-    public class CategoryController : Controller
+    public class CategoryController : BaseController
     {
-        private readonly HttpClient _httpClient;
-
-        public CategoryController(HttpClient httpClient)
-        {
-            _httpClient = httpClient;
-        }
+        public CategoryController(HttpClient httpClient) : base(httpClient) { }
 
         [HttpGet]
         public async Task<IActionResult> List()
         {
+            SetJwtHeader();
+
             var response = await _httpClient.GetAsync("https://localhost:5001/api/categories");
 
             if (!response.IsSuccessStatusCode)
@@ -51,6 +48,8 @@ namespace App.Admin.Controllers
             if (!ModelState.IsValid)
                 return View(newCategoryModel);
 
+            SetJwtHeader();
+
             var response = await _httpClient.PostAsJsonAsync(
                 "https://localhost:5001/api/categories",
                 new
@@ -75,6 +74,8 @@ namespace App.Admin.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit([FromRoute] int categoryId)
         {
+            SetJwtHeader();
+
             var response = await _httpClient.GetAsync("https://localhost:5001/api/categories");
             if (!response.IsSuccessStatusCode)
                 return NotFound();
@@ -101,6 +102,8 @@ namespace App.Admin.Controllers
             if (!ModelState.IsValid)
                 return View(editCategoryModel);
 
+            SetJwtHeader();
+
             var response = await _httpClient.PutAsJsonAsync(
                 $"https://localhost:5001/api/categories/{categoryId}",
                 new
@@ -124,6 +127,8 @@ namespace App.Admin.Controllers
         [HttpGet]
         public async Task<IActionResult> Delete([FromRoute] int categoryId)
         {
+            SetJwtHeader();
+
             var response = await _httpClient.DeleteAsync($"https://localhost:5001/api/categories/{categoryId}");
 
             if (!response.IsSuccessStatusCode)

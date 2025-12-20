@@ -6,19 +6,16 @@ namespace App.Admin.Controllers
 {
     [Route("/comment")]
     [Authorize(Roles = "admin")]
-    public class CommentController : Controller
+    public class CommentController : BaseController
     {
-        private readonly HttpClient _httpClient;
-
-        public CommentController(HttpClient httpClient)
-        {
-            _httpClient = httpClient;
-        }
+        public CommentController(HttpClient httpClient) : base(httpClient) { }
 
         [Route("")]
         [HttpGet]
         public async Task<IActionResult> List()
         {
+            SetJwtHeader();
+
             var response = await _httpClient.GetAsync("https://localhost:5001/api/comment");
 
             if (!response.IsSuccessStatusCode)
@@ -38,6 +35,8 @@ namespace App.Admin.Controllers
         [HttpGet]
         public async Task<IActionResult> Approve([FromRoute] int commentId)
         {
+            SetJwtHeader();
+
             var response = await _httpClient.PostAsync($"https://localhost:5001/api/comment/{commentId}/approve", null);
 
             if (!response.IsSuccessStatusCode)

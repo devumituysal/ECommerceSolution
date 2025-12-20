@@ -10,14 +10,9 @@ using System.Security.Claims;
 namespace App.Eticaret.Controllers
 {
     [Authorize(Roles = "buyer, seller")]
-    public class OrderController : Controller
+    public class OrderController : BaseController
     {
-        private readonly HttpClient _httpClient;
-
-        public OrderController(HttpClient httpClient)
-        {
-            _httpClient = httpClient;
-        }
+        public OrderController(HttpClient httpClient) : base(httpClient) { }
 
         [HttpPost("/order")]
         public async Task<IActionResult> Create([FromForm] CheckoutViewModel model)
@@ -26,6 +21,8 @@ namespace App.Eticaret.Controllers
             {
                 return View(model);
             }
+
+            SetJwtHeader();
 
             var userIdClaim = User.FindFirst(ClaimTypes.Sid);
 
@@ -59,6 +56,8 @@ namespace App.Eticaret.Controllers
         [HttpGet("/order/{orderCode}/details")]
         public async Task<IActionResult> Details([FromRoute] string orderCode)
         {
+            SetJwtHeader();
+
             var userIdClaim = User.FindFirst(ClaimTypes.Sid);
 
             if (userIdClaim == null)

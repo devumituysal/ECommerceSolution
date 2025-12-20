@@ -11,20 +11,17 @@ using System.Text.Json;
 namespace App.Admin.Controllers
 {
     [Authorize(Roles = "admin")]
-    public class UserController : Controller
+    public class UserController : BaseController
     {
-        private readonly HttpClient _httpClient;
-
-        public UserController(HttpClient httpClient)
-        {
-            _httpClient = httpClient;
-        }
+        public UserController(HttpClient httpClient) : base(httpClient) { }
         public async Task<IActionResult> List()
         {
             if (!User.Identity!.IsAuthenticated)
             {
                 return RedirectToAction("Login", "Auth");
             }
+
+            SetJwtHeader();
 
             var response = await _httpClient.GetAsync("https://localhost:5001/api/users/list");
 
@@ -50,6 +47,8 @@ namespace App.Admin.Controllers
             {
                 return RedirectToAction("Login", "Auth");
             }
+
+            SetJwtHeader();
 
             var response = await _httpClient.PostAsync($"https://localhost:5001/api/users/{id}/approve", null);
 
