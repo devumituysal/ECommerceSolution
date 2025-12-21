@@ -13,7 +13,8 @@ namespace App.Admin.Controllers
     [Authorize(Roles = "admin")]
     public class CategoryController : BaseController
     {
-        public CategoryController(HttpClient httpClient) : base(httpClient) { }
+        public CategoryController(IHttpClientFactory httpClientFactory)
+            : base(httpClientFactory.CreateClient("DataApi")){}
 
         [HttpGet]
         public async Task<IActionResult> List()

@@ -8,7 +8,8 @@ namespace App.Admin.Controllers
     [Authorize(Roles = "admin")]
     public class CommentController : BaseController
     {
-        public CommentController(HttpClient httpClient) : base(httpClient) { }
+        public CommentController(IHttpClientFactory httpClientFactory)
+            : base(httpClientFactory.CreateClient("DataApi")){}
 
         [Route("")]
         [HttpGet]

@@ -10,6 +10,18 @@ var connectionString = builder.Configuration.GetConnectionString("SqlServer")
 
 builder.Services.AddData(connectionString);
 
+var apiSettings = builder.Configuration.GetSection("ApiSettings");
+
+builder.Services.AddHttpClient("DataApi", client =>
+{
+    client.BaseAddress = new Uri(apiSettings["DataApiBaseUrl"]!);
+});
+
+builder.Services.AddHttpClient("FileApi", client =>
+{
+    client.BaseAddress = new Uri(apiSettings["FileApiBaseUrl"]!);
+});
+
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options => {
         options.Cookie.Name = "auth-cookie";

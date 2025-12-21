@@ -13,7 +13,13 @@ namespace App.Eticaret.Controllers
     [Authorize(Roles = "seller, buyer")]
     public class ProfileController : BaseController
     {
-        public ProfileController(HttpClient httpClient) : base(httpClient) { }
+        private readonly HttpClient _fileApiClient;
+
+        public ProfileController(IHttpClientFactory httpClientFactory)
+            : base(httpClientFactory.CreateClient("DataApi"))
+        {
+            _fileApiClient = httpClientFactory.CreateClient("FileApi");
+        }
 
         [HttpGet("/profile")]
         public async Task<IActionResult> Details()

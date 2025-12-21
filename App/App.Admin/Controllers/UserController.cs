@@ -13,7 +13,9 @@ namespace App.Admin.Controllers
     [Authorize(Roles = "admin")]
     public class UserController : BaseController
     {
-        public UserController(HttpClient httpClient) : base(httpClient) { }
+        public UserController(IHttpClientFactory httpClientFactory)
+            : base(httpClientFactory.CreateClient("DataApi")){}
+
         public async Task<IActionResult> List()
         {
             if (!User.Identity!.IsAuthenticated)

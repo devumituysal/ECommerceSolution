@@ -7,7 +7,8 @@ namespace App.Admin.Controllers
     [Authorize(Roles = "admin")]
     public class ProductController : BaseController
     {
-        public ProductController(HttpClient httpClient) : base(httpClient) { }
+        public ProductController(IHttpClientFactory httpClientFactory)
+            : base(httpClientFactory.CreateClient("DataApi")){}
 
         public async Task<IActionResult> Delete(int id)
         {

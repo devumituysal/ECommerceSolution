@@ -15,7 +15,15 @@ namespace App.Eticaret.Controllers
     [Route("/product")]
     public class ProductController : BaseController
     {
-        public ProductController(HttpClient httpClient) : base(httpClient) { }
+        private readonly HttpClient _fileApiClient;
+
+        public ProductController(IHttpClientFactory httpClientFactory)
+            : base(httpClientFactory.CreateClient("DataApi"))
+        {
+            _fileApiClient = httpClientFactory.CreateClient("FileApi");
+        }
+
+
 
         [HttpGet("create")]
         [Authorize(Roles = "seller")]

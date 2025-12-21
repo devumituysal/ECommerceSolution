@@ -10,9 +10,9 @@ namespace App.Eticaret.Controllers
 {
     public class HomeController : BaseController
     {
-        public HomeController(HttpClient httpClient) : base(httpClient) { }
+        public HomeController(IHttpClientFactory httpClientFactory)
+            : base(httpClientFactory.CreateClient("DataApi")) { }
 
-        
 
         public IActionResult Index()
         {

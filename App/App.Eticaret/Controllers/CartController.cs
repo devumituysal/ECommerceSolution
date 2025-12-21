@@ -11,8 +11,9 @@ namespace App.Eticaret.Controllers
     [Authorize(Roles = "buyer, seller")]
     public class CartController : BaseController
     {
-        public CartController(HttpClient httpClient) : base(httpClient) { }
-        
+        public CartController(IHttpClientFactory httpClientFactory)
+            : base(httpClientFactory.CreateClient("DataApi")){}
+
         [HttpGet("/add-to-cart/{productId:int}")]
         public async Task<IActionResult> AddProduct([FromRoute] int productId)
         {

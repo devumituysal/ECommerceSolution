@@ -19,9 +19,9 @@ namespace App.Eticaret.Controllers
     [AllowAnonymous]
     public class AuthController : BaseController 
     {
-        public AuthController(HttpClient httpClient) : base(httpClient) { }
-        
 
+        public AuthController(IHttpClientFactory httpClientFactory) 
+            : base(httpClientFactory.CreateClient("DataApi")){}
 
 
         [Route("/register")]

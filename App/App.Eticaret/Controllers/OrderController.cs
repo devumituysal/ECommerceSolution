@@ -12,7 +12,8 @@ namespace App.Eticaret.Controllers
     [Authorize(Roles = "buyer, seller")]
     public class OrderController : BaseController
     {
-        public OrderController(HttpClient httpClient) : base(httpClient) { }
+        public OrderController(IHttpClientFactory httpClientFactory)
+            : base(httpClientFactory.CreateClient("DataApi")){}
 
         [HttpPost("/order")]
         public async Task<IActionResult> Create([FromForm] CheckoutViewModel model)
