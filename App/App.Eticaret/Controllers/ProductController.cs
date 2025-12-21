@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using static App.Eticaret.Controllers.ProfileController;
 
 namespace App.Eticaret.Controllers
 {
@@ -36,7 +37,7 @@ namespace App.Eticaret.Controllers
         public async Task<IActionResult> Create([FromForm] ProductSaveViewModel newProductModel)
         {
             if (!ModelState.IsValid)
-            {
+            {   
                 return View(newProductModel);
             }
 
@@ -79,23 +80,53 @@ namespace App.Eticaret.Controllers
 
             if (newProductModel.Images != null && newProductModel.Images.Any())
             {
-                var content = new MultipartFormDataContent();
 
                 foreach (var image in newProductModel.Images)
                 {
+                    SetJwtHeader();
+
+                    var content = new MultipartFormDataContent();
+
                     content.Add(
                         new StreamContent(image.OpenReadStream()),
-                        "images",
-                        image.FileName);
-                }
+                        "file",
+                        image.FileName
+                    );
 
-                await _httpClient.PostAsync(
-                    $"https://localhost:7200/api/product/{productId}/images",content);
+                    var fileResponse = await _httpClient.PostAsync(
+                        "https://localhost:7132/api/file/upload",
+                        content
+                    );
+
+                    if (!fileResponse.IsSuccessStatusCode)
+                    {
+                        ModelState.AddModelError("", "Ürün görselleri yüklenemedi.");
+                        return View(newProductModel);
+                    }
+
+                    var uploadResult = await fileResponse.Content.ReadFromJsonAsync<FileUploadResponse>();
+
+                    var imageSaveResponse = await _httpClient.PostAsJsonAsync(
+                        $"https://localhost:7200/api/product/{productId}/images",
+                        new 
+                        { 
+                            fileName = uploadResult!.FileName 
+                        }
+                    );
+
+                    if (!imageSaveResponse.IsSuccessStatusCode)
+                    {
+                        ModelState.AddModelError("", "Ürün görseli kaydedilemedi.");
+                        return View(newProductModel);
+                    }
+
+
+                }
             }
 
-                ViewBag.SuccessMessage = "Ürün başarıyla oluşturuldu.";
+            ViewBag.SuccessMessage = "Ürün başarıyla oluşturuldu.";
 
-            return View();
+            return View(new ProductSaveViewModel());
         }
 
         [HttpGet("{productId:int}/edit")]
