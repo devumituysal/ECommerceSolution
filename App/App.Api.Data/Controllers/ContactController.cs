@@ -1,6 +1,7 @@
 ﻿using App.Api.Data.Models.Dtos.Contact;
 using App.Data.Entities;
 using App.Data.Repositories.Abstractions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -18,6 +19,7 @@ namespace App.Api.Data.Controllers
         }
 
         [HttpPost]
+        [AllowAnonymous]
         public async Task<IActionResult> Create([FromBody] CreateContactMessageDto dto)
         {
             var entity = new ContactMessageEntity

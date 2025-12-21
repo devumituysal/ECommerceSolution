@@ -1,6 +1,7 @@
 ﻿using App.Api.Data.Models.Dtos.Order;
 using App.Data.Entities;
 using App.Data.Repositories.Abstractions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -8,6 +9,7 @@ using System.Security.Claims;
 
 namespace App.Api.Data.Controllers
 {
+    [Authorize(Roles = "Buyer,Seller")]
     [Route("api/[controller]")]
     [ApiController]
     public class OrderController : ControllerBase

@@ -5,20 +5,17 @@ using System.Net;
 namespace App.Admin.Controllers
 {
     [Authorize(Roles = "admin")]
-    public class ProductController : Controller
+    public class ProductController : BaseController
     {
-        private readonly HttpClient _httpClient;
-
-        public ProductController(HttpClient httpClient)
-        {
-            _httpClient = httpClient;
-        }
+        public ProductController(HttpClient httpClient) : base(httpClient) { }
 
         public async Task<IActionResult> Delete(int id)
         {
             
             if (!User.Identity!.IsAuthenticated)
                 return RedirectToAction("Login", "Auth");
+
+            SetJwtHeader();
 
             var response = await _httpClient.DeleteAsync($"https://localhost:5001/api/products/{id}");
 

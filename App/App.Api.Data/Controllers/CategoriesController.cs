@@ -1,6 +1,7 @@
 ﻿using App.Api.Data.Models.Dtos.Category;
 using App.Data.Entities;
 using App.Data.Repositories.Abstractions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -17,9 +18,9 @@ namespace App.Api.Data.Controllers
         {
             _repo = repo;
         }
-
+        
         [HttpGet]
-        [HttpGet]
+        [Authorize]
         public async Task<IActionResult> GetAll()
         {
             var categories = await _repo.GetAll<CategoryEntity>()
@@ -36,6 +37,7 @@ namespace App.Api.Data.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([FromBody] SaveCategoryDto newCategory)
         {
             if (!ModelState.IsValid)
@@ -54,6 +56,7 @@ namespace App.Api.Data.Controllers
         }
 
         [HttpPut("{categoryId:int}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int categoryId, [FromBody] SaveCategoryDto editCategory)
         {
             var category = await _repo.GetAll<CategoryEntity>()
@@ -71,6 +74,7 @@ namespace App.Api.Data.Controllers
         }
 
         [HttpDelete("{categoryId:int}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int categoryId)
         {
             var category = await _repo.GetAll<CategoryEntity>()

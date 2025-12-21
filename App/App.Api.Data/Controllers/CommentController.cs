@@ -1,6 +1,7 @@
 ﻿using App.Api.Data.Models.Dtos.Comment;
 using App.Data.Entities;
 using App.Data.Repositories.Abstractions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -19,6 +20,7 @@ namespace App.Api.Data.Controllers
         }
 
         [HttpGet]
+        [Authorize]
         public async Task<IActionResult> GetAll()
         {
             var comments = await _repo.GetAll<CommentEntity>()
@@ -37,6 +39,7 @@ namespace App.Api.Data.Controllers
         }
 
         [HttpPost("{commentId:int}/approve")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Approve(int commentId)
         {
             var comment = await _repo.GetAll<CommentEntity>()

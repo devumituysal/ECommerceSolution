@@ -1,9 +1,14 @@
 ﻿using App.Api.Data.Models.Dtos.Auth;
 using App.Data.Entities;
 using App.Data.Repositories.Abstractions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 namespace App.Api.Data.Controllers
 {
@@ -19,6 +24,7 @@ namespace App.Api.Data.Controllers
         }
 
         [HttpPost("login")]
+        [AllowAnonymous]
         public async Task<IActionResult> Login([FromBody] LoginRequestDto loginRequestDto)
         {
             var user = await _repo.GetAll<UserEntity>()
@@ -27,8 +33,32 @@ namespace App.Api.Data.Controllers
 
             if (user == null)
             {
-                return Unauthorized();
+                return NotFound("Email veya şifre yanlış");
             }
+
+            var claims = new[]
+            {
+                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+                new Claim(JwtRegisteredClaimNames.Email, user.Email),
+                new Claim(ClaimTypes.Name, user.FirstName + " " + user.LastName),
+                new Claim(ClaimTypes.Role, user.Role.Name)
+            };
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(HttpContext.RequestServices.GetRequiredService<IConfiguration>()["Jwt:Secret"]));
+
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var expires = DateTime.Now.AddMinutes(60);
+
+            var token = new JwtSecurityToken(
+                issuer: "App.Api.Data",       
+                audience: "App",              
+                claims: claims,
+                expires: expires,
+                signingCredentials: creds
+                );
+
+            var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
 
             var response = new LoginResponseDto
             {
@@ -37,12 +67,14 @@ namespace App.Api.Data.Controllers
                 FirstName = user.FirstName,
                 LastName = user.LastName,
                 Role = user.Role.Name,
+                Token = tokenString
             };
 
             return Ok(response);
         }
 
         [HttpPost("Register")]
+        [AllowAnonymous]
         public async Task<IActionResult> Register([FromBody] RegisterRequestDto registerRequestDto)
         {
             var existingUser = await _repo.GetAll<UserEntity>()
@@ -70,6 +102,7 @@ namespace App.Api.Data.Controllers
         }
 
         [HttpPost("forgot-password")]
+        [AllowAnonymous]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequestDto forgotPasswordRequestDto)
         {
             var user = await _repo.GetAll<UserEntity>()
@@ -93,6 +126,7 @@ namespace App.Api.Data.Controllers
         }
 
         [HttpPost("renew-password")]
+        [AllowAnonymous]
         public async Task<IActionResult> RenewPassword([FromBody] RenewPasswordRequestDto forgotPasswordRequestDto)
         {
             var user = await _repo.GetAll<UserEntity>()

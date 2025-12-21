@@ -10,6 +10,7 @@ namespace App.Api.Data.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = "Seller")]
     public class ProductController : ControllerBase
     {
         private readonly IDataRepository _repo;
@@ -76,6 +77,7 @@ namespace App.Api.Data.Controllers
         }
 
         [HttpPost("{productId:int}/comment")]
+        [Authorize(Roles = "Buyer,Seller")]
         public async Task<IActionResult> CreateComment(int productId,[FromBody] CreateProductCommentRequestDto createProductCommentRequest)
         {
             var productExists = await _repo

@@ -9,14 +9,9 @@ using Microsoft.EntityFrameworkCore;
 namespace App.Eticaret.Controllers
 {
     [Authorize(Roles = "seller, buyer")]
-    public class ProfileController : Controller
+    public class ProfileController : BaseController
     {
-        private readonly HttpClient _httpClient;
-
-        public ProfileController(HttpClient httpClient)
-        {
-            _httpClient = httpClient;
-        }
+        public ProfileController(HttpClient httpClient) : base(httpClient) { }
 
         [HttpGet("/profile")]
         public async Task<IActionResult> Details()
@@ -34,6 +29,8 @@ namespace App.Eticaret.Controllers
             {
                 return View(editMyProfileModel);
             }
+
+            SetJwtHeader();
 
             var response = await _httpClient.PutAsJsonAsync(
                 "https://localhost:7200/api/profile", editMyProfileModel);
@@ -76,6 +73,8 @@ namespace App.Eticaret.Controllers
                 return RedirectToAction("Login", "Auth");
             }
 
+            SetJwtHeader();
+
             var response = await _httpClient.GetAsync("https://localhost:7200/api/order/my-orders");
 
             if (!response.IsSuccessStatusCode)
@@ -100,6 +99,8 @@ namespace App.Eticaret.Controllers
             {
                 return RedirectToAction("Login", "Auth");
             }
+
+            SetJwtHeader();
 
             var response = await _httpClient.GetAsync("https://localhost:7200/api/product");
 

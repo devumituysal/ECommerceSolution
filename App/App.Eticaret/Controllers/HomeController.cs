@@ -8,14 +8,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace App.Eticaret.Controllers
 {
-    public class HomeController : Controller
+    public class HomeController : BaseController
     {
-        private readonly HttpClient _httpClient;
-
-        public HomeController(HttpClient httpClient)
-        {
-            _httpClient = httpClient;
-        }
+        public HomeController(HttpClient httpClient) : base(httpClient) { }
 
         
 
