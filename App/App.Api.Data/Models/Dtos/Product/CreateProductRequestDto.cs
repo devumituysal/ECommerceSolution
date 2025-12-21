@@ -7,6 +7,5 @@
         public string? Details { get; set; }
         public byte StockAmount { get; set; }
         public int CategoryId { get; set; }
-        public int SellerId { get; set; }
     }
 }

@@ -40,7 +40,7 @@ namespace App.Eticaret.Controllers
             }
 
             var response = await _httpClient.PostAsJsonAsync(
-                "https://localhost:7200/api/contact",
+                "/api/contact",
                 new
                 {
                     name = contactViewModel.Name,
@@ -63,7 +63,7 @@ namespace App.Eticaret.Controllers
         public async Task<IActionResult> Listing()
         {
             var products = await _httpClient.GetFromJsonAsync<List<ProductListItemViewModel>>(
-                "https://localhost:7200/api/products");
+                "/api/products");
 
             return View(products);
         }
@@ -74,7 +74,7 @@ namespace App.Eticaret.Controllers
         {
             var product = await _httpClient
                 .GetFromJsonAsync<ProductDetailViewModel>(
-                $"https://localhost:7200/api/products/{productId}");
+                $"/api/products/{productId}");
 
             if (product == null)
             {

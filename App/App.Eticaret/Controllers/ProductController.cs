@@ -33,7 +33,7 @@ namespace App.Eticaret.Controllers
 
             var categories = await _httpClient
                 .GetFromJsonAsync<List<CategoryListItemViewModel>>(
-                "https://localhost:7200/api/categories");
+                "/api/categories");
 
             ViewBag.CategoryList = categories;
 
@@ -60,7 +60,7 @@ namespace App.Eticaret.Controllers
             }
 
             var response = await _httpClient.PostAsJsonAsync(
-                "https://localhost:7200/api/product",
+                "/api/product",
                 new
                 {
                     name = newProductModel.Name,
@@ -68,7 +68,6 @@ namespace App.Eticaret.Controllers
                     details = newProductModel.Details,
                     stockAmount = newProductModel.StockAmount,
                     categoryId = newProductModel.CategoryId,
-                    sellerId = int.Parse(sellerIdClaim.Value)
                 });
 
             if (!response.IsSuccessStatusCode)
@@ -102,8 +101,9 @@ namespace App.Eticaret.Controllers
                         image.FileName
                     );
 
-                    var fileResponse = await _httpClient.PostAsync(
-                        "https://localhost:7132/api/file/upload",
+
+                    var fileResponse = await _fileApiClient.PostAsync(
+                        "/api/file/upload",
                         content
                     );
 
@@ -116,7 +116,7 @@ namespace App.Eticaret.Controllers
                     var uploadResult = await fileResponse.Content.ReadFromJsonAsync<FileUploadResponse>();
 
                     var imageSaveResponse = await _httpClient.PostAsJsonAsync(
-                        $"https://localhost:7200/api/product/{productId}/images",
+                        $"/api/product/{productId}/images",
                         new 
                         { 
                             fileName = uploadResult!.FileName 
@@ -145,7 +145,7 @@ namespace App.Eticaret.Controllers
             SetJwtHeader();
 
             var product = await _httpClient.GetFromJsonAsync<ProductSaveViewModel>(
-                $"https://localhost:7200/api/products/{productId}");
+                $"/api/products/{productId}");
 
             if (product == null)
             {
@@ -154,7 +154,7 @@ namespace App.Eticaret.Controllers
 
             var categories = await _httpClient
                 .GetFromJsonAsync<List<CategoryListItemViewModel>>(
-                "https://localhost:7200/api/categories");
+                "/api/categories");
 
             ViewBag.CategoryList = categories;
 
@@ -170,7 +170,7 @@ namespace App.Eticaret.Controllers
 
             var categories = await _httpClient
                 .GetFromJsonAsync<List<CategoryListItemViewModel>>(
-                "https://localhost:7200/api/categories");
+                "/api/categories");
 
             ViewBag.CategoryList = categories;
 
@@ -180,7 +180,7 @@ namespace App.Eticaret.Controllers
             }
 
             var response = await _httpClient.PutAsJsonAsync(
-                $"https://localhost:7200/api/product/{productId}",
+                $"/api/product/{productId}",
                 new
                 {
                     name = editProductModel.Name,
@@ -208,7 +208,7 @@ namespace App.Eticaret.Controllers
             SetJwtHeader();
 
             var response = await _httpClient.DeleteAsync(
-                $"https://localhost:7200/api/product/{productId}");
+                $"/api/product/{productId}");
 
             if (!response.IsSuccessStatusCode)
             {
@@ -233,7 +233,7 @@ namespace App.Eticaret.Controllers
 
             SetJwtHeader();
 
-            var response = await _httpClient.PostAsJsonAsync($"https://localhost:7200/api/product/{productId}/comment",
+            var response = await _httpClient.PostAsJsonAsync($"/api/product/{productId}/comment",
                 new
                 {
                     starCount = newProductCommentModel.StarCount,
@@ -266,7 +266,7 @@ namespace App.Eticaret.Controllers
                 var content = new MultipartFormDataContent();
                 content.Add(new StreamContent(image.OpenReadStream()), "file", image.FileName);
 
-                var fileResponse = await _httpClient.PostAsync("https://localhost:7132/api/file/upload", content);
+                var fileResponse = await _fileApiClient.PostAsync("/api/file/upload", content);
                 if (!fileResponse.IsSuccessStatusCode)
                 {
                     ModelState.AddModelError("", $"Görsel '{image.FileName}' yüklenemedi.");
@@ -282,7 +282,7 @@ namespace App.Eticaret.Controllers
 
                 // 2. Dosya adını product ile ilişkilendir data API'ye gönder
                 var associateResponse = await _httpClient.PostAsJsonAsync(
-                    $"https://localhost:7200/api/product/{productId}/images",
+                    $"/api/product/{productId}/images",
                     new { fileName = uploadResult.FileName }
                 );
 
@@ -309,7 +309,7 @@ namespace App.Eticaret.Controllers
             SetJwtHeader();
 
             var deleteResponse = await _httpClient.DeleteAsync(
-                $"https://localhost:7200/api/product/{productId}/images?fileName={fileName}"
+                $"/api/product/{productId}/images?fileName={fileName}"
             );
 
             if (!deleteResponse.IsSuccessStatusCode)

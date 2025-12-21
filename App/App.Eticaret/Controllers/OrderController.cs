@@ -32,14 +32,11 @@ namespace App.Eticaret.Controllers
                 return RedirectToAction(nameof(AuthController.Login), "Auth");
             }
 
-            var userId = int.Parse(userIdClaim.Value);
-            
 
             var response = await _httpClient.PostAsJsonAsync(
-                "https://localhost:7200/api/orders",
+                "/api/order",
                 new
                 {
-                    userId = userId,
                     address = model.Address
                 });
 
@@ -68,8 +65,7 @@ namespace App.Eticaret.Controllers
 
             var userId = int.Parse(userIdClaim.Value);
 
-            var response = await _httpClient.GetAsync(
-                $"https://localhost:7200/api/orders/{orderCode}?userId={userId}");
+            var response = await _httpClient.GetAsync($"/api/order/{orderCode}");
 
             if (!response.IsSuccessStatusCode)
             {

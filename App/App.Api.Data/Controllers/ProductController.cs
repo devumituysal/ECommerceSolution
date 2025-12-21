@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace App.Api.Data.Controllers
 {
@@ -23,7 +24,8 @@ namespace App.Api.Data.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateProductRequestDto createProductRequestDto)
         {
-            var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.Sid)!.Value);
+            var userId = int.Parse(User.FindFirst(ClaimTypes.Sid)!.Value);
+
 
             var product = new ProductEntity
             {
@@ -91,7 +93,7 @@ namespace App.Api.Data.Controllers
                 return NotFound();
             }
 
-            var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.Sid)!.Value);
+            var userId = int.Parse(User.FindFirst(ClaimTypes.Sid)!.Value);
 
             var comment = new ProductCommentEntity
             {
@@ -109,7 +111,7 @@ namespace App.Api.Data.Controllers
         [HttpGet]
         public async Task<IActionResult> GetMyProducts()
         {
-            var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.Sid)!.Value);
+            var userId = int.Parse(User.FindFirst(ClaimTypes.Sid)!.Value);
 
             var products = await _repo.GetAll<ProductEntity>()
                 .Include(p => p.Images)

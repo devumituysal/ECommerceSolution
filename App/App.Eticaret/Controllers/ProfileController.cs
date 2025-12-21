@@ -26,7 +26,7 @@ namespace App.Eticaret.Controllers
         {
             SetJwtHeader();
 
-            var response = await _httpClient.GetAsync("https://localhost:7200/api/profile");
+            var response = await _httpClient.GetAsync("/api/profile");
 
             if (!response.IsSuccessStatusCode)
             {
@@ -35,9 +35,9 @@ namespace App.Eticaret.Controllers
 
             var profile = await response.Content.ReadFromJsonAsync<ProfileDetailsViewModel>();
 
-            if (profile != null && !string.IsNullOrEmpty(profile.ProfileImagePath))
+            if (!string.IsNullOrEmpty(profile.ProfileImagePath))
             {
-                profile.ProfileImageUrl = $"/uploads/{profile.ProfileImage}";
+                profile.ProfileImageUrl = $"/uploads/{profile.ProfileImagePath}";
             }
 
             return View(profile);
@@ -65,7 +65,7 @@ namespace App.Eticaret.Controllers
                     editMyProfileModel.ProfileImage.FileName
                     );
 
-                var fileResponse = await _httpClient.PostAsync("https://localhost:7132/api/file/upload", content);
+                var fileResponse = await _fileApiClient.PostAsync("/api/file/upload", content);
 
                 if (!fileResponse.IsSuccessStatusCode)
                 {
@@ -80,7 +80,7 @@ namespace App.Eticaret.Controllers
 
 
             var response = await _httpClient.PutAsJsonAsync(
-                "https://localhost:7200/api/profile", 
+                "/api/profile", 
                 new
                 {
                     firstName = editMyProfileModel.FirstName,
@@ -129,7 +129,7 @@ namespace App.Eticaret.Controllers
 
             SetJwtHeader();
 
-            var response = await _httpClient.GetAsync("https://localhost:7200/api/order/my-orders");
+            var response = await _httpClient.GetAsync("/api/order/my-orders");
 
             if (!response.IsSuccessStatusCode)
             {
@@ -156,7 +156,7 @@ namespace App.Eticaret.Controllers
 
             SetJwtHeader();
 
-            var response = await _httpClient.GetAsync("https://localhost:7200/api/product");
+            var response = await _httpClient.GetAsync("/api/product");
 
             if (!response.IsSuccessStatusCode)
             {

@@ -17,7 +17,7 @@ namespace App.Admin.Controllers
         {
             SetJwtHeader();
 
-            var response = await _httpClient.GetAsync("https://localhost:5001/api/comment");
+            var response = await _httpClient.GetAsync("/api/comment");
 
             if (!response.IsSuccessStatusCode)
             {
@@ -38,7 +38,7 @@ namespace App.Admin.Controllers
         {
             SetJwtHeader();
 
-            var response = await _httpClient.PostAsync($"https://localhost:5001/api/comment/{commentId}/approve", null);
+            var response = await _httpClient.PostAsync($"/api/comment/{commentId}/approve", null);
 
             if (!response.IsSuccessStatusCode)
             {

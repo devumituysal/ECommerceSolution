@@ -13,6 +13,9 @@ namespace App.Admin.Controllers
         protected void SetJwtHeader()
         {
             var token = Request.Cookies["access_token"];
+
+            _httpClient.DefaultRequestHeaders.Remove("Authorization");
+
             if (!string.IsNullOrEmpty(token))
             {
                 _httpClient.DefaultRequestHeaders.Authorization =

@@ -24,9 +24,11 @@ namespace App.Api.Data.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateOrderRequestDto createOrderRequestDto)
         {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.Sid)!.Value);
+
             var cartItems = await _repo.GetAll<CartItemEntity>()
                 .Include(ci=>ci.Product)
-                .Where(ci=>ci.UserId == createOrderRequestDto.UserId)
+                .Where(ci => ci.UserId == userId)
                 .ToListAsync();
 
             if (cartItems.Count == 0)
@@ -36,7 +38,7 @@ namespace App.Api.Data.Controllers
 
             var order = new OrderEntity
             {
-                UserId = createOrderRequestDto.UserId,
+                UserId = userId,
                 Address = createOrderRequestDto.Address,
                 OrderCode = await CreateOrderCode() // direk guid yapmaktansa %100 unique olması için aşağıdaki metodla yapıldı
             };
@@ -72,8 +74,10 @@ namespace App.Api.Data.Controllers
         }
 
         [HttpGet("{orderCode}")]
-        public async Task<IActionResult> GetDetails(string orderCode, [FromQuery] int userId)
+        public async Task<IActionResult> GetDetails(string orderCode)
         {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.Sid)!.Value);
+
             var order = await _repo.GetAll<OrderEntity>()
                 .Where(o => o.OrderCode == orderCode && o.UserId == userId)
                 .Select(o => new OrderDetailsResponseDto

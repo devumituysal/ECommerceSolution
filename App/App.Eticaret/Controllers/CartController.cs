@@ -1,10 +1,6 @@
-﻿using App.Data.Contexts;
-using App.Data.Entities;
-using App.Data.Repositories.Abstractions;
-using App.Eticaret.Models.ViewModels;
+﻿using App.Eticaret.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace App.Eticaret.Controllers
 {
@@ -20,8 +16,8 @@ namespace App.Eticaret.Controllers
             SetJwtHeader();
 
             var response = await _httpClient.PostAsync(
-                $"https://localhost:7200/api/cart/add/{productId}", null);
-
+                $"/api/cart/add/{productId}", null);
+           
             if (!response.IsSuccessStatusCode)
             {
                 TempData["ErrorMessage"] = "Product could not be added to cart.";
@@ -36,7 +32,7 @@ namespace App.Eticaret.Controllers
         {
             SetJwtHeader();
 
-            var response = await _httpClient.GetAsync("https://localhost:7200/api/cart");
+            var response = await _httpClient.GetAsync("/api/cart");
 
             if (!response.IsSuccessStatusCode)
             {
@@ -54,7 +50,7 @@ namespace App.Eticaret.Controllers
             SetJwtHeader();
 
             var response = await _httpClient.PutAsJsonAsync(
-                $"https://localhost:7200/api/cart/{cartItemId}",
+                $"/api/cart/{cartItemId}",
                 new { Quantity = quantity });
 
             if (!response.IsSuccessStatusCode)
@@ -71,7 +67,7 @@ namespace App.Eticaret.Controllers
         {
             SetJwtHeader();
 
-            var response = await _httpClient.PostAsync("https://localhost:7200/api/cart/checkout", null);
+            var response = await _httpClient.PostAsync("/api/cart/checkout", null);
 
             if (!response.IsSuccessStatusCode)
             {

@@ -18,7 +18,7 @@ namespace App.Admin.Controllers
 
             SetJwtHeader();
 
-            var response = await _httpClient.DeleteAsync($"https://localhost:5001/api/products/{id}");
+            var response = await _httpClient.DeleteAsync($"/api/products/{id}");
 
             if (response.StatusCode == HttpStatusCode.NotFound)
             {
