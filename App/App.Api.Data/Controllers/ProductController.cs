@@ -23,6 +23,8 @@ namespace App.Api.Data.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateProductRequestDto createProductRequestDto)
         {
+            var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.Sid)!.Value);
+
             var product = new ProductEntity
             {
                 Name = createProductRequestDto.Name,
@@ -30,7 +32,7 @@ namespace App.Api.Data.Controllers
                 Details = createProductRequestDto.Details,
                 StockAmount = createProductRequestDto.StockAmount,
                 CategoryId = createProductRequestDto.CategoryId,
-                SellerId = createProductRequestDto.SellerId  // claimden alınmalı
+                SellerId = userId
             };
 
             await _repo.Add(product);
@@ -89,10 +91,12 @@ namespace App.Api.Data.Controllers
                 return NotFound();
             }
 
+            var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.Sid)!.Value);
+
             var comment = new ProductCommentEntity
             {
                 ProductId = productId,
-                UserId = 1, // şimdilik // jwt tamamlandığında düzeltilecek...
+                UserId = userId,
                 StarCount = createProductCommentRequest.StarCount,
                 Text = createProductCommentRequest.Text
             };
@@ -132,27 +136,6 @@ namespace App.Api.Data.Controllers
             return Ok(products);
         }
 
-        //[HttpGet("{id:int}")]
-        //public async Task<IActionResult> GetById(int id)
-        //{
-        //    var product = await _repo.GetAll<ProductEntity>()
-        //        .Where(p => p.Id == id)
-        //        .Select(p => new ProductDetailDto
-        //        {
-        //            Id = p.Id,
-        //            Name = p.Name,
-        //            Price = p.Price,
-        //            Details = p.Details,
-        //            StockAmount = p.StockAmount,
-        //            CategoryId = p.CategoryId
-        //        })
-        //        .FirstOrDefaultAsync();
-
-        //    if (product == null)
-        //        return NotFound();
-
-        //    return Ok(product);
-        //}
 
         [HttpPost("{productId:int}/images")]
         [Authorize(Roles = "seller")]
@@ -173,18 +156,29 @@ namespace App.Api.Data.Controllers
                 
             foreach (var image in images)
             {
-                var fileName = $"{Guid.NewGuid()}{Path.GetExtension(image.FileName)}";
-                var path = Path.Combine("wwwroot/uploads", fileName);
-
-                await using var stream = new FileStream(path, FileMode.Create);
-                await image.CopyToAsync(stream);
+                
 
                 await _repo.Add(new ProductImageEntity
                 {
                     ProductId = productId,
-                    Url = $"/uploads/{fileName}"
+                    Url = $"/uploads/{image}"
                 });
             }
+
+            return NoContent();
+        }
+
+        [HttpDelete("{productId:int}/images")]
+        [Authorize(Roles = "seller")]
+        public async Task<IActionResult> DeleteImage(int productId, [FromQuery] string fileName)
+        {
+            var productImage = await _repo.GetAll<ProductImageEntity>()
+                .FirstOrDefaultAsync(pi => pi.ProductId == productId && pi.Url.EndsWith(fileName));
+
+            if (productImage == null)
+                return NotFound();
+
+            await _repo.Delete(productImage);
 
             return NoContent();
         }

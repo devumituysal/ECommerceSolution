@@ -1,12 +1,14 @@
 ﻿using App.Data.Contexts;
 using App.Data.Entities;
 using App.Data.Repositories.Abstractions;
+using App.Eticaret.Models.ApiResponses;
 using App.Eticaret.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using static App.Eticaret.Controllers.ProfileController;
 
 namespace App.Eticaret.Controllers
 {
@@ -36,7 +38,7 @@ namespace App.Eticaret.Controllers
         public async Task<IActionResult> Create([FromForm] ProductSaveViewModel newProductModel)
         {
             if (!ModelState.IsValid)
-            {
+            {   
                 return View(newProductModel);
             }
 
@@ -79,23 +81,53 @@ namespace App.Eticaret.Controllers
 
             if (newProductModel.Images != null && newProductModel.Images.Any())
             {
-                var content = new MultipartFormDataContent();
 
                 foreach (var image in newProductModel.Images)
                 {
+                    SetJwtHeader();
+
+                    var content = new MultipartFormDataContent();
+
                     content.Add(
                         new StreamContent(image.OpenReadStream()),
-                        "images",
-                        image.FileName);
-                }
+                        "file",
+                        image.FileName
+                    );
 
-                await _httpClient.PostAsync(
-                    $"https://localhost:7200/api/product/{productId}/images",content);
+                    var fileResponse = await _httpClient.PostAsync(
+                        "https://localhost:7132/api/file/upload",
+                        content
+                    );
+
+                    if (!fileResponse.IsSuccessStatusCode)
+                    {
+                        ModelState.AddModelError("", "Ürün görselleri yüklenemedi.");
+                        return View(newProductModel);
+                    }
+
+                    var uploadResult = await fileResponse.Content.ReadFromJsonAsync<FileUploadResponse>();
+
+                    var imageSaveResponse = await _httpClient.PostAsJsonAsync(
+                        $"https://localhost:7200/api/product/{productId}/images",
+                        new 
+                        { 
+                            fileName = uploadResult!.FileName 
+                        }
+                    );
+
+                    if (!imageSaveResponse.IsSuccessStatusCode)
+                    {
+                        ModelState.AddModelError("", "Ürün görseli kaydedilemedi.");
+                        return View(newProductModel);
+                    }
+
+
+                }
             }
 
-                ViewBag.SuccessMessage = "Ürün başarıyla oluşturuldu.";
+            ViewBag.SuccessMessage = "Ürün başarıyla oluşturuldu.";
 
-            return View();
+            return View(new ProductSaveViewModel());
         }
 
         [HttpGet("{productId:int}/edit")]
@@ -207,5 +239,80 @@ namespace App.Eticaret.Controllers
 
             return Ok();
         }
+
+        [HttpPost("{productId:int}/add-images")]
+        [Authorize(Roles = "seller")]
+        public async Task<IActionResult> AddImages([FromRoute] int productId, [FromForm] List<IFormFile> images)
+        {
+            if (images == null || !images.Any())
+            {
+                ModelState.AddModelError("", "Lütfen en az bir görsel seçin.");
+                return RedirectToAction("Edit", new { productId });
+            }
+
+            SetJwtHeader();
+
+            foreach (var image in images)
+            {
+                // 1. Dosyayı file API'ye yükle
+                var content = new MultipartFormDataContent();
+                content.Add(new StreamContent(image.OpenReadStream()), "file", image.FileName);
+
+                var fileResponse = await _httpClient.PostAsync("https://localhost:7132/api/file/upload", content);
+                if (!fileResponse.IsSuccessStatusCode)
+                {
+                    ModelState.AddModelError("", $"Görsel '{image.FileName}' yüklenemedi.");
+                    continue;
+                }
+
+                var uploadResult = await fileResponse.Content.ReadFromJsonAsync<FileUploadResponse>();
+                if (uploadResult == null)
+                {
+                    ModelState.AddModelError("", $"Görsel '{image.FileName}' yüklenemedi.");
+                    continue;
+                }
+
+                // 2. Dosya adını product ile ilişkilendir data API'ye gönder
+                var associateResponse = await _httpClient.PostAsJsonAsync(
+                    $"https://localhost:7200/api/product/{productId}/images",
+                    new { fileName = uploadResult.FileName }
+                );
+
+                if (!associateResponse.IsSuccessStatusCode)
+                {
+                    ModelState.AddModelError("", $"Görsel '{image.FileName}' ürünle ilişkilendirilemedi.");
+                }
+            }
+
+            TempData["SuccessMessage"] = "Görseller başarıyla eklendi.";
+            return RedirectToAction("Edit", new { productId });
+        }
+
+        [HttpPost("{productId:int}/delete-image")]
+        [Authorize(Roles = "seller")]
+        public async Task<IActionResult> DeleteImage([FromRoute] int productId, [FromForm] string fileName)
+        {
+            if (string.IsNullOrWhiteSpace(fileName))
+            {
+                TempData["ErrorMessage"] = "Silinecek görsel seçilmedi.";
+                return RedirectToAction("Edit", new { productId });
+            }
+
+            SetJwtHeader();
+
+            var deleteResponse = await _httpClient.DeleteAsync(
+                $"https://localhost:7200/api/product/{productId}/images?fileName={fileName}"
+            );
+
+            if (!deleteResponse.IsSuccessStatusCode)
+            {
+                TempData["ErrorMessage"] = "Görsel silinemedi.";
+                return RedirectToAction("Edit", new { productId });
+            }
+
+            TempData["SuccessMessage"] = "Görsel başarıyla silindi.";
+            return RedirectToAction("Edit", new { productId });
+        }
+
     }
 }

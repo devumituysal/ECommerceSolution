@@ -1,10 +1,12 @@
 ﻿using App.Data.Contexts;
 using App.Data.Entities;
 using App.Data.Repositories.Abstractions;
+using App.Eticaret.Models.ApiResponses;
 using App.Eticaret.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 namespace App.Eticaret.Controllers
 {
@@ -16,8 +18,21 @@ namespace App.Eticaret.Controllers
         [HttpGet("/profile")]
         public async Task<IActionResult> Details()
         {
-            var profile = await _httpClient.GetFromJsonAsync<ProfileDetailsViewModel>
-                ("https://localhost:7200/api/profile");
+            SetJwtHeader();
+
+            var response = await _httpClient.GetAsync("https://localhost:7200/api/profile");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            var profile = await response.Content.ReadFromJsonAsync<ProfileDetailsViewModel>();
+
+            if (profile != null && !string.IsNullOrEmpty(profile.ProfileImagePath))
+            {
+                profile.ProfileImageUrl = $"/uploads/{profile.ProfileImage}";
+            }
 
             return View(profile);
         }
@@ -32,8 +47,41 @@ namespace App.Eticaret.Controllers
 
             SetJwtHeader();
 
+            string? uploadedFileName = null;
+
+            if (editMyProfileModel.ProfileImage != null)
+            {
+                var content = new MultipartFormDataContent();
+
+                content.Add(
+                    new StreamContent(editMyProfileModel.ProfileImage.OpenReadStream()),
+                    "file",
+                    editMyProfileModel.ProfileImage.FileName
+                    );
+
+                var fileResponse = await _httpClient.PostAsync("https://localhost:7132/api/file/upload", content);
+
+                if (!fileResponse.IsSuccessStatusCode)
+                {
+                    ModelState.AddModelError("", "Profil fotoğrafı yüklenemedi.");
+                    return View(editMyProfileModel);
+                }
+
+                var fileResult = await fileResponse.Content.ReadFromJsonAsync<FileUploadResponse>();
+
+                uploadedFileName = fileResult!.FileName;
+            }
+
+
             var response = await _httpClient.PutAsJsonAsync(
-                "https://localhost:7200/api/profile", editMyProfileModel);
+                "https://localhost:7200/api/profile", 
+                new
+                {
+                    firstName = editMyProfileModel.FirstName,
+                    lastName = editMyProfileModel.LastName,
+                    email = editMyProfileModel.Email,
+                    profileImage = uploadedFileName
+                });
 
             if (!response.IsSuccessStatusCode)
             {
@@ -85,7 +133,7 @@ namespace App.Eticaret.Controllers
 
             var orders = await response.Content.ReadFromJsonAsync<List<OrderViewModel>>();
 
-            orders ??= new List<OrderViewModel>();  // null kontrolü
+            orders ??= new List<OrderViewModel>();  
 
             return View(orders ?? new List<OrderViewModel>());
 
@@ -112,10 +160,9 @@ namespace App.Eticaret.Controllers
 
             var products = await response.Content.ReadFromJsonAsync<List<MyProductsViewModel>>();
 
-            products ??= new List<MyProductsViewModel>(); // null kontrolü
+            products ??= new List<MyProductsViewModel>(); 
 
             return View(products);
         }
-
     }
 }

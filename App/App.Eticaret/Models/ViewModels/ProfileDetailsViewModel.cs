@@ -12,5 +12,14 @@ namespace App.Eticaret.Models.ViewModels
 
         [Required, MaxLength(256), EmailAddress]
         public string Email { get; set; } = null!;
+
+        // 🔹 API’den gelen mevcut dosya adı
+        public string? ProfileImagePath { get; set; }
+
+        // 🔹 Formdan upload edilen dosya
+        public IFormFile? ProfileImage { get; set; }
+
+        public string? ProfileImageUrl { get; set; }
+
     }
 }
