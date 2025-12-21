@@ -1,4 +1,5 @@
-﻿@model List<MyProductsViewModel>
+﻿
+@model List<MyProductsViewModel>
 @{
     ViewData["Title"] = "My Products";
 }
@@ -6,9 +7,11 @@
 <div class="container">
     <h2>@ViewData["Title"]</h2>
     <partial name="Partials/ViewMessages" />
-    <table class="table">
+
+    <table class="table table-striped">
         <thead>
             <tr>
+                <th>Image</th>
                 <th>Product Name</th>
                 <th>Price</th>
                 <th>Has Discount</th>
@@ -20,13 +23,38 @@
             @foreach (var product in Model)
             {
                 <tr>
+                    <td>
+                        @if (!string.IsNullOrEmpty(product.ImageUrl))
+                        {
+                            <img src="@product.ImageUrl" alt="Product Image" style="width:60px;height:60px;object-fit:cover;border-radius:4px;" />
+                        }
+                        else
+                        {
+                            <span class="text-muted">No Image</span>
+                        }
+                    </td>
                     <td>@product.Name</td>
-                    <td>@product.Price</td>
-                    <td>@product.HasDiscount</td>
+                    <td>@product.Price.ToString("C")</td>
+                    <td>@(product.HasDiscount ? "Yes" : "No")</td>
                     <td>@product.Stock</td>
                     <td>
-                        <a asp-action="Edit" asp-controller="Product" asp-route-productId="@product.Id" class="btn btn-primary">Edit</a>
-                        <a asp-action="Delete" asp-controller="Product" asp-route-productId="@product.Id" class="btn btn-danger">Delete</a>
+                        <a asp-action="Edit" asp-controller="Product" asp-route-productId="@product.Id" class="btn btn-primary btn-sm">Edit</a>
+                        <a asp-action="Delete" asp-controller="Product" asp-route-productId="@product.Id" class="btn btn-danger btn-sm">Delete</a>
+
+                        <!-- Görsel ekle -->
+                        <form asp-action="AddImages" asp-controller="Product" asp-route-productId="@product.Id" method="post" enctype="multipart/form-data" style="display:inline-block;">
+                            <input type="file" name="images" multiple style="display:inline-block;" />
+                            <button type="submit" class="btn btn-success btn-sm">Add Image</button>
+                        </form>
+
+                        <!-- Mevcut görsel varsa silme -->
+                        @if (!string.IsNullOrEmpty(product.ImageUrl))
+                        {
+                            <form asp-action="DeleteImage" asp-controller="Product" asp-route-productId="@product.Id" method="post" style="display:inline-block;">
+                                <input type="hidden" name="fileName" value="@System.IO.Path.GetFileName(product.ImageUrl)" />
+                                <button type="submit" class="btn btn-warning btn-sm">Delete Image</button>
+                            </form>
+                        }
                     </td>
                 </tr>
             }

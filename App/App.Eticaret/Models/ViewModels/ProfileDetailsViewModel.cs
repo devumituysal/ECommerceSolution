@@ -18,5 +18,8 @@ namespace App.Eticaret.Models.ViewModels
 
         // 🔹 Formdan upload edilen dosya
         public IFormFile? ProfileImage { get; set; }
+
+        public string? ProfileImageUrl { get; set; }
+
     }
 }

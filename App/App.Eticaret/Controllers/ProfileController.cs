@@ -1,10 +1,12 @@
 ﻿using App.Data.Contexts;
 using App.Data.Entities;
 using App.Data.Repositories.Abstractions;
+using App.Eticaret.Models.ApiResponses;
 using App.Eticaret.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 namespace App.Eticaret.Controllers
 {
@@ -26,6 +28,12 @@ namespace App.Eticaret.Controllers
             }
 
             var profile = await response.Content.ReadFromJsonAsync<ProfileDetailsViewModel>();
+
+            if (profile != null && !string.IsNullOrEmpty(profile.ProfileImagePath))
+            {
+                profile.ProfileImageUrl = $"/uploads/{profile.ProfileImage}";
+            }
+
             return View(profile);
         }
 
@@ -125,7 +133,7 @@ namespace App.Eticaret.Controllers
 
             var orders = await response.Content.ReadFromJsonAsync<List<OrderViewModel>>();
 
-            orders ??= new List<OrderViewModel>();  // null kontrolü
+            orders ??= new List<OrderViewModel>();  
 
             return View(orders ?? new List<OrderViewModel>());
 
@@ -152,13 +160,9 @@ namespace App.Eticaret.Controllers
 
             var products = await response.Content.ReadFromJsonAsync<List<MyProductsViewModel>>();
 
-            products ??= new List<MyProductsViewModel>(); // null kontrolü
+            products ??= new List<MyProductsViewModel>(); 
 
             return View(products);
-        }
-        public class FileUploadResponse
-        {
-            public string FileName { get; set; } = null!;
         }
     }
 }
