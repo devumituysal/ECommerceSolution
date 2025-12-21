@@ -16,9 +16,16 @@ namespace App.Eticaret.Controllers
         [HttpGet("/profile")]
         public async Task<IActionResult> Details()
         {
-            var profile = await _httpClient.GetFromJsonAsync<ProfileDetailsViewModel>
-                ("https://localhost:7200/api/profile");
+            SetJwtHeader();
 
+            var response = await _httpClient.GetAsync("https://localhost:7200/api/profile");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            var profile = await response.Content.ReadFromJsonAsync<ProfileDetailsViewModel>();
             return View(profile);
         }
 
@@ -32,8 +39,41 @@ namespace App.Eticaret.Controllers
 
             SetJwtHeader();
 
+            string? uploadedFileName = null;
+
+            if (editMyProfileModel.ProfileImage != null)
+            {
+                var content = new MultipartFormDataContent();
+
+                content.Add(
+                    new StreamContent(editMyProfileModel.ProfileImage.OpenReadStream()),
+                    "file",
+                    editMyProfileModel.ProfileImage.FileName
+                    );
+
+                var fileResponse = await _httpClient.PostAsync("https://localhost:7132/api/file/upload", content);
+
+                if (!fileResponse.IsSuccessStatusCode)
+                {
+                    ModelState.AddModelError("", "Profil fotoğrafı yüklenemedi.");
+                    return View(editMyProfileModel);
+                }
+
+                var fileResult = await fileResponse.Content.ReadFromJsonAsync<FileUploadResponse>();
+
+                uploadedFileName = fileResult!.FileName;
+            }
+
+
             var response = await _httpClient.PutAsJsonAsync(
-                "https://localhost:7200/api/profile", editMyProfileModel);
+                "https://localhost:7200/api/profile", 
+                new
+                {
+                    firstName = editMyProfileModel.FirstName,
+                    lastName = editMyProfileModel.LastName,
+                    email = editMyProfileModel.Email,
+                    profileImage = uploadedFileName
+                });
 
             if (!response.IsSuccessStatusCode)
             {
@@ -116,6 +156,9 @@ namespace App.Eticaret.Controllers
 
             return View(products);
         }
-
+        public class FileUploadResponse
+        {
+            public string FileName { get; set; } = null!;
+        }
     }
 }

@@ -9,7 +9,9 @@
 
     <partial name="Partials/ViewMessages" />
 
-    <form asp-action="Edit" asp-controller="Profile" method="post">
+    @* 🔹 FORM: enctype EKLENDİ *@
+    <form asp-action="Edit" asp-controller="Profile" method="post" enctype="multipart/form-data">
+
         <div class="form-group">
             <label asp-for="FirstName">First Name</label>
             <input asp-for="FirstName" class="form-control">
@@ -24,13 +26,30 @@
 
         <div class="form-group">
             <label asp-for="Email">Email</label>
-            <input asp-for="Email" class="form-control"> 
+            <input asp-for="Email" class="form-control">
             <span asp-validation-for="Email" class="text-danger"></span>
         </div>
 
-        <button type="submit" class="btn btn-primary">Save</button>
+        @* 🔹 MEVCUT PROFİL FOTOĞRAFI (varsa) *@
+        @if (!string.IsNullOrEmpty(Model.ProfileImagePath))
+        {
+            <div class="form-group mt-3">
+                <label>Current Profile Image</label><br />
+                <img src="/uploads/@Model.ProfileImage"
+                     style="width:120px;height:120px;object-fit:cover;border-radius:50%" />
+            </div>
+        }
+
+        @* 🔹 PROFİL FOTOĞRAFI UPLOAD *@
+        <div class="form-group mt-3">
+            <label asp-for="ProfileImage">Profile Image</label>
+            <input asp-for="ProfileImage" type="file" class="form-control" />
+        </div>
+
+        <button type="submit" class="btn btn-primary mt-3">Save</button>
     </form>
 </div>
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 }

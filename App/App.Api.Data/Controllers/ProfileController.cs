@@ -21,6 +21,7 @@ namespace App.Api.Data.Controllers
             _repo = repo;
         }
 
+        [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetProfile()
         {
@@ -41,12 +42,13 @@ namespace App.Api.Data.Controllers
                 FirstName = user.FirstName,
                 LastName = user.LastName,
                 Email = user.Email,
-                Role = user.Role.Name
+                Role = user.Role.Name,
+                ProfileImage = user.ProfileImage
             });
         }
 
         [Authorize]
-        [HttpPut("profile")]
+        [HttpPut]
         public async Task<IActionResult> UpdateProfile([FromBody] ProfileDetailDto updateProfileDetail)
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.Sid)!.Value);
@@ -71,6 +73,11 @@ namespace App.Api.Data.Controllers
             user.FirstName = updateProfileDetail.FirstName;
             user.LastName = updateProfileDetail.LastName;
             user.Email = updateProfileDetail.Email;
+
+            if (!string.IsNullOrWhiteSpace(updateProfileDetail.ProfileImage))
+            {
+                user.ProfileImage = updateProfileDetail.ProfileImage;
+            }
 
             await _repo.Update(user);
 
