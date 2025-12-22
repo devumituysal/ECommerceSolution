@@ -108,6 +108,34 @@ namespace App.Api.Data.Controllers
             return NoContent();
         }
 
+        [HttpGet("{productId:int}")]
+        public async Task<IActionResult> GetById(int productId)
+        {
+            var product = await _repo.GetAll<ProductEntity>()
+                .Include(p => p.Images)
+                .Include(p => p.Category)
+                .FirstOrDefaultAsync(p => p.Id == productId);
+
+            if (product == null)
+                return NotFound();
+
+            var dto = new ProductDetailDto
+            {
+                Id = product.Id,
+                Name = product.Name,
+                Details = product.Details,
+                Price = product.Price,
+                StockAmount = product.StockAmount,
+                CategoryId = product.CategoryId,
+                CategoryName = product.Category.Name,
+                Images = product.Images
+                    .Select(i => i.Url)
+                    .ToList()
+            };
+
+            return Ok(dto);
+        }
+
         [HttpGet]
         public async Task<IActionResult> GetMyProducts()
         {

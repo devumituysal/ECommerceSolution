@@ -1,5 +1,6 @@
 ﻿using App.Models.DTO.Order;
 using App.Services.Abstract;
+using App.Services.Base;
 using Ardalis.Result;
 using System;
 using System.Collections.Generic;
@@ -11,32 +12,16 @@ using System.Threading.Tasks;
 
 namespace App.Services.Concrete
 {
-    public class OrderService : IOrderService
+    public class OrderService : BaseService , IOrderService
     {
-        private readonly HttpClient _client;
-
-        public OrderService(IHttpClientFactory httpClientFactory)
-        {
-            _client = httpClientFactory.CreateClient("DataApi");
+        public OrderService(IHttpClientFactory factory) : base(factory) 
+        { 
+        
         }
 
 
-        private async Task<HttpResponseMessage> SendAsync(HttpMethod method,string route,string jwt,object? body = null)
-        {
-            var request = new HttpRequestMessage(method, route);
-
-            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwt);
-
-            if (body is not null)
-            {
-                request.Content = JsonContent.Create(body);
-            }
-
-            return await _client.SendAsync(request);
-        }
-
-        // POST /api/order
-        public async Task<Result<string>> CreateAsync(
+    // POST /api/order
+    public async Task<Result<string>> CreateAsync(
             string jwt,
             CreateOrderRequestDto createOrderRequestDto)
         {

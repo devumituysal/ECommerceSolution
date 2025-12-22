@@ -10,15 +10,8 @@ namespace App.Services.Abstract
 {
     public interface IOrderService
     {
-        Task<Result<string>> CreateAsync(
-           string jwt,
-           CreateOrderRequestDto request);
-
-        Task<Result<List<OrderDto>>> GetMyOrdersAsync(
-            string jwt);
-
-        Task<Result<OrderDetailsResponseDto>> GetOrderDetailsAsync(
-            string jwt,
-            string orderCode);
+        Task<Result<string>> CreateAsync(string jwt,CreateOrderRequestDto request);
+        Task<Result<List<OrderDto>>> GetMyOrdersAsync(string jwt);
+        Task<Result<OrderDetailsResponseDto>> GetOrderDetailsAsync(string jwt,string orderCode);
     }
 }

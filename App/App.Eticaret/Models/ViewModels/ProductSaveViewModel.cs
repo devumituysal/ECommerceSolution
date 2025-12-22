@@ -21,6 +21,7 @@ namespace App.Eticaret.Models.ViewModels
         [Required, Range(1, 255)]
         public byte StockAmount { get; set; }
 
-        public IList<IFormFile> Images { get; set; } = [];
+        public IList<IFormFile> Images { get; set; } = new List<IFormFile>();
+        public List<string> ExistingImages { get; set; } = new();
     }
 }
