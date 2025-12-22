@@ -13,6 +13,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "App.Api.Data", "App.Api.Dat
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "App.Api.File", "App.Api.File\App.Api.File.csproj", "{33936CB1-45E1-4461-A786-078982861752}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "App.Models.DTO", "App.Models.DTO\App.Models.DTO.csproj", "{C968B9AC-5621-4EE8-895E-CE93F8E6B58E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "App.Services", "App.Services\App.Services.csproj", "{BCF17745-6E0A-4732-B084-611FEB5441A4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +43,14 @@ Global
 		{33936CB1-45E1-4461-A786-078982861752}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{33936CB1-45E1-4461-A786-078982861752}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{33936CB1-45E1-4461-A786-078982861752}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C968B9AC-5621-4EE8-895E-CE93F8E6B58E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C968B9AC-5621-4EE8-895E-CE93F8E6B58E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C968B9AC-5621-4EE8-895E-CE93F8E6B58E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C968B9AC-5621-4EE8-895E-CE93F8E6B58E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BCF17745-6E0A-4732-B084-611FEB5441A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BCF17745-6E0A-4732-B084-611FEB5441A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BCF17745-6E0A-4732-B084-611FEB5441A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BCF17745-6E0A-4732-B084-611FEB5441A4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

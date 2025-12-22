@@ -2,6 +2,8 @@ using App.Data.Contexts;
 using App.Data.Repositories.Extensions;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+using App.Services.Abstract;
+using App.Services.Concrete;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +24,8 @@ builder.Services.AddHttpClient("FileApi", client =>
     client.BaseAddress = new Uri(apiSettings["FileApiBaseUrl"]!);
 });
 
+builder.Services.AddScoped<IOrderService, OrderService>();
+
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options => {
         options.Cookie.Name = "auth-cookie";
@@ -35,7 +39,6 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
-builder.Services.AddHttpClient();
 
 var app = builder.Build();
 

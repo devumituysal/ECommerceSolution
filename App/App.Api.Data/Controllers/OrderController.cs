@@ -40,7 +40,7 @@ namespace App.Api.Data.Controllers
             {
                 UserId = userId,
                 Address = createOrderRequestDto.Address,
-                OrderCode = await CreateOrderCode() // direk guid yapmaktansa %100 unique olması için aşağıdaki metodla yapıldı
+                OrderCode = await CreateOrderCodeAsync() // direk guid yapmaktansa %100 unique olması için aşağıdaki metodla yapıldı
             };
 
             await _repo.Add(order);
@@ -58,10 +58,10 @@ namespace App.Api.Data.Controllers
                 await _repo.Add(orderItem);
             }
 
-            return Ok(new { orderCode = order.OrderCode });
- 
+            return Ok(new CreateOrderResponseDto{ OrderCode = order.OrderCode });
+
         }
-        private async Task<string> CreateOrderCode()
+        private async Task<string> CreateOrderCodeAsync()
         {
             var orderCode = Guid.NewGuid().ToString("n")[..16].ToUpperInvariant();
 
