@@ -1,4 +1,4 @@
-﻿using App.Api.Data.Models.Dtos.Order;
+﻿using App.Models.DTO.Order;
 using App.Data.Entities;
 using App.Data.Repositories.Abstractions;
 using Microsoft.AspNetCore.Authorization;

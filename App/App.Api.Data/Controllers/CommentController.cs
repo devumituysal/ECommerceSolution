@@ -1,4 +1,4 @@
-﻿using App.Api.Data.Models.Dtos.Comment;
+﻿using App.Models.DTO.Comment;
 using App.Data.Entities;
 using App.Data.Repositories.Abstractions;
 using Microsoft.AspNetCore.Authorization;

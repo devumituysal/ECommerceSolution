@@ -1,4 +1,4 @@
-﻿using App.Api.Data.Models.Dtos.Contact;
+﻿using App.Models.DTO.Contact;
 using App.Data.Entities;
 using App.Data.Repositories.Abstractions;
 using Microsoft.AspNetCore.Authorization;

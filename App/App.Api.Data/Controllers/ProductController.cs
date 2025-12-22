@@ -1,4 +1,4 @@
-﻿using App.Api.Data.Models.Dtos.Product;
+﻿using App.Models.DTO.Product;
 using App.Data.Entities;
 using App.Data.Repositories.Abstractions;
 using Microsoft.AspNetCore.Authorization;
