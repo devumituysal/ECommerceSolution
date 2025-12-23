@@ -25,7 +25,7 @@ namespace App.Services.Concrete
         // POST /api/product
         public async Task<Result<int>> CreateAsync(string jwt, CreateProductRequestDto dto)
         {
-            var response = await SendAsync(HttpMethod.Post,"api/product",jwt,dto);
+            var response = await SendAsync(HttpMethod.Post, "api/product", jwt, dto);
 
             if (response.StatusCode == HttpStatusCode.Unauthorized)
                 return Result.Unauthorized();
@@ -42,7 +42,7 @@ namespace App.Services.Concrete
         // PUT /api/product/{productId}
         public async Task<Result> UpdateAsync(string jwt, int productId, UpdateProductRequestDto dto)
         {
-            var response = await SendAsync(HttpMethod.Put,$"api/product/{productId}",jwt,dto);
+            var response = await SendAsync(HttpMethod.Put, $"api/product/{productId}", jwt, dto);
 
             if (response.StatusCode == HttpStatusCode.NotFound)
                 return Result.NotFound();
@@ -59,7 +59,7 @@ namespace App.Services.Concrete
         // DELETE /api/product/{productId}
         public async Task<Result> DeleteAsync(string jwt, int productId)
         {
-            var response = await SendAsync(HttpMethod.Delete,$"api/product/{productId}",jwt);
+            var response = await SendAsync(HttpMethod.Delete, $"api/product/{productId}", jwt);
 
             if (response.StatusCode == HttpStatusCode.NotFound)
                 return Result.NotFound();
@@ -76,7 +76,7 @@ namespace App.Services.Concrete
         // POST /api/product/{productId}/comment
         public async Task<Result> CreateCommentAsync(string jwt, int productId, CreateProductCommentRequestDto dto)
         {
-            var response = await SendAsync(HttpMethod.Post,$"api/product/{productId}/comment",jwt,dto);
+            var response = await SendAsync(HttpMethod.Post, $"api/product/{productId}/comment", jwt, dto);
 
             if (response.StatusCode == HttpStatusCode.NotFound)
                 return Result.NotFound();
@@ -93,7 +93,7 @@ namespace App.Services.Concrete
         // GET /api/product
         public async Task<Result<List<ProductListItemDto>>> GetMyProductsAsync(string jwt)
         {
-            var response = await SendAsync(HttpMethod.Get,"api/product",jwt);
+            var response = await SendAsync(HttpMethod.Get, "api/product", jwt);
 
             if (response.StatusCode == HttpStatusCode.Unauthorized)
                 return Result.Unauthorized();
@@ -101,13 +101,13 @@ namespace App.Services.Concrete
             if (!response.IsSuccessStatusCode)
                 return Result.Error();
 
-            var result =await response.Content.ReadFromJsonAsync<List<ProductListItemDto>>();
+            var result = await response.Content.ReadFromJsonAsync<List<ProductListItemDto>>();
 
             return Result.Success(result!);
         }
 
         // POST /api/product/{productId}/images
-        public async Task<Result> UploadImagesAsync(string jwt,int productId,List<IFormFile> files)
+        public async Task<Result> UploadImagesAsync(string jwt, int productId, List<IFormFile> files)
         {
             foreach (var file in files)
             {
@@ -153,7 +153,7 @@ namespace App.Services.Concrete
         // DELETE /api/product/{productId}/images?fileName=xxx
         public async Task<Result> DeleteImageAsync(string jwt, int productId, string fileName)
         {
-            var request = new HttpRequestMessage(HttpMethod.Delete,$"api/product/{productId}/images?fileName={fileName}");
+            var request = new HttpRequestMessage(HttpMethod.Delete, $"api/product/{productId}/images?fileName={fileName}");
 
             request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwt);
 
@@ -193,6 +193,35 @@ namespace App.Services.Concrete
                 await response.Content.ReadFromJsonAsync<ProductDetailDto>();
 
             return Result.Success(result!);
+        }
+
+        // home listing sayfası için...login olmayan kullanıcılar... ( jwt siz)
+        public async Task<Result<List<ProductListItemDto>>> GetPublicProductsAsync()
+        {
+            var response = await DataClient.GetAsync("api/products");
+
+            if (!response.IsSuccessStatusCode)
+                return Result.Error();
+
+            var result =
+                await response.Content.ReadFromJsonAsync<List<ProductListItemDto>>();
+
+            return Result.Success(result!);
+        }
+
+        // home detail sayfası için
+        public async Task<Result<ProductDetailDto>> GetPublicByIdAsync(int productId)
+        {
+            var response = await DataClient.GetAsync($"api/product/{productId}");
+
+            if (response.StatusCode == HttpStatusCode.NotFound)
+                return Result.NotFound();
+
+            if (!response.IsSuccessStatusCode)
+                return Result.Error();
+
+            var dto = await response.Content.ReadFromJsonAsync<ProductDetailDto>();
+            return Result.Success(dto!);
         }
     }
 }

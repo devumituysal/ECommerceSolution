@@ -108,6 +108,7 @@ namespace App.Api.Data.Controllers
             return NoContent();
         }
 
+        [AllowAnonymous]
         [HttpGet("{productId:int}")]
         public async Task<IActionResult> GetById(int productId)
         {
@@ -212,5 +213,6 @@ namespace App.Api.Data.Controllers
 
             return NoContent();
         }
+
     }
 }
