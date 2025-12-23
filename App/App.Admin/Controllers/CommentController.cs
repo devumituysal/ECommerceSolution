@@ -1,4 +1,5 @@
 ﻿using App.Admin.Models.ViewModels;
+using App.Services.Abstract;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -6,41 +7,60 @@ namespace App.Admin.Controllers
 {
     [Route("/comment")]
     [Authorize(Roles = "admin")]
-    public class CommentController : BaseController
+    public class CommentController : Controller
     {
-        public CommentController(IHttpClientFactory httpClientFactory)
-            : base(httpClientFactory.CreateClient("DataApi")){}
+        private readonly ICommentService _commentService;
+
+        public CommentController(ICommentService commentService)
+        {
+            _commentService = commentService;
+        }
+
 
         [Route("")]
         [HttpGet]
         public async Task<IActionResult> List()
         {
-            SetJwtHeader();
+            var jwt = Request.Cookies["access_token"];
 
-            var response = await _httpClient.GetAsync("/api/comment");
+            if (string.IsNullOrEmpty(jwt))
+                return RedirectToAction("Login", "Auth");
 
-            if (!response.IsSuccessStatusCode)
+            var result = await _commentService.GetAllAsync(jwt);
+
+            if (!result.IsSuccess)
             {
                 TempData["ErrorMessage"] = "Comments could not be loaded.";
                 return View(new List<CommentListItemViewModel>());
             }
 
-            var comments = await response.Content.ReadFromJsonAsync<List<CommentListItemViewModel>>();
+            var viewModels = result.Value
+                .Select(c => new CommentListItemViewModel
+                {
+                    Id = c.Id,
+                    Text = c.Text,
+                    FirstName = c.FirstName,
+                    LastName = c.LastName,
+                    Approved = c.Approved,
+                    CreatedAt = c.CreatedAt
+                })
+                .ToList();
 
-            comments ??= new List<CommentListItemViewModel>();
-
-            return View(comments);
+            return View(viewModels);
         }
 
         [Route("{commentId:int}/approve")]
         [HttpGet]
         public async Task<IActionResult> Approve([FromRoute] int commentId)
         {
-            SetJwtHeader();
+            var jwt = Request.Cookies["access_token"];
 
-            var response = await _httpClient.PostAsync($"/api/comment/{commentId}/approve", null);
+            if (string.IsNullOrEmpty(jwt))
+                return RedirectToAction("Login", "Auth");
 
-            if (!response.IsSuccessStatusCode)
+            var result = await _commentService.ApproveAsync(jwt, commentId);
+
+            if (!result.IsSuccess)
             {
                 TempData["ErrorMessage"] = "Comment could not be approved.";
                 return RedirectToAction(nameof(List));
