@@ -2,6 +2,8 @@
 using App.Data.Entities;
 using App.Data.Repositories.Abstractions;
 using App.Eticaret.Models.ViewModels;
+using App.Models.DTO.Auth;
+using App.Services.Abstract;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
@@ -17,12 +19,14 @@ using System.Threading.Tasks;
 namespace App.Eticaret.Controllers
 {
     [AllowAnonymous]
-    public class AuthController : BaseController 
+    public class AuthController : Controller
     {
-        public AuthController(HttpClient httpClient) : base(httpClient) { }
-        
+        private readonly IAuthService _authService;
 
-
+        public AuthController(IAuthService authService)
+        {
+            _authService = authService;
+        }
 
         [Route("/register")]
         [HttpGet]
@@ -36,33 +40,25 @@ namespace App.Eticaret.Controllers
         public async Task<IActionResult> Register([FromForm] RegisterUserViewModel newUser)
         {
             if (!ModelState.IsValid)
+                return View(newUser);
+
+            var dto = new RegisterRequestDto
             {
+                FirstName = newUser.FirstName,
+                LastName = newUser.LastName,
+                Email = newUser.Email,
+                Password = newUser.Password
+            };
+
+            var result = await _authService.RegisterAsync(dto);
+
+            if (!result.IsSuccess)
+            {
+                ModelState.AddModelError("", "Kayıt işlemi başarısız.");
                 return View(newUser);
             }
 
-            var response = await _httpClient.PostAsJsonAsync(
-                "https://localhost:7200/api/auth/register",
-                new
-                {
-                    firstName = newUser.FirstName,
-                    lastName = newUser.LastName,
-                    email = newUser.Email,
-                    password = newUser.Password
-                });
-
-            if(response.StatusCode == HttpStatusCode.BadRequest)
-            {
-                ModelState.AddModelError("", "Bu e-posta adresi zaten kayıtlı.");
-                return View(newUser);
-            }
-
-            if(!response.IsSuccessStatusCode)
-            {
-                ModelState.AddModelError("", "Kayıt sırasında bir hata oluştu.");
-                return View(newUser);
-            }
-
-            return RedirectToAction("Login", "Auth");
+            return RedirectToAction(nameof(Login));
         }
 
         [Route("/login")]
@@ -77,47 +73,42 @@ namespace App.Eticaret.Controllers
         public async Task<IActionResult> Login([FromForm] LoginViewModel loginModel)
         {
             if (!ModelState.IsValid)
-            {
                 return View(loginModel);
-            }
-           
 
-            var response = await _httpClient.PostAsJsonAsync(
-                "https://localhost:7200/api/auth/login",
-                new
-                {
-                    email = loginModel.Email,
-                    password = loginModel.Password,
-                });
-
-            if (response.StatusCode == HttpStatusCode.NotFound)
+            var dto = new LoginRequestDto
             {
-                ModelState.AddModelError("", "Email veya şifre Hatalı");
+                Email = loginModel.Email,
+                Password = loginModel.Password
+            };
+
+            var result = await _authService.LoginAsync(dto);
+
+            if (!result.IsSuccess)
+            {
+                ModelState.AddModelError("", "Email veya şifre hatalı.");
                 return View(loginModel);
             }
 
-            if (!response.IsSuccessStatusCode)
+            var userDto = result.Value;
+
+            var userVm = new LoginResponseViewModel
             {
-                ModelState.AddModelError("", "Bir hata oluştu.");
-                return View(loginModel);
-            }
+                Id = userDto.Id,
+                Email = userDto.Email,
+                FirstName = userDto.FirstName,
+                LastName = userDto.LastName,
+                Role = userDto.Role,
+                Token = userDto.Token
+            };
 
-            var user = await response.Content.ReadFromJsonAsync<LoginResponseViewModel>();
-
-            if (user is null)
-            {
-                ModelState.AddModelError("", "Giriş işlemi başarısız.");
-                return View(loginModel);
-            }
-
-            Response.Cookies.Append("access_token", user.Token, new CookieOptions
+            Response.Cookies.Append("access_token", userVm.Token, new CookieOptions
             {
                 HttpOnly = true,
                 Secure = true,
                 SameSite = SameSiteMode.Strict
             });
 
-            await LoginUser(user);
+            await LoginUser(userVm);
 
             return RedirectToAction("Index", "Home");
         }
@@ -134,24 +125,23 @@ namespace App.Eticaret.Controllers
         public async Task<IActionResult> ForgotPassword([FromForm] ForgotPasswordViewModel model)
         {
             if (!ModelState.IsValid)
-            {
                 return View(model);
-            }
 
-            var response = await _httpClient.PostAsJsonAsync(
-                "https://localhost:7200/api/auth/forgot-password",
-                new
-                {
-                    email = model.Email
-                });
+            var dto = new ForgotPasswordRequestDto
+            {
+                Email = model.Email
+            };
 
-            if(!response.IsSuccessStatusCode)
+            var result = await _authService.ForgotPasswordAsync(dto);
+
+            if (!result.IsSuccess)
             {
                 ModelState.AddModelError("", "Bir hata oluştu.");
                 return View(model);
             }
 
-            ViewBag.SuccessMessage = "Şifre sıfırlama maili gönderildi. Lütfen e-posta adresinizi kontrol edin.";
+            ViewBag.SuccessMessage =
+                "Şifre sıfırlama maili gönderildi. Lütfen e-posta adresinizi kontrol edin.";
 
             ModelState.Clear();
             return View();
@@ -209,26 +199,24 @@ namespace App.Eticaret.Controllers
         [HttpPost]
         public async Task<IActionResult> RenewPassword([FromForm] RenewPasswordViewModel renewPasswordViewModel)
         {
-            if(!ModelState.IsValid)
-            {
+            if (!ModelState.IsValid)
                 return View(renewPasswordViewModel);
-            }
 
-            var response = await _httpClient.PostAsJsonAsync(
-                "https://localhost:7200/api/auth/renew-password",
-                new
-                {
-                    token = renewPasswordViewModel.Token,
-                    newPassword = renewPasswordViewModel.NewPassword
-                });
+            var dto = new RenewPasswordRequestDto
+            {
+                Token = renewPasswordViewModel.Token,
+                NewPassword = renewPasswordViewModel.NewPassword
+            };
 
-            if(!response.IsSuccessStatusCode)
+            var result = await _authService.RenewPasswordAsync(dto);
+
+            if (!result.IsSuccess)
             {
                 ModelState.AddModelError("", "Şifre yenileme işlemi başarısız.");
                 return View(renewPasswordViewModel);
             }
 
-            return RedirectToAction("Login", "Auth");
+            return RedirectToAction(nameof(Login));
         }
 
         [Route("/logout")]

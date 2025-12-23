@@ -3,34 +3,35 @@ using App.Data.Entities;
 using App.Data.Repositories.Abstractions;
 using App.Eticaret.Models.ApiResponses;
 using App.Eticaret.Models.ViewModels;
+using App.Models.DTO.Product;
+using App.Services.Abstract;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using static App.Eticaret.Controllers.ProfileController;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace App.Eticaret.Controllers
 {
     [Route("/product")]
-    public class ProductController : BaseController
+    public class ProductController : Controller
     {
-        public ProductController(HttpClient httpClient) : base(httpClient) { }
+        private readonly IProductService _productService;
+
+        public ProductController(IProductService productService)
+        {
+            _productService = productService;
+        }
+
+
 
         [HttpGet("create")]
         [Authorize(Roles = "seller")]
-        public async Task<IActionResult> Create()
+        public IActionResult Create()
         {
-            SetJwtHeader();
-
-            var categories = await _httpClient
-                .GetFromJsonAsync<List<CategoryListItemViewModel>>(
-                "https://localhost:7200/api/categories");
-
-            ViewBag.CategoryList = categories;
-
             return View(new ProductSaveViewModel());
-
         }
 
         [HttpPost("create")]
@@ -42,115 +43,74 @@ namespace App.Eticaret.Controllers
                 return View(newProductModel);
             }
 
-            SetJwtHeader();
+            var jwt = HttpContext.Request.Cookies["jwt"];
 
-            var sellerIdClaim = User.FindFirst(ClaimTypes.Sid);
+            if (string.IsNullOrEmpty(jwt))
+                return RedirectToAction("Login", "Auth");
 
-            if(sellerIdClaim == null)
+            var dto = new CreateProductRequestDto
             {
-                return RedirectToAction(nameof(AuthController.Login), "Auth");
-            }
+                Name = newProductModel.Name,
+                Price = newProductModel.Price,
+                Details = newProductModel.Details,
+                StockAmount = newProductModel.StockAmount,
+                CategoryId = newProductModel.CategoryId
+            };
 
-            var response = await _httpClient.PostAsJsonAsync(
-                "https://localhost:7200/api/product",
-                new
-                {
-                    name = newProductModel.Name,
-                    price = newProductModel.Price,
-                    details = newProductModel.Details,
-                    stockAmount = newProductModel.StockAmount,
-                    categoryId = newProductModel.CategoryId,
-                    sellerId = int.Parse(sellerIdClaim.Value)
-                });
+            var result = await _productService.CreateAsync(jwt, dto);
 
-            if (!response.IsSuccessStatusCode)
+            if (!result.IsSuccess)
             {
                 ModelState.AddModelError("", "Ürün oluşturulamadı.");
                 return View(newProductModel);
-            }
+            }   
 
-            var result = await response.Content.ReadFromJsonAsync<ProductCreateResponseViewModel>();
-
-            if (result == null)
-            {
-                ModelState.AddModelError("", "Ürün oluşturuldu ama cevap okunamadı.");
-                return View(newProductModel);
-            }
-
-            int productId = result.ProductId;
+            var productId = result.Value;
 
             if (newProductModel.Images != null && newProductModel.Images.Any())
             {
+                var uploadResult = await _productService.UploadImagesAsync(jwt, productId,newProductModel.Images.ToList());
 
-                foreach (var image in newProductModel.Images)
+                if (!uploadResult.IsSuccess)
                 {
-                    SetJwtHeader();
-
-                    var content = new MultipartFormDataContent();
-
-                    content.Add(
-                        new StreamContent(image.OpenReadStream()),
-                        "file",
-                        image.FileName
-                    );
-
-                    var fileResponse = await _httpClient.PostAsync(
-                        "https://localhost:7132/api/file/upload",
-                        content
-                    );
-
-                    if (!fileResponse.IsSuccessStatusCode)
-                    {
-                        ModelState.AddModelError("", "Ürün görselleri yüklenemedi.");
-                        return View(newProductModel);
-                    }
-
-                    var uploadResult = await fileResponse.Content.ReadFromJsonAsync<FileUploadResponse>();
-
-                    var imageSaveResponse = await _httpClient.PostAsJsonAsync(
-                        $"https://localhost:7200/api/product/{productId}/images",
-                        new 
-                        { 
-                            fileName = uploadResult!.FileName 
-                        }
-                    );
-
-                    if (!imageSaveResponse.IsSuccessStatusCode)
-                    {
-                        ModelState.AddModelError("", "Ürün görseli kaydedilemedi.");
-                        return View(newProductModel);
-                    }
-
-
+                    ModelState.AddModelError("", "Ürün görselleri yüklenemedi.");
+                    return View(newProductModel);
                 }
             }
 
-            ViewBag.SuccessMessage = "Ürün başarıyla oluşturuldu.";
+            TempData["SuccessMessage"] = "Ürün başarıyla oluşturuldu.";
 
-            return View(new ProductSaveViewModel());
+            return RedirectToAction("Edit", new { productId });
+
         }
 
         [HttpGet("{productId:int}/edit")]
         [Authorize(Roles = "seller")]
         public async Task<IActionResult> Edit([FromRoute] int productId)
         {
-            SetJwtHeader();
+            var jwt = HttpContext.Request.Cookies["jwt"];
 
-            var product = await _httpClient.GetFromJsonAsync<ProductSaveViewModel>(
-                $"https://localhost:7200/api/products/{productId}");
+            if (string.IsNullOrEmpty(jwt))
+                return RedirectToAction("Login", "Auth");
 
-            if (product == null)
-            {
+            var result = await _productService.GetByIdAsync(jwt, productId);
+
+            if (!result.IsSuccess)
                 return NotFound();
-            }
 
-            var categories = await _httpClient
-                .GetFromJsonAsync<List<CategoryListItemViewModel>>(
-                "https://localhost:7200/api/categories");
+            var product = result.Value;
 
-            ViewBag.CategoryList = categories;
+            var viewModel = new ProductSaveViewModel
+            {
+                Name = product.Name,
+                Price = product.Price,
+                Details = product.Details,
+                StockAmount = product.StockAmount,
+                CategoryId = product.CategoryId,
+                ExistingImages = product.Images // mevcut görseller (edit ekranında göstermek için)
+            };
 
-            return View(product);
+            return View(viewModel);
 
         }
 
@@ -158,58 +118,49 @@ namespace App.Eticaret.Controllers
         [Authorize(Roles = "seller")]
         public async Task<IActionResult> Edit([FromRoute] int productId, [FromForm] ProductSaveViewModel editProductModel)
         {
-            SetJwtHeader();
-
-            var categories = await _httpClient
-                .GetFromJsonAsync<List<CategoryListItemViewModel>>(
-                "https://localhost:7200/api/categories");
-
-            ViewBag.CategoryList = categories;
-
             if (!ModelState.IsValid)
-            {
                 return View(editProductModel);
-            }
 
-            var response = await _httpClient.PutAsJsonAsync(
-                $"https://localhost:7200/api/product/{productId}",
-                new
-                {
-                    name = editProductModel.Name,
-                    price = editProductModel.Price,
-                    details = editProductModel.Details,
-                    stockAmount = editProductModel.StockAmount,
-                    categoryId = editProductModel.CategoryId
-                });
+            var jwt = HttpContext.Request.Cookies["jwt"];
+            if (string.IsNullOrEmpty(jwt))
+                return RedirectToAction("Login", "Auth");
 
-            if (!response.IsSuccessStatusCode)
+            var dto = new UpdateProductRequestDto
+            {
+                Name = editProductModel.Name,
+                Price = editProductModel.Price,
+                Details = editProductModel.Details,
+                StockAmount = editProductModel.StockAmount,
+                CategoryId = editProductModel.CategoryId
+            };
+
+            var result = await _productService.UpdateAsync(jwt, productId, dto);
+
+            if (!result.IsSuccess)
             {
                 ModelState.AddModelError("", "Ürün güncellenemedi.");
                 return View(editProductModel);
             }
 
-            ViewBag.SuccessMessage = "Ürün başarıyla güncellendi.";
-
-            return View(editProductModel);
+            TempData["SuccessMessage"] = "Ürün başarıyla güncellendi.";
+            return RedirectToAction("Edit", new { productId });
         }
 
-        [HttpGet("{productId:int}/delete")]
+        [HttpPost("{productId:int}/delete")]
         [Authorize(Roles = "seller")]
         public async Task<IActionResult> Delete([FromRoute] int productId)
         {
-            SetJwtHeader();
+            var jwt = HttpContext.Request.Cookies["jwt"];
+            if (string.IsNullOrEmpty(jwt))
+                return RedirectToAction("Login", "Auth");
 
-            var response = await _httpClient.DeleteAsync(
-                $"https://localhost:7200/api/product/{productId}");
+            var result = await _productService.DeleteAsync(jwt, productId);
 
-            if (!response.IsSuccessStatusCode)
-            {
+            if (!result.IsSuccess)
                 return BadRequest();
-            }
 
-            ViewBag.SuccessMessage = "Ürün başarıyla silindi.";
-
-            return View();
+            TempData["SuccessMessage"] = "Ürün başarıyla silindi.";
+            return RedirectToAction("Index", "Profile");
 
         }
 
@@ -217,25 +168,25 @@ namespace App.Eticaret.Controllers
         [Authorize(Roles = "buyer, seller")]
         public async Task<IActionResult> Comment([FromRoute] int productId, [FromForm] SaveProductCommentViewModel newProductCommentModel)
         {
-            
+
             if (!ModelState.IsValid)
-            {
                 return BadRequest();
-            }
 
-            SetJwtHeader();
+            var jwt = HttpContext.Request.Cookies["jwt"];
+            if (string.IsNullOrEmpty(jwt))
+                return Unauthorized();
 
-            var response = await _httpClient.PostAsJsonAsync($"https://localhost:7200/api/product/{productId}/comment",
-                new
-                {
-                    starCount = newProductCommentModel.StarCount,
-                    text = newProductCommentModel.Text
-                });
-
-            if (!response.IsSuccessStatusCode)
+            var dto = new CreateProductCommentRequestDto
             {
+                StarCount = newProductCommentModel.StarCount,
+                Text = newProductCommentModel.Text
+            };
+
+            var result =
+                await _productService.CreateCommentAsync(jwt, productId, dto);
+
+            if (!result.IsSuccess)
                 return BadRequest();
-            }
 
             return Ok();
         }
@@ -246,42 +197,21 @@ namespace App.Eticaret.Controllers
         {
             if (images == null || !images.Any())
             {
-                ModelState.AddModelError("", "Lütfen en az bir görsel seçin.");
+                TempData["ErrorMessage"] = "Lütfen en az bir görsel seçin.";
                 return RedirectToAction("Edit", new { productId });
             }
 
-            SetJwtHeader();
+            var jwt = HttpContext.Request.Cookies["jwt"];
+            if (string.IsNullOrEmpty(jwt))
+                return RedirectToAction("Login", "Auth");
 
-            foreach (var image in images)
+            var result =
+                await _productService.UploadImagesAsync(jwt, productId, images);
+
+            if (!result.IsSuccess)
             {
-                // 1. Dosyayı file API'ye yükle
-                var content = new MultipartFormDataContent();
-                content.Add(new StreamContent(image.OpenReadStream()), "file", image.FileName);
-
-                var fileResponse = await _httpClient.PostAsync("https://localhost:7132/api/file/upload", content);
-                if (!fileResponse.IsSuccessStatusCode)
-                {
-                    ModelState.AddModelError("", $"Görsel '{image.FileName}' yüklenemedi.");
-                    continue;
-                }
-
-                var uploadResult = await fileResponse.Content.ReadFromJsonAsync<FileUploadResponse>();
-                if (uploadResult == null)
-                {
-                    ModelState.AddModelError("", $"Görsel '{image.FileName}' yüklenemedi.");
-                    continue;
-                }
-
-                // 2. Dosya adını product ile ilişkilendir data API'ye gönder
-                var associateResponse = await _httpClient.PostAsJsonAsync(
-                    $"https://localhost:7200/api/product/{productId}/images",
-                    new { fileName = uploadResult.FileName }
-                );
-
-                if (!associateResponse.IsSuccessStatusCode)
-                {
-                    ModelState.AddModelError("", $"Görsel '{image.FileName}' ürünle ilişkilendirilemedi.");
-                }
+                TempData["ErrorMessage"] = "Görseller yüklenemedi.";
+                return RedirectToAction("Edit", new { productId });
             }
 
             TempData["SuccessMessage"] = "Görseller başarıyla eklendi.";
@@ -298,13 +228,14 @@ namespace App.Eticaret.Controllers
                 return RedirectToAction("Edit", new { productId });
             }
 
-            SetJwtHeader();
+            var jwt = HttpContext.Request.Cookies["jwt"];
+            if (string.IsNullOrEmpty(jwt))
+                return RedirectToAction("Login", "Auth");
 
-            var deleteResponse = await _httpClient.DeleteAsync(
-                $"https://localhost:7200/api/product/{productId}/images?fileName={fileName}"
-            );
+            var result =
+                await _productService.DeleteImageAsync(jwt, productId, fileName);
 
-            if (!deleteResponse.IsSuccessStatusCode)
+            if (!result.IsSuccess)
             {
                 TempData["ErrorMessage"] = "Görsel silinemedi.";
                 return RedirectToAction("Edit", new { productId });

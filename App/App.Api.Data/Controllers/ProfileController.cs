@@ -1,4 +1,4 @@
-﻿using App.Api.Data.Models.Dtos.Profile;
+﻿using App.Models.DTO.Profile;
 using App.Data.Entities;
 using App.Data.Repositories.Abstractions;
 using Microsoft.AspNetCore.Authorization;

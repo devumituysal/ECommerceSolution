@@ -2,6 +2,8 @@
 using App.Data.Entities;
 using App.Data.Repositories.Abstractions;
 using App.Eticaret.Models.ViewModels;
+using App.Models.DTO.Order;
+using App.Services.Abstract;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -10,9 +12,14 @@ using System.Security.Claims;
 namespace App.Eticaret.Controllers
 {
     [Authorize(Roles = "buyer, seller")]
-    public class OrderController : BaseController
+    public class OrderController : Controller
     {
-        public OrderController(HttpClient httpClient) : base(httpClient) { }
+        private readonly IOrderService _orderService;
+
+        public OrderController(IOrderService orderService)
+        {
+            _orderService = orderService;
+        }
 
         [HttpPost("/order")]
         public async Task<IActionResult> Create([FromForm] CheckoutViewModel model)
@@ -22,63 +29,49 @@ namespace App.Eticaret.Controllers
                 return View(model);
             }
 
-            SetJwtHeader();
+            var jwt = Request.Cookies["jwt"];
 
-            var userIdClaim = User.FindFirst(ClaimTypes.Sid);
-
-            if (userIdClaim == null)
+            if (string.IsNullOrEmpty(jwt))
             {
-                return RedirectToAction(nameof(AuthController.Login), "Auth");
+                return RedirectToAction("Login", "Auth");
             }
 
-            var userId = int.Parse(userIdClaim.Value);
-            
+            var request = new CreateOrderRequestDto
+            {
+                Address = model.Address
+            };
 
-            var response = await _httpClient.PostAsJsonAsync(
-                "https://localhost:7200/api/orders",
-                new
-                {
-                    userId = userId,
-                    address = model.Address
-                });
+            var result = await _orderService.CreateAsync(jwt, request);
 
-            if (!response.IsSuccessStatusCode)
+            if (!result.IsSuccess)
             {
                 ModelState.AddModelError("", "Sipariş oluşturulamadı.");
                 return View(model);
             }
 
-            var result = await response.Content.ReadFromJsonAsync<OrderCreateResponseViewModel>();
+            return RedirectToAction(nameof(Details), new { orderCode = result.Value });
 
-            return RedirectToAction(nameof(Details), new { orderCode = result!.OrderCode });
+
         }
 
         [HttpGet("/order/{orderCode}/details")]
         public async Task<IActionResult> Details([FromRoute] string orderCode)
         {
-            SetJwtHeader();
+            var jwt = Request.Cookies["jwt"];
 
-            var userIdClaim = User.FindFirst(ClaimTypes.Sid);
-
-            if (userIdClaim == null)
+            if (string.IsNullOrEmpty(jwt))
             {
-                return RedirectToAction(nameof(AuthController.Login), "Auth");
+                return RedirectToAction("Login", "Auth");
             }
 
-            var userId = int.Parse(userIdClaim.Value);
+            var result = await _orderService.GetOrderDetailsAsync(jwt, orderCode);
 
-            var response = await _httpClient.GetAsync(
-                $"https://localhost:7200/api/orders/{orderCode}?userId={userId}");
-
-            if (!response.IsSuccessStatusCode)
+            if (!result.IsSuccess)
             {
                 return NotFound();
             }
 
-            var order =
-                await response.Content.ReadFromJsonAsync<OrderDetailsViewModel>();
-
-            return View(order);
+            return View(result.Value);
         }
     }
 }

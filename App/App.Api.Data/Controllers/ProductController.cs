@@ -1,10 +1,11 @@
-﻿using App.Api.Data.Models.Dtos.Product;
+﻿using App.Models.DTO.Product;
 using App.Data.Entities;
 using App.Data.Repositories.Abstractions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace App.Api.Data.Controllers
 {
@@ -23,7 +24,8 @@ namespace App.Api.Data.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateProductRequestDto createProductRequestDto)
         {
-            var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.Sid)!.Value);
+            var userId = int.Parse(User.FindFirst(ClaimTypes.Sid)!.Value);
+
 
             var product = new ProductEntity
             {
@@ -91,7 +93,7 @@ namespace App.Api.Data.Controllers
                 return NotFound();
             }
 
-            var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.Sid)!.Value);
+            var userId = int.Parse(User.FindFirst(ClaimTypes.Sid)!.Value);
 
             var comment = new ProductCommentEntity
             {
@@ -106,10 +108,39 @@ namespace App.Api.Data.Controllers
             return NoContent();
         }
 
+        [AllowAnonymous]
+        [HttpGet("{productId:int}")]
+        public async Task<IActionResult> GetById(int productId)
+        {
+            var product = await _repo.GetAll<ProductEntity>()
+                .Include(p => p.Images)
+                .Include(p => p.Category)
+                .FirstOrDefaultAsync(p => p.Id == productId);
+
+            if (product == null)
+                return NotFound();
+
+            var dto = new ProductDetailDto
+            {
+                Id = product.Id,
+                Name = product.Name,
+                Details = product.Details,
+                Price = product.Price,
+                StockAmount = product.StockAmount,
+                CategoryId = product.CategoryId,
+                CategoryName = product.Category.Name,
+                Images = product.Images
+                    .Select(i => i.Url)
+                    .ToList()
+            };
+
+            return Ok(dto);
+        }
+
         [HttpGet]
         public async Task<IActionResult> GetMyProducts()
         {
-            var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.Sid)!.Value);
+            var userId = int.Parse(User.FindFirst(ClaimTypes.Sid)!.Value);
 
             var products = await _repo.GetAll<ProductEntity>()
                 .Include(p => p.Images)
@@ -182,5 +213,6 @@ namespace App.Api.Data.Controllers
 
             return NoContent();
         }
+
     }
 }

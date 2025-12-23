@@ -1,18 +1,27 @@
-using System.Diagnostics;
 using App.Data.Contexts;
 using App.Data.Entities;
 using App.Data.Repositories.Abstractions;
 using App.Eticaret.Models.ViewModels;
+using App.Models.DTO.Contact;
+using App.Services.Abstract;
+using App.Services.Concrete;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Diagnostics;
+using System.Linq;
 
 namespace App.Eticaret.Controllers
 {
-    public class HomeController : BaseController
+    public class HomeController : Controller
     {
-        public HomeController(HttpClient httpClient) : base(httpClient) { }
+        private readonly IContactService _contactService;
+        private readonly IProductService _productService;
 
-        
+        public HomeController(IContactService contactService,IProductService productService)
+        {
+            _contactService = contactService;
+            _productService = productService;
+        }
 
         public IActionResult Index()
         {
@@ -35,22 +44,23 @@ namespace App.Eticaret.Controllers
         public  async Task<IActionResult> Contact([FromForm] ContactViewModel contactViewModel)
         {
             if (!ModelState.IsValid)
-            {
                 return View(contactViewModel);
-            }
 
-            var response = await _httpClient.PostAsJsonAsync(
-                "https://localhost:7200/api/contact",
-                new
-                {
-                    name = contactViewModel.Name,
-                    email = contactViewModel.Email,
-                    message = contactViewModel.Message
-                });
-
-            if (!response.IsSuccessStatusCode)
+            var dto = new CreateContactMessageDto
             {
-                ModelState.AddModelError("", "Mesaj gönderilemedi.");
+                Name = contactViewModel.Name,
+                Email = contactViewModel.Email,
+                Message = contactViewModel.Message
+            };
+
+            var result = await _contactService.SendMessageAsync(dto);
+
+            if (!result.IsSuccess)
+            {
+                ModelState.AddModelError(
+                    "",
+                    result.Errors.FirstOrDefault() ?? "Mesaj gönderilemedi."
+                );
                 return View(contactViewModel);
             }
 
@@ -62,8 +72,20 @@ namespace App.Eticaret.Controllers
         [Route("/products/list")]    
         public async Task<IActionResult> Listing()
         {
-            var products = await _httpClient.GetFromJsonAsync<List<ProductListItemViewModel>>(
-                "https://localhost:7200/api/products");
+            var result = await _productService.GetPublicProductsAsync();
+
+            if (!result.IsSuccess)
+                return View(new List<ProductListItemViewModel>());
+
+            var products = result.Value
+                .Select(p => new ProductListItemViewModel
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    Price = p.Price,
+                    ImageUrl = p.ImageUrl
+                })
+                .ToList();
 
             return View(products);
         }
@@ -72,16 +94,24 @@ namespace App.Eticaret.Controllers
         [HttpGet("/product/{productId:int}/details")]
         public async Task<IActionResult> ProductDetail([FromRoute] int productId)
         {
-            var product = await _httpClient
-                .GetFromJsonAsync<ProductDetailViewModel>(
-                $"https://localhost:7200/api/products/{productId}");
+            var result = await _productService.GetPublicByIdAsync(productId);
 
-            if (product == null)
-            {
+            if (!result.IsSuccess)
                 return NotFound();
-            }
-            return View(product);
-          
+
+            var dto = result.Value;
+
+            var productDetail = new ProductDetailViewModel
+            {
+                Id = dto.Id,
+                Name = dto.Name,
+                Details = dto.Details,
+                Price = dto.Price,
+                CategoryName = dto.CategoryName,
+                ImageUrls = dto.Images.Count > 0? new[] { dto.Images[0] }: Array.Empty<string>()};
+
+            return View(productDetail);
+
         }
-    }
+    }   
 }

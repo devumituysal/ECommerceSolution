@@ -13,14 +13,15 @@ namespace App.Admin.Controllers
     [Authorize(Roles = "admin")]
     public class CategoryController : BaseController
     {
-        public CategoryController(HttpClient httpClient) : base(httpClient) { }
+        public CategoryController(IHttpClientFactory httpClientFactory)
+            : base(httpClientFactory.CreateClient("DataApi")){}
 
         [HttpGet]
         public async Task<IActionResult> List()
         {
             SetJwtHeader();
 
-            var response = await _httpClient.GetAsync("https://localhost:5001/api/categories");
+            var response = await _httpClient.GetAsync("/api/categories");
 
             if (!response.IsSuccessStatusCode)
             {
@@ -51,7 +52,7 @@ namespace App.Admin.Controllers
             SetJwtHeader();
 
             var response = await _httpClient.PostAsJsonAsync(
-                "https://localhost:5001/api/categories",
+                "/api/categories",
                 new
                 {
                     Name = newCategoryModel.Name,
@@ -76,7 +77,7 @@ namespace App.Admin.Controllers
         {
             SetJwtHeader();
 
-            var response = await _httpClient.GetAsync("https://localhost:5001/api/categories");
+            var response = await _httpClient.GetAsync("/api/categories");
             if (!response.IsSuccessStatusCode)
                 return NotFound();
 
@@ -105,7 +106,7 @@ namespace App.Admin.Controllers
             SetJwtHeader();
 
             var response = await _httpClient.PutAsJsonAsync(
-                $"https://localhost:5001/api/categories/{categoryId}",
+                $"/api/categories/{categoryId}",
                 new
                 {
                     Name = editCategoryModel.Name,
@@ -129,7 +130,7 @@ namespace App.Admin.Controllers
         {
             SetJwtHeader();
 
-            var response = await _httpClient.DeleteAsync($"https://localhost:5001/api/categories/{categoryId}");
+            var response = await _httpClient.DeleteAsync($"/api/categories/{categoryId}");
 
             if (!response.IsSuccessStatusCode)
             {

@@ -2,6 +2,8 @@ using App.Data.Contexts;
 using App.Data.Repositories.Extensions;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+using App.Services.Abstract;
+using App.Services.Concrete;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,6 +11,27 @@ var connectionString = builder.Configuration.GetConnectionString("SqlServer")
     ?? throw new InvalidOperationException("SqlServer connection string is missing.");
 
 builder.Services.AddData(connectionString);
+
+var apiSettings = builder.Configuration.GetSection("ApiSettings");
+
+builder.Services.AddHttpClient("DataApi", client =>
+{
+    client.BaseAddress = new Uri(apiSettings["DataApiBaseUrl"]!);
+});
+
+builder.Services.AddHttpClient("FileApi", client =>
+{
+    client.BaseAddress = new Uri(apiSettings["FileApiBaseUrl"]!);
+});
+
+builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<ICartService, CartService>();
+builder.Services.AddScoped<IProfileService, ProfileService>();
+builder.Services.AddScoped<IContactService, ContactService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+
+
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options => {
@@ -23,7 +46,6 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
-builder.Services.AddHttpClient();
 
 var app = builder.Build();
 

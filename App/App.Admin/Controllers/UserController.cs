@@ -13,7 +13,9 @@ namespace App.Admin.Controllers
     [Authorize(Roles = "admin")]
     public class UserController : BaseController
     {
-        public UserController(HttpClient httpClient) : base(httpClient) { }
+        public UserController(IHttpClientFactory httpClientFactory)
+            : base(httpClientFactory.CreateClient("DataApi")){}
+
         public async Task<IActionResult> List()
         {
             if (!User.Identity!.IsAuthenticated)
@@ -23,7 +25,7 @@ namespace App.Admin.Controllers
 
             SetJwtHeader();
 
-            var response = await _httpClient.GetAsync("https://localhost:5001/api/users/list");
+            var response = await _httpClient.GetAsync("/api/users/list");
 
             if (!response.IsSuccessStatusCode)
             {
@@ -50,7 +52,7 @@ namespace App.Admin.Controllers
 
             SetJwtHeader();
 
-            var response = await _httpClient.PostAsync($"https://localhost:5001/api/users/{id}/approve", null);
+            var response = await _httpClient.PostAsync($"/api/users/{id}/approve", null);
 
             if (!response.IsSuccessStatusCode)
             {

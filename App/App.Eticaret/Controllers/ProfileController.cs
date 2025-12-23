@@ -3,6 +3,9 @@ using App.Data.Entities;
 using App.Data.Repositories.Abstractions;
 using App.Eticaret.Models.ApiResponses;
 using App.Eticaret.Models.ViewModels;
+using App.Models.DTO.Profile;
+using App.Services.Abstract;
+using App.Services.Concrete;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -11,98 +14,72 @@ using Microsoft.IdentityModel.Tokens;
 namespace App.Eticaret.Controllers
 {
     [Authorize(Roles = "seller, buyer")]
-    public class ProfileController : BaseController
+    public class ProfileController : Controller
     {
-        public ProfileController(HttpClient httpClient) : base(httpClient) { }
+        private readonly IProfileService _profileService;
+        private readonly IOrderService _orderService;
+        private readonly IProductService _productService;
+
+        public ProfileController(IProfileService profileService,IOrderService orderService,IProductService productService)
+        {
+            _profileService = profileService;
+            _orderService = orderService;
+            _productService = productService;
+        }
 
         [HttpGet("/profile")]
         public async Task<IActionResult> Details()
         {
-            SetJwtHeader();
+            var jwt = HttpContext.Request.Cookies["jwt"];
 
-            var response = await _httpClient.GetAsync("https://localhost:7200/api/profile");
-
-            if (!response.IsSuccessStatusCode)
-            {
+            if (string.IsNullOrEmpty(jwt))
                 return RedirectToAction("Login", "Auth");
-            }
 
-            var profile = await response.Content.ReadFromJsonAsync<ProfileDetailsViewModel>();
+            var result = await _profileService.GetMyProfileAsync(jwt);
 
-            if (profile != null && !string.IsNullOrEmpty(profile.ProfileImagePath))
+            if (!result.IsSuccess)
+                return RedirectToAction("Login", "Auth");
+
+            var dto = result.Value;
+
+            var profileDetail = new ProfileDetailsViewModel
             {
-                profile.ProfileImageUrl = $"/uploads/{profile.ProfileImage}";
-            }
+                FirstName = dto.FirstName,
+                LastName = dto.LastName,
+                Email = dto.Email,
+                ProfileImagePath = dto.ProfileImage,
+                ProfileImageUrl = string.IsNullOrEmpty(dto.ProfileImage)
+                    ? null
+                    : $"/uploads/{dto.ProfileImage}"
+            };
 
-            return View(profile);
+            return View(profileDetail);
         }
 
         [HttpPost("/profile")]
         public async Task<IActionResult> Edit([FromForm] ProfileDetailsViewModel editMyProfileModel)
         {
             if (!ModelState.IsValid)
-            {
                 return View(editMyProfileModel);
-            }
 
-            SetJwtHeader();
+            var jwt = HttpContext.Request.Cookies["jwt"];
 
-            string? uploadedFileName = null;
+            if (string.IsNullOrEmpty(jwt))
+                return RedirectToAction("Login", "Auth");
 
-            if (editMyProfileModel.ProfileImage != null)
+            var dto = new ProfileDetailDto
             {
-                var content = new MultipartFormDataContent();
+                FirstName = editMyProfileModel.FirstName,
+                LastName = editMyProfileModel.LastName,
+                Email = editMyProfileModel.Email,
+                ProfileImage = editMyProfileModel.ProfileImagePath
+            };
 
-                content.Add(
-                    new StreamContent(editMyProfileModel.ProfileImage.OpenReadStream()),
-                    "file",
-                    editMyProfileModel.ProfileImage.FileName
-                    );
+            var result = await _profileService.UpdateMyProfileAsync(jwt, dto);
 
-                var fileResponse = await _httpClient.PostAsync("https://localhost:7132/api/file/upload", content);
-
-                if (!fileResponse.IsSuccessStatusCode)
-                {
-                    ModelState.AddModelError("", "Profil fotoğrafı yüklenemedi.");
-                    return View(editMyProfileModel);
-                }
-
-                var fileResult = await fileResponse.Content.ReadFromJsonAsync<FileUploadResponse>();
-
-                uploadedFileName = fileResult!.FileName;
-            }
-
-
-            var response = await _httpClient.PutAsJsonAsync(
-                "https://localhost:7200/api/profile", 
-                new
-                {
-                    firstName = editMyProfileModel.FirstName,
-                    lastName = editMyProfileModel.LastName,
-                    email = editMyProfileModel.Email,
-                    profileImage = uploadedFileName
-                });
-
-            if (!response.IsSuccessStatusCode)
+            if (!result.IsSuccess)
             {
-                // API'den gelen hata mesajını oku (BadRequest durumunda)
-                if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
-                {
-                    var error = await response.Content.ReadFromJsonAsync<Dictionary<string, string>>();
-                    if (error != null && error.ContainsKey("message"))
-                    {
-                        ModelState.AddModelError("", error["message"]);
-                    }
-                    else
-                    {
-                        ModelState.AddModelError("", "Profil güncellenemedi.");
-                    }
-                }
-                else
-                {
-                    ModelState.AddModelError("", "Profil güncellenemedi.");
-                }
-
+                ModelState.AddModelError("", result.Errors.FirstOrDefault() ?? "Profil güncellenemedi.");
                 return View(editMyProfileModel);
             }
 
@@ -110,32 +87,26 @@ namespace App.Eticaret.Controllers
             return RedirectToAction(nameof(Details));
 
 
-          
+
         }
 
         [HttpGet("/my-orders")]
         public async Task<IActionResult> MyOrders()
         {
-            if (!User.Identity.IsAuthenticated)
-            {
+            var jwt = HttpContext.Request.Cookies["jwt"];
+
+            if (string.IsNullOrEmpty(jwt))
                 return RedirectToAction("Login", "Auth");
-            }
 
-            SetJwtHeader();
+            var result = await _orderService.GetMyOrdersAsync(jwt);
 
-            var response = await _httpClient.GetAsync("https://localhost:7200/api/order/my-orders");
-
-            if (!response.IsSuccessStatusCode)
+            if (!result.IsSuccess)
             {
                 TempData["ErrorMessage"] = "Siparişler alınamadı.";
                 return View(new List<OrderViewModel>());
             }
 
-            var orders = await response.Content.ReadFromJsonAsync<List<OrderViewModel>>();
-
-            orders ??= new List<OrderViewModel>();  
-
-            return View(orders ?? new List<OrderViewModel>());
+            return View(result.Value);
 
         }
 
@@ -143,26 +114,20 @@ namespace App.Eticaret.Controllers
         [Authorize(Roles = "seller")]
         public async Task<IActionResult> MyProducts()
         {
-            if (!User.Identity.IsAuthenticated)
-            {
+            var jwt = HttpContext.Request.Cookies["jwt"];
+
+            if (string.IsNullOrEmpty(jwt))
                 return RedirectToAction("Login", "Auth");
-            }
 
-            SetJwtHeader();
+            var result = await _productService.GetMyProductsAsync(jwt);
 
-            var response = await _httpClient.GetAsync("https://localhost:7200/api/product");
-
-            if (!response.IsSuccessStatusCode)
+            if (!result.IsSuccess)
             {
                 TempData["ErrorMessage"] = "Ürünler alınamadı.";
                 return View(new List<MyProductsViewModel>());
             }
 
-            var products = await response.Content.ReadFromJsonAsync<List<MyProductsViewModel>>();
-
-            products ??= new List<MyProductsViewModel>(); 
-
-            return View(products);
+            return View(result.Value);
         }
     }
 }

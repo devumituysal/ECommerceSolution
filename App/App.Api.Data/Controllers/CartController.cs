@@ -1,4 +1,4 @@
-﻿using App.Api.Data.Models.Dtos.Cart;
+﻿using App.Models.DTO.Cart;
 using App.Data.Entities;
 using App.Data.Repositories.Abstractions;
 using Microsoft.AspNetCore.Authorization;

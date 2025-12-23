@@ -1,86 +1,119 @@
-﻿using App.Data.Contexts;
-using App.Data.Entities;
-using App.Data.Repositories.Abstractions;
-using App.Eticaret.Models.ViewModels;
+﻿using App.Eticaret.Models.ViewModels;
+using App.Models.DTO.Cart;
+using App.Services.Abstract;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace App.Eticaret.Controllers
 {
     [Authorize(Roles = "buyer, seller")]
-    public class CartController : BaseController
+    public class CartController : Controller
     {
-        public CartController(HttpClient httpClient) : base(httpClient) { }
-        
+        private readonly ICartService _cartService;
+
+        public CartController(ICartService cartService)
+        {
+            _cartService = cartService;
+        }
+
         [HttpGet("/add-to-cart/{productId:int}")]
         public async Task<IActionResult> AddProduct([FromRoute] int productId)
         {
-            SetJwtHeader();
+            var jwt = HttpContext.Request.Cookies["jwt"];
 
-            var response = await _httpClient.PostAsync(
-                $"https://localhost:7200/api/cart/add/{productId}", null);
+            if (string.IsNullOrEmpty(jwt))
+                return RedirectToAction("Login", "Auth");
 
-            if (!response.IsSuccessStatusCode)
+            var result = await _cartService.AddProductAsync(jwt, productId);
+
+            if (!result.IsSuccess)
             {
                 TempData["ErrorMessage"] = "Product could not be added to cart.";
             }
 
             var prevUrl = Request.Headers.Referer.FirstOrDefault();
 
-            return prevUrl is null ? RedirectToAction(nameof(Edit)) : Redirect(prevUrl);
+            if(prevUrl is null)
+            {
+              return RedirectToAction(nameof(Edit));
+            }
+
+            return  Redirect(prevUrl);
         }
+
+
         [HttpGet("/cart")]
         public async Task<IActionResult> Edit()
         {
-            SetJwtHeader();
+            var jwt = HttpContext.Request.Cookies["jwt"];
 
-            var response = await _httpClient.GetAsync("https://localhost:7200/api/cart");
+            if (string.IsNullOrEmpty(jwt))
+                return RedirectToAction("Login", "Auth");
 
-            if (!response.IsSuccessStatusCode)
+            var result = await _cartService.GetMyCartAsync(jwt);
+
+            if (!result.IsSuccess)
             {
                 TempData["ErrorMessage"] = "Could not load cart items.";
                 return View(new List<CartItemViewModel>());
             }
 
-            var cartItems = await response.Content.ReadFromJsonAsync<List<CartItemViewModel>>();
+            var cartItems = result.Value.Select(x => new CartItemViewModel
+            {
+                Id = x.Id,
+                ProductName = x.ProductName,
+                ProductImage = x.ProductImage,
+                Quantity = x.Quantity,
+                Price = x.Price
+            }).ToList();
 
-            return View(cartItems ?? new List<CartItemViewModel>());
+            return View(cartItems);
         }
+
+
         [HttpPost("/cart/update")]
         public async Task<IActionResult> UpdateCart(int cartItemId, byte quantity)
         {
-            SetJwtHeader();
 
-            var response = await _httpClient.PutAsJsonAsync(
-                $"https://localhost:7200/api/cart/{cartItemId}",
-                new { Quantity = quantity });
+            var jwt = HttpContext.Request.Cookies["jwt"];
 
-            if (!response.IsSuccessStatusCode)
+            if (string.IsNullOrEmpty(jwt))
+                return RedirectToAction("Login", "Auth");
+
+            var result = await _cartService.UpdateItemAsync(
+                jwt,
+                cartItemId,
+                new UpdateCartItemDto { Quantity = quantity }
+            );
+
+            if (!result.IsSuccess)
             {
                 TempData["ErrorMessage"] = "Cart item could not be updated.";
-                return RedirectToAction(nameof(Edit));
             }
 
             return RedirectToAction(nameof(Edit));
         }
 
+
+
         [HttpGet("/checkout")]
         public async Task<IActionResult> Checkout()
         {
-            SetJwtHeader();
+            var jwt = HttpContext.Request.Cookies["jwt"];
 
-            var response = await _httpClient.PostAsync("https://localhost:7200/api/cart/checkout", null);
+            if (string.IsNullOrEmpty(jwt))
+                return RedirectToAction("Login", "Auth");
 
-            if (!response.IsSuccessStatusCode)
+            var result = await _cartService.CheckoutAsync(jwt);
+
+            if (!result.IsSuccess)
             {
                 TempData["ErrorMessage"] = "Checkout failed.";
                 return RedirectToAction(nameof(Edit));
             }
 
             TempData["SuccessMessage"] = "Checkout successful!";
-
-            return RedirectToAction("Index", "Home"); 
+            return RedirectToAction("Index", "Home");
         }
 
     }
