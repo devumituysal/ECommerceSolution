@@ -1,34 +1,36 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using App.Services.Abstract;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 
 namespace App.Admin.Controllers
 {
     [Authorize(Roles = "admin")]
-    public class ProductController : BaseController
+    public class ProductController : Controller
     {
-        public ProductController(IHttpClientFactory httpClientFactory)
-            : base(httpClientFactory.CreateClient("DataApi")){}
+        private readonly IProductService _productService;
+
+        public ProductController(IProductService productService)
+        {
+            _productService = productService;
+        }
 
         public async Task<IActionResult> Delete(int id)
         {
-            
-            if (!User.Identity!.IsAuthenticated)
+            var jwt = Request.Cookies["access_token"];
+
+            if (string.IsNullOrEmpty(jwt))
                 return RedirectToAction("Login", "Auth");
 
-            SetJwtHeader();
+            var result = await _productService.DeleteAsync(jwt, id);
 
-            var response = await _httpClient.DeleteAsync($"/api/products/{id}");
-
-            if (response.StatusCode == HttpStatusCode.NotFound)
+            if (!result.IsSuccess)
             {
-                TempData["ErrorMessage"] = "Product not found.";
-                return RedirectToAction("Index"); 
-            }
+                TempData["ErrorMessage"] =
+                    result.Status == Ardalis.Result.ResultStatus.NotFound
+                        ? "Product not found."
+                        : "Product could not be deleted.";
 
-            if (!response.IsSuccessStatusCode)
-            {
-                TempData["ErrorMessage"] = "Product could not be deleted.";
                 return RedirectToAction("Index");
             }
 

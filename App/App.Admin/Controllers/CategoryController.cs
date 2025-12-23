@@ -2,6 +2,8 @@
 using App.Data.Contexts;
 using App.Data.Entities;
 using App.Data.Repositories.Abstractions;
+using App.Models.DTO.Category;
+using App.Services.Abstract;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -11,26 +13,36 @@ namespace App.Admin.Controllers
 {
     [Route("/categories")]
     [Authorize(Roles = "admin")]
-    public class CategoryController : BaseController
+    public class CategoryController : Controller
     {
-        public CategoryController(IHttpClientFactory httpClientFactory)
-            : base(httpClientFactory.CreateClient("DataApi")){}
+        private readonly ICategoryService _categoryService;
+
+        public CategoryController(ICategoryService categoryService)
+        {
+            _categoryService = categoryService;
+        }
+
 
         [HttpGet]
         public async Task<IActionResult> List()
         {
-            SetJwtHeader();
+            var result = await _categoryService.GetAllAsync();
 
-            var response = await _httpClient.GetAsync("/api/categories");
-
-            if (!response.IsSuccessStatusCode)
+            if (!result.IsSuccess)
             {
                 TempData["ErrorMessage"] = "Categories could not be loaded.";
                 return View(new List<CategoryListViewModel>());
             }
 
-            var categories = await response.Content.ReadFromJsonAsync<List<CategoryListViewModel>>();
-            categories ??= new List<CategoryListViewModel>();
+            var categories = result.Value
+                .Select(c => new CategoryListViewModel
+                {
+                    Id = c.Id,
+                    Name = c.Name,
+                    Color = c.Color,
+                    IconCssClass = c.IconCssClass
+                })
+                .ToList();
 
             return View(categories);
         }
@@ -49,18 +61,16 @@ namespace App.Admin.Controllers
             if (!ModelState.IsValid)
                 return View(newCategoryModel);
 
-            SetJwtHeader();
+            var dto = new SaveCategoryDto
+            {
+                Name = newCategoryModel.Name,
+                Color = newCategoryModel.Color,
+                IconCssClass = newCategoryModel.IconCssClass
+            };
 
-            var response = await _httpClient.PostAsJsonAsync(
-                "/api/categories",
-                new
-                {
-                    Name = newCategoryModel.Name,
-                    Color = newCategoryModel.Color,
-                    IconCssClass = newCategoryModel.IconCssClass
-                });
+            var result = await _categoryService.CreateAsync(dto);
 
-            if (!response.IsSuccessStatusCode)
+            if (!result.IsSuccess)
             {
                 TempData["ErrorMessage"] = "Category could not be created.";
                 return View(newCategoryModel);
@@ -68,6 +78,7 @@ namespace App.Admin.Controllers
 
             TempData["SuccessMessage"] = "Category created successfully.";
             ModelState.Clear();
+
             return View();
         }
 
@@ -75,25 +86,24 @@ namespace App.Admin.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit([FromRoute] int categoryId)
         {
-            SetJwtHeader();
+            var result = await _categoryService.GetAllAsync();
 
-            var response = await _httpClient.GetAsync("/api/categories");
-            if (!response.IsSuccessStatusCode)
+            if (!result.IsSuccess)
                 return NotFound();
 
-            var categories = await response.Content.ReadFromJsonAsync<List<CategoryListViewModel>>();
-            var category = categories?.FirstOrDefault(c => c.Id == categoryId);
+            var category = result.Value.FirstOrDefault(c => c.Id == categoryId);
+
             if (category == null)
                 return NotFound();
 
-            var editModel = new SaveCategoryViewModel
+            var model = new SaveCategoryViewModel
             {
                 Name = category.Name,
                 Color = category.Color,
                 IconCssClass = category.IconCssClass
             };
 
-            return View(editModel);
+            return View(model);
         }
 
         [Route("{categoryId:int}/edit")]
@@ -103,18 +113,16 @@ namespace App.Admin.Controllers
             if (!ModelState.IsValid)
                 return View(editCategoryModel);
 
-            SetJwtHeader();
+            var dto = new SaveCategoryDto
+            {
+                Name = editCategoryModel.Name,
+                Color = editCategoryModel.Color,
+                IconCssClass = editCategoryModel.IconCssClass
+            };
 
-            var response = await _httpClient.PutAsJsonAsync(
-                $"/api/categories/{categoryId}",
-                new
-                {
-                    Name = editCategoryModel.Name,
-                    Color = editCategoryModel.Color,
-                    IconCssClass = editCategoryModel.IconCssClass
-                });
+            var result = await _categoryService.UpdateAsync(categoryId, dto);
 
-            if (!response.IsSuccessStatusCode)
+            if (!result.IsSuccess)
             {
                 TempData["ErrorMessage"] = "Category could not be updated.";
                 return View(editCategoryModel);
@@ -128,14 +136,12 @@ namespace App.Admin.Controllers
         [HttpGet]
         public async Task<IActionResult> Delete([FromRoute] int categoryId)
         {
-            SetJwtHeader();
+            var result = await _categoryService.DeleteAsync(categoryId);
 
-            var response = await _httpClient.DeleteAsync($"/api/categories/{categoryId}");
-
-            if (!response.IsSuccessStatusCode)
-            {
+            if (!result.IsSuccess)
                 TempData["ErrorMessage"] = "Category could not be deleted.";
-            }
+            else
+                TempData["SuccessMessage"] = "Category deleted successfully.";
 
             return RedirectToAction(nameof(List));
         }

@@ -19,7 +19,7 @@ namespace App.Services.Base
             FileClient = httpClientFactory.CreateClient("FileApi");
         }
 
-        protected async Task<HttpResponseMessage> SendAsync(HttpMethod method,string route,string jwt,object? body = null)
+        protected async Task<HttpResponseMessage> SendAsync(HttpMethod method,string route,string? jwt,object? body = null)
         {
             var request = new HttpRequestMessage(method, route);
 

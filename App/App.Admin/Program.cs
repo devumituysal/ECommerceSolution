@@ -1,5 +1,7 @@
 using App.Data.Contexts;
 using App.Data.Repositories.Extensions;
+using App.Services.Abstract;
+using App.Services.Concrete;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,6 +17,13 @@ builder.Services.AddHttpClient("DataApi", client =>
 {
     client.BaseAddress = new Uri(apiSettings["DataApiBaseUrl"]!);
 });
+
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<ICommentService, CommentService>();
+builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IUserService, UserService>();
+
+
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>

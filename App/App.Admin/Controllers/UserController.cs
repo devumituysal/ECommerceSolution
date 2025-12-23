@@ -2,6 +2,7 @@
 using App.Data.Contexts;
 using App.Data.Entities;
 using App.Data.Repositories.Abstractions;
+using App.Services.Abstract;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -11,31 +12,43 @@ using System.Text.Json;
 namespace App.Admin.Controllers
 {
     [Authorize(Roles = "admin")]
-    public class UserController : BaseController
+    public class UserController : Controller
     {
-        public UserController(IHttpClientFactory httpClientFactory)
-            : base(httpClientFactory.CreateClient("DataApi")){}
+        private readonly IUserService _userService;
+
+        public UserController(IUserService userService)
+        {
+            _userService = userService;
+        }
+
 
         public async Task<IActionResult> List()
         {
-            if (!User.Identity!.IsAuthenticated)
-            {
+            var jwt = Request.Cookies["access_token"];
+
+            if (string.IsNullOrEmpty(jwt))
                 return RedirectToAction("Login", "Auth");
-            }
 
-            SetJwtHeader();
+            var result = await _userService.GetUsersAsync(jwt);
 
-            var response = await _httpClient.GetAsync("/api/users/list");
-
-            if (!response.IsSuccessStatusCode)
+            if (!result.IsSuccess)
             {
                 TempData["ErrorMessage"] = "Kullanıcılar alınamadı.";
                 return View(new List<UserListItemViewModel>());
             }
 
-            var users = await response.Content.ReadFromJsonAsync<List<UserListItemViewModel>>();
-
-            users ??= new List<UserListItemViewModel>();
+            var users = result.Value
+                .Select(u => new UserListItemViewModel
+                {
+                    Id = u.Id,
+                    FirstName = u.FirstName,
+                    LastName = u.LastName,
+                    Email = u.Email,
+                    Role = u.Role,
+                    Enabled = u.Enabled,
+                    HasSellerRequest = u.HasSellerRequest
+                })
+                .ToList();
 
             return View(users);
         }
@@ -45,16 +58,14 @@ namespace App.Admin.Controllers
         [HttpGet]
         public async Task<IActionResult> Approve([FromRoute] int id)
         {
-            if (!User.Identity!.IsAuthenticated)
-            {
+            var jwt = Request.Cookies["access_token"];
+
+            if (string.IsNullOrEmpty(jwt))
                 return RedirectToAction("Login", "Auth");
-            }
 
-            SetJwtHeader();
+            var result = await _userService.ApproveAsync(jwt, id);
 
-            var response = await _httpClient.PostAsync($"/api/users/{id}/approve", null);
-
-            if (!response.IsSuccessStatusCode)
+            if (!result.IsSuccess)
             {
                 TempData["ErrorMessage"] = "Kullanıcı onaylanamadı.";
                 return RedirectToAction(nameof(List));
