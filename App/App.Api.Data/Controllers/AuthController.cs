@@ -1,8 +1,9 @@
-﻿using App.Models.DTO.Auth;
-using App.Data.Entities;
+﻿using App.Data.Entities;
 using App.Data.Repositories.Abstractions;
+using App.Models.DTO.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -28,10 +29,19 @@ namespace App.Api.Data.Controllers
         public async Task<IActionResult> Login([FromBody] LoginRequestDto loginRequestDto)
         {
             var user = await _repo.GetAll<UserEntity>()
-                .Include(u=>u.Role)
-                .FirstOrDefaultAsync(u=>u.Email == loginRequestDto.Email && u.Password == loginRequestDto.Password);
+                .Include(u => u.Role)
+                .FirstOrDefaultAsync(u => u.Email == loginRequestDto.Email);
 
             if (user == null)
+            {
+                return NotFound("Email veya şifre yanlış");
+            }
+
+            var hasher = new PasswordHasher<UserEntity>();
+
+            var verifyResult = hasher.VerifyHashedPassword(user,user.Password,loginRequestDto.Password);
+
+            if (verifyResult == PasswordVerificationResult.Failed)
             {
                 return NotFound("Email veya şifre yanlış");
             }
@@ -85,12 +95,14 @@ namespace App.Api.Data.Controllers
                 return BadRequest("Email already exists");
             }
 
+            var hasher = new PasswordHasher<UserEntity>();
+
             var user = new UserEntity
             {
                 FirstName = registerRequestDto.FirstName,
                 LastName = registerRequestDto.LastName,
                 Email = registerRequestDto.Email,
-                Password = registerRequestDto.Password,
+                Password = hasher.HashPassword(null!, registerRequestDto.Password),
                 RoleId =  2,
                 Enabled = true,
                 HasSellerRequest = false,

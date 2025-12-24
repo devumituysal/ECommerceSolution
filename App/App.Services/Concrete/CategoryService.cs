@@ -12,11 +12,11 @@ using System.Threading.Tasks;
 
 namespace App.Services.Concrete
 {
-    public class CategoryService : BaseService , ICategoryService
+    public class CategoryService : BaseService, ICategoryService
     {
-        public CategoryService(IHttpClientFactory httpClientFactory) : base(httpClientFactory) 
+        public CategoryService(IHttpClientFactory httpClientFactory) : base(httpClientFactory)
         {
-             
+
         }
 
         // GET /api/categories
@@ -79,4 +79,5 @@ namespace App.Services.Concrete
 
             return Result.Success();
         }
+    }
 }
