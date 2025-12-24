@@ -19,7 +19,7 @@ namespace App.Eticaret.Controllers
         [HttpGet("/add-to-cart/{productId:int}")]
         public async Task<IActionResult> AddProduct([FromRoute] int productId)
         {
-            var jwt = HttpContext.Request.Cookies["jwt"];
+            var jwt = HttpContext.Request.Cookies["access_token"];
 
             if (string.IsNullOrEmpty(jwt))
                 return RedirectToAction("Login", "Auth");
@@ -45,7 +45,7 @@ namespace App.Eticaret.Controllers
         [HttpGet("/cart")]
         public async Task<IActionResult> Edit()
         {
-            var jwt = HttpContext.Request.Cookies["jwt"];
+            var jwt = HttpContext.Request.Cookies["access_token"];
 
             if (string.IsNullOrEmpty(jwt))
                 return RedirectToAction("Login", "Auth");
@@ -75,7 +75,7 @@ namespace App.Eticaret.Controllers
         public async Task<IActionResult> UpdateCart(int cartItemId, byte quantity)
         {
 
-            var jwt = HttpContext.Request.Cookies["jwt"];
+            var jwt = HttpContext.Request.Cookies["access_token"];
 
             if (string.IsNullOrEmpty(jwt))
                 return RedirectToAction("Login", "Auth");
@@ -99,7 +99,7 @@ namespace App.Eticaret.Controllers
         [HttpGet("/checkout")]
         public async Task<IActionResult> Checkout()
         {
-            var jwt = HttpContext.Request.Cookies["jwt"];
+            var jwt = HttpContext.Request.Cookies["access_token"];
 
             if (string.IsNullOrEmpty(jwt))
                 return RedirectToAction("Login", "Auth");

@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 
 namespace App.Services.Concrete
 {
-    public class ProductService : BaseService, IProductService
+    public class ProductService : BaseService, IProductService 
     {
         public ProductService(IHttpClientFactory factory) : base(factory)
         {
@@ -212,7 +212,7 @@ namespace App.Services.Concrete
         // home detail sayfası için
         public async Task<Result<ProductDetailDto>> GetPublicByIdAsync(int productId)
         {
-            var response = await DataClient.GetAsync($"api/product/{productId}");
+            var response = await DataClient.GetAsync($"api/products/{productId}");
 
             if (response.StatusCode == HttpStatusCode.NotFound)
                 return Result.NotFound();

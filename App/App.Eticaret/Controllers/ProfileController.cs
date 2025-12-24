@@ -30,7 +30,7 @@ namespace App.Eticaret.Controllers
         [HttpGet("/profile")]
         public async Task<IActionResult> Details()
         {
-            var jwt = HttpContext.Request.Cookies["jwt"];
+            var jwt = HttpContext.Request.Cookies["access_token"];
 
             if (string.IsNullOrEmpty(jwt))
                 return RedirectToAction("Login", "Auth");
@@ -62,7 +62,7 @@ namespace App.Eticaret.Controllers
             if (!ModelState.IsValid)
                 return View(editMyProfileModel);
 
-            var jwt = HttpContext.Request.Cookies["jwt"];
+            var jwt = HttpContext.Request.Cookies["access_token"];
 
             if (string.IsNullOrEmpty(jwt))
                 return RedirectToAction("Login", "Auth");
@@ -93,7 +93,7 @@ namespace App.Eticaret.Controllers
         [HttpGet("/my-orders")]
         public async Task<IActionResult> MyOrders()
         {
-            var jwt = HttpContext.Request.Cookies["jwt"];
+            var jwt = HttpContext.Request.Cookies["access_token"];
 
             if (string.IsNullOrEmpty(jwt))
                 return RedirectToAction("Login", "Auth");
@@ -114,7 +114,7 @@ namespace App.Eticaret.Controllers
         [Authorize(Roles = "seller")]
         public async Task<IActionResult> MyProducts()
         {
-            var jwt = HttpContext.Request.Cookies["jwt"];
+            var jwt = HttpContext.Request.Cookies["access_token"];
 
             if (string.IsNullOrEmpty(jwt))
                 return RedirectToAction("Login", "Auth");

@@ -4,9 +4,7 @@
             <div class="row">
                 <div class="col-lg-6 col-md-6">
                     <div class="header__top__left">
-                        <ul>
-                            @* Sol taraf isteğin üzerine boşaltıldı *@
-                        </ul>
+                        <ul></ul>
                     </div>
                 </div>
                 <div class="col-lg-6 col-md-6">
@@ -15,16 +13,13 @@
                             @if (User.Identity.IsAuthenticated)
                             {
                                 <div style="display: flex; align-items: center; gap: 20px;">
-                                    @* Role claim'i içindeki "admin" kontrolü *@
                                     @if (User.IsInRole("admin"))
                                     {
-                                        @* Buradaki 7100 kısmını kendi Admin projenin portuyla değiştir *@
                                         <a href="https://localhost:7223/Home/Index" target="_blank" style="color:#d63031; font-weight:bold;">
                                             <i class="fa fa-cog"></i> Admin Paneli
                                         </a>
                                     }
 
-                                    @* AuthController -> [Route("/logout")] *@
                                     <a href="/logout">
                                         <i class="fa fa-sign-out"></i> Logout
                                     </a>
@@ -32,13 +27,11 @@
                             }
                             else
                             {
-                                @* Login olmamış kullanıcı için Dropdown menü *@
                                 <div class="header__top__right__language">
                                     <i class="fa fa-user"></i>
                                     <div>Hesabım</div>
                                     <span class="arrow_carrot-down"></span>
                                     <ul>
-                                        @* AuthController -> [Route("/login")] ve [Route("/register")] *@
                                         <li><a href="/login">Login</a></li>
                                         <li><a href="/register">Register</a></li>
                                     </ul>
@@ -50,47 +43,51 @@
             </div>
         </div>
     </div>
+
     <div class="container">
         <div class="row">
             <div class="col-lg-3">
                 <div class="header__logo">
-                    <a href="@Url.Action("Index", "Home", new { area = "" })">
+                    <a href="@Url.Action("Index", "Home")">
                         <img src="img/SiliconShopLogo.png" alt="Logo">
                     </a>
                 </div>
             </div>
+
             <div class="col-lg-6">
                 <nav class="header__menu">
                     <ul>
-                        <li class="active"><a href="@Url.Action("Index", "Home", new { area = "" })">Home</a></li>
-
-                        @* HomeController -> [Route("/products/list")] public async Task<IActionResult> Listing() *@
-                        <li><a href="/products/list">Shop</a></li>
-
-                        <li>
-                            <a href="#">Pages</a>
-                            <ul class="header__menu__dropdown">
-                                @* Shop Details için ürün listesine yönlendirme yapıldı *@
-                                <li><a href="/products/list">Shop Details</a></li>
-                                <li><a href="#">Shoping Cart</a></li>
-                                <li><a href="#">Check Out</a></li>
-                            </ul>
+                        <li class="active">
+                            <a href="@Url.Action("Index", "Home")">Home</a>
                         </li>
-                        @* HomeController -> [HttpGet("/contact")] *@
-                        <li><a href="/contact">Contact</a></li>
+                        <li>
+                            <a href="/products/list">Shop</a>
+                        </li>
+                        <li>
+                            <a href="/contact">Contact</a>
+                        </li>
                     </ul>
                 </nav>
             </div>
+
             <div class="col-lg-3">
                 <div class="header__cart">
                     <ul>
-                        <li><a href="#"><i class="fa fa-heart"></i> <span>1</span></a></li>
-                        <li><a href="#"><i class="fa fa-shopping-bag"></i> <span>3</span></a></li>
+                        @* Kalp iconu kaldırıldı *@
+
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <li>
+                                <a href="/cart">
+                                    <i class="fa fa-shopping-bag"></i>
+                                </a>
+                            </li>
+                        }
                     </ul>
-                    <div class="header__cart__price">item: <span>$150.00</span></div>
                 </div>
             </div>
         </div>
+
         <div class="humberger__open">
             <i class="fa fa-bars"></i>
         </div>
