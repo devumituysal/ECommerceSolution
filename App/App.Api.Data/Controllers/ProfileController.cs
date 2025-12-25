@@ -25,7 +25,7 @@ namespace App.Api.Data.Controllers
         [HttpGet]
         public async Task<IActionResult> GetProfile()
         {
-            var userId = int.Parse(User.FindFirst(ClaimTypes.Sid)!.Value);
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
             var user = await _repo.GetAll<UserEntity>()
                 .Include(u=>u.Role)

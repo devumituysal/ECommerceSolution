@@ -18,11 +18,19 @@ public class PublicProductsController : ControllerBase
 
     // GET api/products  (home listing)
     [HttpGet]
-    public async Task<IActionResult> GetPublicProducts()
+    public async Task<IActionResult> GetPublicProducts([FromQuery] int? categoryId , [FromQuery] string? q)
     {
-        var products = await _repo.GetAll<ProductEntity>()
-            .Include(p => p.Images)
-            .Include(p => p.Category)
+        var query = _repo.GetAll<ProductEntity>()
+               .Include(p => p.Images)
+               .Include(p => p.Category)
+               .AsQueryable();
+
+        if (categoryId.HasValue)
+            query = query.Where(p => p.CategoryId == categoryId.Value);
+        if (!string.IsNullOrWhiteSpace(q))
+            query = query.Where(p => p.Name.Contains(q) || p.Details.Contains(q));
+
+        var products = await query
             .Select(p => new ProductListItemDto
             {
                 Id = p.Id,
@@ -71,5 +79,24 @@ public class PublicProductsController : ControllerBase
         };
 
         return Ok(dto);
+    }
+
+    [HttpGet("latest")]
+    public async Task<IActionResult> GetLatest(int count = 8)
+    {
+        var products = await _repo.GetAll<ProductEntity>()
+            .Include(p => p.Images)
+            .OrderByDescending(p => p.CreatedAt)
+            .Take(count)
+            .Select(p => new ProductListItemDto
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Price = p.Price,
+                ImageUrl = p.Images.FirstOrDefault() != null ? $"https://localhost:7132/{p.Images.First().Url.TrimStart('/')}" : ""
+            })
+            .ToListAsync();
+
+        return Ok(products);
     }
 }

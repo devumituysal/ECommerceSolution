@@ -1,4 +1,5 @@
 ﻿using App.Models.DTO.Auth;
+using App.Models.DTO.Profile;
 using App.Services.Abstract;
 using App.Services.Base;
 using Ardalis.Result;
@@ -81,6 +82,24 @@ namespace App.Services.Concrete
                 return Result.Error();
 
             return Result.Success();
+        }
+
+        public async Task<Result<ProfileDetailDto>> GetProfileAsync(string token)
+        {
+            DataClient.DefaultRequestHeaders.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            var response = await DataClient.GetAsync("api/users/profile");
+
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+                return Result.Unauthorized();
+
+            if (!response.IsSuccessStatusCode)
+                return Result.Error();
+
+            var result = await response.Content.ReadFromJsonAsync<ProfileDetailDto>();
+
+            return Result.Success(result!);
         }
     }
 }

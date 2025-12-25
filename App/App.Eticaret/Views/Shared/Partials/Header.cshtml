@@ -12,17 +12,33 @@
                         <div class="header__top__right__auth">
                             @if (User.Identity.IsAuthenticated)
                             {
-                                <div style="display: flex; align-items: center; gap: 20px;">
-                                    @if (User.IsInRole("admin"))
-                                    {
-                                        <a href="https://localhost:7223/Home/Index" target="_blank" style="color:#d63031; font-weight:bold;">
-                                            <i class="fa fa-cog"></i> Admin Paneli
-                                        </a>
-                                    }
+                                <div class="header__top__right__language">
+                                    <i class="fa fa-user"></i>
+                                    <div>Hesabım</div>
+                                    <span class="arrow_carrot-down"></span>
 
-                                    <a href="/logout">
-                                        <i class="fa fa-sign-out"></i> Logout
-                                    </a>
+                                    <ul>
+                                        <li>
+                                            <a href="/profile">
+                                                <i class="fa fa-user-circle"></i> My Profile
+                                            </a>
+                                        </li>
+
+                                        @if (User.IsInRole("admin"))
+                                        {
+                                            <li>
+                                                <a href="https://localhost:7223/Home/Index" target="_blank" style="color:#d63031; font-weight:bold;">
+                                                    <i class="fa fa-cog"></i> Admin Paneli
+                                                </a>
+                                            </li>
+                                        }
+
+                                        <li>
+                                            <a href="/logout">
+                                                <i class="fa fa-sign-out"></i> Logout
+                                            </a>
+                                        </li>
+                                    </ul>
                                 </div>
                             }
                             else
@@ -49,7 +65,7 @@
             <div class="col-lg-3">
                 <div class="header__logo">
                     <a href="@Url.Action("Index", "Home")">
-                        <img src="img/SiliconShopLogo.png" alt="Logo">
+                        <img src="~/img/SiliconShopLogo.png" alt="Logo">
                     </a>
                 </div>
             </div>

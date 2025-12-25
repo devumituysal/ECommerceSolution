@@ -3,6 +3,7 @@ using App.Data.Entities;
 using App.Data.Repositories.Abstractions;
 using App.Eticaret.Models.ViewModels;
 using App.Models.DTO.Contact;
+using App.Models.DTO.Product;
 using App.Services.Abstract;
 using App.Services.Concrete;
 using Microsoft.AspNetCore.Mvc;
@@ -16,16 +17,27 @@ namespace App.Eticaret.Controllers
     {
         private readonly IContactService _contactService;
         private readonly IProductService _productService;
+        private readonly ICategoryService _categoryService;
 
-        public HomeController(IContactService contactService,IProductService productService)
+        public HomeController(IContactService contactService,IProductService productService,ICategoryService categoryService)
         {
             _contactService = contactService;
             _productService = productService;
+            _categoryService = categoryService;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            return View();
+            var categoryResult = await _categoryService.GetCategoriesWithFirstProductImageAsync();
+            var productsResult = await _productService.GetLatestAsync(8);
+
+            var vm = new HomeIndexViewModel
+            {
+                Categories = categoryResult.Value ?? new(),
+                LatestProducts = productsResult.IsSuccess ? productsResult.Value : new List<ProductListItemDto>()
+            };
+
+            return View(vm);
         }
 
         [HttpGet("/about-us")]
@@ -69,10 +81,10 @@ namespace App.Eticaret.Controllers
 
         }
 
-        [Route("/products/list")]    
-        public async Task<IActionResult> Listing()
+        [Route("/products/list")]
+        public async Task<IActionResult> Listing(int? categoryId, string? q)
         {
-            var result = await _productService.GetPublicProductsAsync();
+            var result = await _productService.GetPublicProductsAsync(categoryId,q);
 
             if (!result.IsSuccess)
                 return View(new List<ProductListItemViewModel>());

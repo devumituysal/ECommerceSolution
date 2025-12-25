@@ -19,8 +19,9 @@ namespace App.Api.Data.Controllers
             _repo = repo;
         }
         
+
         [HttpGet]
-        [Authorize]
+        [AllowAnonymous]
         public async Task<IActionResult> GetAll()
         {
             var categories = await _repo.GetAll<CategoryEntity>()
@@ -85,6 +86,26 @@ namespace App.Api.Data.Controllers
             await _repo.Delete(category);
 
             return NoContent();
+        }
+
+        [HttpGet("with-first-product")]
+        public async Task<IActionResult> GetCategoriesWithFirstProduct()
+        {
+            var categories = await _repo.GetAll<CategoryEntity>()
+                .Select(c => new
+                {
+                    c.Id,
+                    c.Name,
+                    FirstProductImage = _repo.GetAll<ProductEntity>()
+                        .Where(p => p.CategoryId == c.Id)
+                        .OrderBy(p => p.Id)
+                        .SelectMany(p => p.Images)
+                        .Select(i => i.Url)
+                        .FirstOrDefault()
+                })
+                .ToListAsync();
+
+            return Ok(categories);
         }
     }
 }

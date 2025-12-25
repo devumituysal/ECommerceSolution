@@ -14,5 +14,6 @@ namespace App.Services.Abstract
         Task<Result> CreateAsync(SaveCategoryDto dto);
         Task<Result> UpdateAsync(int categoryId, SaveCategoryDto dto);
         Task<Result> DeleteAsync(int categoryId);
+        Task<Result<List<CategoryWithImageDto>>> GetCategoriesWithFirstProductImageAsync();
     }
 }
