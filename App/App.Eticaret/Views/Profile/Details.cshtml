@@ -1,53 +1,160 @@
 ﻿@model ProfileDetailsViewModel
 
 @{
-    ViewData["Title"] = "Profile Details";
+    ViewData["Title"] = "My Profile";
 }
 
-<div class="container">
-    <h2>@ViewData["Title"]</h2>
+<div class="container mt-4">
 
-    <partial name="Partials/ViewMessages" />
+    <h2 class="mb-4">@ViewData["Title"]</h2>
 
-    @* 🔹 FORM: enctype EKLENDİ *@
-    <form asp-action="Edit" asp-controller="Profile" method="post" enctype="multipart/form-data">
-
-        <div class="form-group">
-            <label asp-for="FirstName">First Name</label>
-            <input asp-for="FirstName" class="form-control" />
-            <span asp-validation-for="FirstName" class="text-danger"></span>
+    <!-- 🔔 MESSAGES -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            <span>@TempData["SuccessMessage"]</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
+    }
 
-        <div class="form-group">
-            <label asp-for="LastName">Last Name</label>
-            <input asp-for="LastName" class="form-control" />
-            <span asp-validation-for="LastName" class="text-danger"></span>
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            <span>@TempData["ErrorMessage"]</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
+    }
 
-        <div class="form-group">
-            <label asp-for="Email">Email</label>
-            <input asp-for="Email" class="form-control" />
-            <span asp-validation-for="Email" class="text-danger"></span>
+    <!-- ================= PROFILE SECTION ================= -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form asp-action="Edit" asp-controller="Profile" method="post" enctype="multipart/form-data">
+
+                <div class="row">
+
+                    <!-- PROFILE IMAGE -->
+                    <div class="col-md-4 text-center">
+                        <img src="@(Model.ProfileImageUrl ?? "/images/default-avatar.png")"
+                             class="img-fluid rounded-circle mb-3"
+                             style="width:150px;height:150px;object-fit:cover" />
+
+                        <div class="mb-3">
+                            <input asp-for="ProfileImage" type="file" class="form-control" />
+                        </div>
+                    </div>
+
+                    <!-- PROFILE FORM -->
+                    <div class="col-md-8">
+
+                        <div class="mb-3">
+                            <label asp-for="FirstName" class="form-label"></label>
+                            <input asp-for="FirstName" class="form-control" />
+                            <span asp-validation-for="FirstName" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="LastName" class="form-label"></label>
+                            <input asp-for="LastName" class="form-control" />
+                            <span asp-validation-for="LastName" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label"></label>
+                            <input asp-for="Email" class="form-control" />
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            Save Changes
+                        </button>
+
+                    </div>
+                </div>
+            </form>
         </div>
+    </div>
 
-        @* 🔹 MEVCUT PROFİL FOTOĞRAFI (varsa) *@
-        @if (!string.IsNullOrEmpty(Model.ProfileImageUrl))
-        {
-            <div class="form-group mt-3">
-                <label>Current Profile Image</label><br />
-                <img src="@Model.ProfileImageUrl"
-                     style="width:120px;height:120px;object-fit:cover;border-radius:50%" />
+    <!-- ================= MY ORDERS ================= -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">My Orders</h5>
+        </div>
+        <div class="card-body">
+
+            @if (Model.Orders != null && Model.Orders.Any())
+            {
+                <table class="table table-striped align-middle">
+                    <thead>
+                        <tr>
+                            <th>Order Code</th>
+                            <th>Date</th>
+                            <th>Total Products</th>
+                            <th>Total Quantity</th>
+                            <th>Total Price</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var order in Model.Orders)
+                        {
+                            <tr>
+                                <td>@order.OrderCode</td>
+                                <td>@order.CreatedAt.ToShortDateString()</td>
+                                <td>@order.TotalProducts</td>
+                                <td>@order.TotalQuantity</td>
+                                <td>@order.TotalPrice ₺</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <p class="text-muted mb-0">You have no orders.</p>
+            }
+
+        </div>
+    </div>
+
+    <!-- ================= MY PRODUCTS (SELLER ONLY) ================= -->
+    @if (User.IsInRole("seller"))
+    {
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">My Products</h5>
             </div>
-        }
+            <div class="card-body">
 
-        @* 🔹 PROFİL FOTOĞRAFI UPLOAD *@
-        <div class="form-group mt-3">
-            <label asp-for="ProfileImage">Profile Image</label>
-            <input asp-for="ProfileImage" type="file" class="form-control" />
+                @if (Model.Products.Any())
+                {
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Price</th>
+                                <th>Stock</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var product in Model.Products)
+                            {
+                                <tr>
+                                    <td>@product.Name</td>
+                                    <td>@product.Price ₺</td>
+                                    <td>@product.Stock</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <p class="text-muted mb-0">You have no products.</p>
+                }
+
+            </div>
         </div>
+    }
 
-        <button type="submit" class="btn btn-primary mt-3">Save</button>
-    </form>
 </div>
 
 @section Scripts {

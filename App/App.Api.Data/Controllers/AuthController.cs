@@ -48,7 +48,7 @@ namespace App.Api.Data.Controllers
 
             var claims = new[]
             {
-                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),   
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim(ClaimTypes.Name, user.FirstName + " " + user.LastName),
                 new Claim(ClaimTypes.Role, user.Role.Name)
@@ -103,7 +103,7 @@ namespace App.Api.Data.Controllers
                 LastName = registerRequestDto.LastName,
                 Email = registerRequestDto.Email,
                 Password = hasher.HashPassword(null!, registerRequestDto.Password),
-                RoleId =  2,
+                RoleId =  3,
                 Enabled = true,
                 HasSellerRequest = false,
             };

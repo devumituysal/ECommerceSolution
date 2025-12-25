@@ -49,10 +49,10 @@ namespace App.Api.Data.Controllers
 
         [Authorize]
         [HttpPut]
-        public async Task<IActionResult> UpdateProfile([FromBody] ProfileDetailDto updateProfileDetail)
+        public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileDto updateProfileDetail)
         {
-            var userId = int.Parse(User.FindFirst(ClaimTypes.Sid)!.Value);
-
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+     
             var user = await _repo.GetAll<UserEntity>()
                 .Include(u => u.Role)
                 .FirstOrDefaultAsync(u => u.Id == userId);

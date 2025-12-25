@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using App.Models.DTO.Order;
+using App.Models.DTO.Product;
+using System.ComponentModel.DataAnnotations;
 
 namespace App.Eticaret.Models.ViewModels
 {
@@ -20,6 +22,9 @@ namespace App.Eticaret.Models.ViewModels
         public IFormFile? ProfileImage { get; set; }
 
         public string? ProfileImageUrl { get; set; }
+
+        public List<OrderDto> Orders { get; set; } = new();
+        public List<ProductListItemDto> Products { get; set; } = new();
 
     }
 }

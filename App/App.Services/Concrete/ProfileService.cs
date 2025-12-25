@@ -41,7 +41,7 @@ namespace App.Services.Concrete
                 : Result.Success(profile);
         }
 
-        public async Task<Result> UpdateMyProfileAsync(string jwt, ProfileDetailDto dto)
+        public async Task<Result> UpdateMyProfileAsync(string jwt, UpdateProfileDto dto)
         {
             var response = await SendAsync(
                 HttpMethod.Put,
