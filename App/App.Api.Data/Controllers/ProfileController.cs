@@ -43,6 +43,7 @@ namespace App.Api.Data.Controllers
                 LastName = user.LastName,
                 Email = user.Email,
                 Role = user.Role.Name,
+                HasSellerRequest = user.HasSellerRequest
             });
         }
 
@@ -76,6 +77,28 @@ namespace App.Api.Data.Controllers
 
             return NoContent();
         }
+
+        [Authorize]
+        [HttpPost("request-seller")]
+        public async Task<IActionResult> RequestSeller()
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            var user = await _repo.GetAll<UserEntity>()
+                .FirstOrDefaultAsync(x => x.Id == userId);
+
+            if (user == null)
+                return NotFound();
+
+            if (user.HasSellerRequest)
+                return BadRequest(new { message = "Seller request already sent." });
+
+            user.HasSellerRequest = true;
+            await _repo.Update(user);
+
+            return Ok();
+        }
+
 
 
     }

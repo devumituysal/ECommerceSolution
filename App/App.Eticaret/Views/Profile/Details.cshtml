@@ -56,6 +56,25 @@
         </div>
     </div>
 
+    <!-- ================= SELLER REQUEST ================= -->
+    @if (User.IsInRole("buyer"))
+    {
+        if (Model.HasSellerRequest)
+        {
+            <button class="btn btn-secondary mt-3" disabled>
+                Seller request sent
+            </button>
+        }
+        else
+        {
+            <form asp-action="RequestSeller" method="post" class="mt-3">
+                <button type="submit" class="btn btn-warning">
+                    Request Seller Account
+                </button>
+            </form>
+        }
+    }
+
     <!-- ================= MY ORDERS ================= -->
     <div class="card mb-4">
         <div class="card-header">

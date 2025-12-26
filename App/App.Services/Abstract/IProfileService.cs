@@ -12,5 +12,6 @@ namespace App.Services.Abstract
     {
         Task<Result<ProfileDetailDto>> GetMyProfileAsync(string jwt);
         Task<Result> UpdateMyProfileAsync(string jwt, UpdateProfileDto dto);
+        Task<Result> RequestSellerAsync(string jwt);
     }
 }

@@ -16,6 +16,6 @@ namespace App.Eticaret.Models.ViewModels
         public string Email { get; set; } = null!;
         public List<OrderDto> Orders { get; set; } = new();
         public List<ProductListItemDto> Products { get; set; } = new();
-
+        public bool HasSellerRequest { get; set; }
     }
 }
