@@ -6,32 +6,27 @@
 <section class="contact spad">
     <div class="container">
         <div class="row">
-            <div class="col-lg-3 col-md-3 col-sm-6 text-center">
+            <div class="col-lg-4 col-md-4 col-sm-6 text-center">
                 <div class="contact__widget">
                     <span class="icon_phone"></span>
                     <h4>Phone</h4>
-                    <p>+01-3-8888-6868</p>
+                    <p>+90 555 555 55 55</p>
                 </div>
             </div>
-            <div class="col-lg-3 col-md-3 col-sm-6 text-center">
+
+            <div class="col-lg-4 col-md-4 col-sm-6 text-center">
                 <div class="contact__widget">
                     <span class="icon_pin_alt"></span>
                     <h4>Address</h4>
-                    <p>60-49 Road 11378 New York</p>
+                    <p>Salihli / Manisa</p>
                 </div>
             </div>
-            <div class="col-lg-3 col-md-3 col-sm-6 text-center">
-                <div class="contact__widget">
-                    <span class="icon_clock_alt"></span>
-                    <h4>Open time</h4>
-                    <p>10:00 am to 23:00 pm</p>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-3 col-sm-6 text-center">
+
+            <div class="col-lg-4 col-md-4 col-sm-6 text-center">
                 <div class="contact__widget">
                     <span class="icon_mail_alt"></span>
                     <h4>Email</h4>
-                    <p>hello@colorlib.com</p>
+                    <p>dev.umituysal@gmail.com</p>
                 </div>
             </div>
         </div>
@@ -48,7 +43,6 @@
             </div>
         </div>
 
-        <!-- Success message (TempData preferred, fallback to ViewBag) -->
         @if (TempData["SuccessMessage"] != null)
         {
             <div class="alert alert-success" role="alert">
@@ -69,14 +63,17 @@
                     <input asp-for="Name" placeholder="Your name" class="form-control" />
                     <span asp-validation-for="Name" class="text-danger"></span>
                 </div>
+
                 <div class="col-lg-6 col-md-6">
                     <input asp-for="Email" placeholder="Your Email" class="form-control" />
                     <span asp-validation-for="Email" class="text-danger"></span>
                 </div>
+
                 <div class="col-lg-12 text-center mt-3">
                     <textarea asp-for="Message" placeholder="Your message" class="form-control" rows="6"></textarea>
                     <span asp-validation-for="Message" class="text-danger"></span>
                 </div>
+
                 <div class="col-lg-12 text-center mt-3">
                     <button type="submit" class="site-btn">SEND MESSAGE</button>
                 </div>
@@ -84,4 +81,3 @@
         </form>
     </div>
 </div>
-

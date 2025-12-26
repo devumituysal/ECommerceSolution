@@ -29,7 +29,7 @@ namespace App.Eticaret.Controllers
                 return View(model);
             }
 
-            var jwt = Request.Cookies["jwt"];
+            var jwt = Request.Cookies["access_token"];
 
             if (string.IsNullOrEmpty(jwt))
             {
@@ -57,7 +57,7 @@ namespace App.Eticaret.Controllers
         [HttpGet("/order/{orderCode}/details")]
         public async Task<IActionResult> Details([FromRoute] string orderCode)
         {
-            var jwt = Request.Cookies["jwt"];
+            var jwt = Request.Cookies["access_token"];
 
             if (string.IsNullOrEmpty(jwt))
             {

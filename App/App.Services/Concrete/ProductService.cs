@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 
 namespace App.Services.Concrete
 {
-    public class ProductService : BaseService, IProductService
+    public class ProductService : BaseService, IProductService 
     {
         public ProductService(IHttpClientFactory factory) : base(factory)
         {
@@ -196,23 +196,34 @@ namespace App.Services.Concrete
         }
 
         // home listing sayfası için...login olmayan kullanıcılar... ( jwt siz)
-        public async Task<Result<List<ProductListItemDto>>> GetPublicProductsAsync()
+        public async Task<Result<List<ProductListItemDto>>> GetPublicProductsAsync(int? categoryId, string? search)
         {
-            var response = await DataClient.GetAsync("api/products");
+            var url = "api/products";
+            var queryParams = new List<string>();
+
+            if (categoryId.HasValue)
+                queryParams.Add($"categoryId={categoryId.Value}");
+            if (!string.IsNullOrWhiteSpace(search))
+                queryParams.Add($"q={WebUtility.UrlEncode(search)}");
+
+            if (queryParams.Any())
+                url += "?" + string.Join("&", queryParams);
+
+            var response = await DataClient.GetAsync(url);
 
             if (!response.IsSuccessStatusCode)
-                return Result.Error();
+                return Result.Error("Products could not be loaded");
 
-            var result =
+            var products =
                 await response.Content.ReadFromJsonAsync<List<ProductListItemDto>>();
 
-            return Result.Success(result!);
+            return Result.Success(products ?? new());
         }
 
         // home detail sayfası için
         public async Task<Result<ProductDetailDto>> GetPublicByIdAsync(int productId)
         {
-            var response = await DataClient.GetAsync($"api/product/{productId}");
+            var response = await DataClient.GetAsync($"api/products/{productId}");
 
             if (response.StatusCode == HttpStatusCode.NotFound)
                 return Result.NotFound();
@@ -222,6 +233,16 @@ namespace App.Services.Concrete
 
             var dto = await response.Content.ReadFromJsonAsync<ProductDetailDto>();
             return Result.Success(dto!);
+        }
+
+        public async Task<Result<List<ProductListItemDto>>> GetLatestAsync(int count)
+        {
+            var response = await DataClient.GetAsync($"api/products/latest?count={count}");
+            if (!response.IsSuccessStatusCode)
+                return Result.Error("Products could not be loaded");
+
+            var products = await response.Content.ReadFromJsonAsync<List<ProductListItemDto>>();
+            return Result.Success(products ?? new());
         }
     }
 }

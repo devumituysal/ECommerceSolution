@@ -23,7 +23,7 @@ namespace App.Data.Configurations
                 .IsRequired();
 
             builder.HasOne(pi => pi.Product)
-                .WithMany()
+                .WithMany(x => x.Images)
                 .HasForeignKey(pi => pi.ProductId)
                 .OnDelete(DeleteBehavior.NoAction);
         }

@@ -3,9 +3,12 @@ using App.Data.Entities;
 using App.Data.Repositories.Abstractions;
 using App.Eticaret.Models.ApiResponses;
 using App.Eticaret.Models.ViewModels;
+using App.Models.DTO.Order;
+using App.Models.DTO.Product;
 using App.Models.DTO.Profile;
 using App.Services.Abstract;
 using App.Services.Concrete;
+using Ardalis.Result;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -30,70 +33,81 @@ namespace App.Eticaret.Controllers
         [HttpGet("/profile")]
         public async Task<IActionResult> Details()
         {
-            var jwt = HttpContext.Request.Cookies["jwt"];
-
+            var jwt = HttpContext.Request.Cookies["access_token"];
             if (string.IsNullOrEmpty(jwt))
                 return RedirectToAction("Login", "Auth");
 
-            var result = await _profileService.GetMyProfileAsync(jwt);
-
-            if (!result.IsSuccess)
+            // PROFILE
+            var profileResult = await _profileService.GetMyProfileAsync(jwt);
+            if (!profileResult.IsSuccess)
                 return RedirectToAction("Login", "Auth");
 
-            var dto = result.Value;
+            // ORDERS
+            var ordersResult = await _orderService.GetMyOrdersAsync(jwt);
 
-            var profileDetail = new ProfileDetailsViewModel
+            // PRODUCTS (seller only)
+            Result<List<ProductListItemDto>>? productsResult = null;
+            if (User.IsInRole("seller"))
+            {
+                productsResult = await _productService.GetMyProductsAsync(jwt);
+            }
+
+            var dto = profileResult.Value;
+
+            var model = new ProfileDetailsViewModel
             {
                 FirstName = dto.FirstName,
                 LastName = dto.LastName,
                 Email = dto.Email,
-                ProfileImagePath = dto.ProfileImage,
-                ProfileImageUrl = string.IsNullOrEmpty(dto.ProfileImage)
-                    ? null
-                    : $"/uploads/{dto.ProfileImage}"
+
+                Orders = ordersResult.IsSuccess
+                    ? ordersResult.Value
+                    : new List<OrderDto>(),
+
+                Products = productsResult != null && productsResult.IsSuccess
+                    ? productsResult.Value
+                    : new List<ProductListItemDto>()
             };
 
-            return View(profileDetail);
+            return View(model);
+
         }
 
         [HttpPost("/profile")]
         public async Task<IActionResult> Edit([FromForm] ProfileDetailsViewModel editMyProfileModel)
         {
             if (!ModelState.IsValid)
-                return View(editMyProfileModel);
+                return RedirectToAction(nameof(Details));
 
-            var jwt = HttpContext.Request.Cookies["jwt"];
-
+            var jwt = HttpContext.Request.Cookies["access_token"];
             if (string.IsNullOrEmpty(jwt))
                 return RedirectToAction("Login", "Auth");
 
-            var dto = new ProfileDetailDto
+            var dto = new UpdateProfileDto
             {
                 FirstName = editMyProfileModel.FirstName,
                 LastName = editMyProfileModel.LastName,
-                Email = editMyProfileModel.Email,
-                ProfileImage = editMyProfileModel.ProfileImagePath
+                Email = editMyProfileModel.Email
             };
 
             var result = await _profileService.UpdateMyProfileAsync(jwt, dto);
 
             if (!result.IsSuccess)
             {
-                ModelState.AddModelError("", result.Errors.FirstOrDefault() ?? "Profil güncellenemedi.");
-                return View(editMyProfileModel);
+                TempData["ErrorMessage"] =
+                    result.Errors.FirstOrDefault() ?? "Profil güncellenemedi.";
+
+                return RedirectToAction(nameof(Details));
             }
 
             TempData["SuccessMessage"] = "Profiliniz başarıyla güncellendi.";
             return RedirectToAction(nameof(Details));
-
-
-
         }
 
         [HttpGet("/my-orders")]
         public async Task<IActionResult> MyOrders()
         {
-            var jwt = HttpContext.Request.Cookies["jwt"];
+            var jwt = HttpContext.Request.Cookies["access_token"];
 
             if (string.IsNullOrEmpty(jwt))
                 return RedirectToAction("Login", "Auth");
@@ -114,7 +128,7 @@ namespace App.Eticaret.Controllers
         [Authorize(Roles = "seller")]
         public async Task<IActionResult> MyProducts()
         {
-            var jwt = HttpContext.Request.Cookies["jwt"];
+            var jwt = HttpContext.Request.Cookies["access_token"];
 
             if (string.IsNullOrEmpty(jwt))
                 return RedirectToAction("Login", "Auth");

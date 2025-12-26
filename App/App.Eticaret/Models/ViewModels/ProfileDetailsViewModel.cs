@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using App.Models.DTO.Order;
+using App.Models.DTO.Product;
+using System.ComponentModel.DataAnnotations;
 
 namespace App.Eticaret.Models.ViewModels
 {
@@ -12,14 +14,8 @@ namespace App.Eticaret.Models.ViewModels
 
         [Required, MaxLength(256), EmailAddress]
         public string Email { get; set; } = null!;
-
-        // 🔹 API’den gelen mevcut dosya adı
-        public string? ProfileImagePath { get; set; }
-
-        // 🔹 Formdan upload edilen dosya
-        public IFormFile? ProfileImage { get; set; }
-
-        public string? ProfileImageUrl { get; set; }
+        public List<OrderDto> Orders { get; set; } = new();
+        public List<ProductListItemDto> Products { get; set; } = new();
 
     }
 }

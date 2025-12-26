@@ -83,6 +83,15 @@ namespace App.Data.Contexts
                     CreatedAt = DateTime.UtcNow
                 }
             );
+
+            modelBuilder.Entity<ProductImageEntity>().HasData(
+                new ProductImageEntity
+                {
+                    Id = 1,
+                    ProductId = 1,      
+                    Url = "/uploads/test-product.png"
+                }
+            );
         }
     }
 }

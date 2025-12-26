@@ -30,6 +30,7 @@ builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IProfileService, ProfileService>();
 builder.Services.AddScoped<IContactService, ContactService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
 
 
 
