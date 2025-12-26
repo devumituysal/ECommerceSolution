@@ -80,8 +80,20 @@ namespace App.Services.Concrete
             return Result.Success();
         }
 
+        public async Task<Result> RequestSellerAsync(string jwt)
+        {
+            var response = await SendAsync(
+                HttpMethod.Post,
+                "api/profile/request-seller",
+                jwt
+            );
+
+            if (!response.IsSuccessStatusCode)
+                return Result.Error("Seller request failed.");
+
+            return Result.Success();
+        }
+
     }
-
-
 }
 
