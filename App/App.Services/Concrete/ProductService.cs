@@ -107,14 +107,22 @@ namespace App.Services.Concrete
         }
 
         // POST /api/product/{productId}/images
-        public async Task<Result> UploadImagesAsync(string jwt, int productId, List<IFormFile> files)
+        public async Task<Result> UploadImagesAsync(
+            string jwt,
+            int productId,
+            List<IFormFile> files)
         {
+            var imageUrls = new List<string>();
+
             foreach (var file in files)
             {
-                // 1️ File API'ye upload
+                // 1️⃣ File API'ye upload
                 var content = new MultipartFormDataContent();
+                var streamContent = new StreamContent(file.OpenReadStream());
+                streamContent.Headers.ContentType = new MediaTypeHeaderValue(file.ContentType);
+
                 content.Add(
-                    new StreamContent(file.OpenReadStream()),
+                    streamContent,
                     "file",
                     file.FileName);
 
@@ -135,20 +143,32 @@ namespace App.Services.Concrete
                 var uploadResult =
                     await uploadResponse.Content
                         .ReadFromJsonAsync<FileUploadResponseDto>();
+               
 
-                // 2️ Data API'de ürünle ilişkilendir
-                var imageResponse = await SendAsync(
-                    HttpMethod.Post,
-                    $"api/product/{productId}/images",
-                    jwt,
-                    new { fileName = uploadResult!.FileName });
-
-                if (!imageResponse.IsSuccessStatusCode)
-                    return Result.Error("Image relation failed");
+                var fileApiBaseUrl = "https://localhost:7132";
+                imageUrls.Add($"{fileApiBaseUrl}/uploads/{uploadResult!.FileName}");
             }
+
+            // 2️⃣ Data API – toplu ilişkilendir
+            var dto = new AddProductImagesRequestDto
+            {
+                ImageUrls = imageUrls
+            };
+
+            var imageResponse = await SendAsync(
+                HttpMethod.Post,
+                $"api/product/{productId}/images",
+                jwt,
+                dto);
+          
+
+            if (!imageResponse.IsSuccessStatusCode)
+                return Result.Error("Image relation failed");
 
             return Result.Success();
         }
+
+
 
         // DELETE /api/product/{productId}/images?fileName=xxx
         public async Task<Result> DeleteImageAsync(string jwt, int productId, string fileName)

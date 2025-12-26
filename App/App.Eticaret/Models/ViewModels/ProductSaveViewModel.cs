@@ -1,11 +1,10 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using App.Models.DTO.Category;
+using System.ComponentModel.DataAnnotations;
 
 namespace App.Eticaret.Models.ViewModels
 {
     public class ProductSaveViewModel
     {
-        public int SellerId { get; set; }
-
         [Required]
         public int CategoryId { get; set; }
 
@@ -23,5 +22,6 @@ namespace App.Eticaret.Models.ViewModels
 
         public IList<IFormFile> Images { get; set; } = new List<IFormFile>();
         public List<string> ExistingImages { get; set; } = new();
+        public List<CategoryListItemDto> Categories { get; set; } = new();
     }
 }

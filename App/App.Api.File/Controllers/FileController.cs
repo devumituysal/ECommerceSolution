@@ -11,8 +11,7 @@ namespace App.Api.File.Controllers
     {
         [Authorize(Roles = "seller,admin")]
         [HttpPost("upload")]
-        [Consumes("multipart/form-data")]
-        public async Task<IActionResult> Upload(IFormFile file)
+        public async Task<IActionResult> Upload([FromForm]IFormFile file)
         {
             if (file == null || file.Length == 0)
             {

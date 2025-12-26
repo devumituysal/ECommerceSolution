@@ -25,7 +25,7 @@ namespace App.Data.Configurations
             builder.HasOne(pi => pi.Product)
                 .WithMany(x => x.Images)
                 .HasForeignKey(pi => pi.ProductId)
-                .OnDelete(DeleteBehavior.NoAction);
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

@@ -5,6 +5,7 @@ using App.Eticaret.Models.ApiResponses;
 using App.Eticaret.Models.ViewModels;
 using App.Models.DTO.Product;
 using App.Services.Abstract;
+using App.Services.Concrete;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -19,34 +20,48 @@ namespace App.Eticaret.Controllers
     public class ProductController : Controller
     {
         private readonly IProductService _productService;
+        private readonly ICategoryService _categoryService;
 
-        public ProductController(IProductService productService)
+        public ProductController(IProductService productService,ICategoryService categoryService)
         {
             _productService = productService;
+            _categoryService = categoryService;
         }
 
 
 
         [HttpGet("create")]
         [Authorize(Roles = "seller")]
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            return View(new ProductSaveViewModel());
+            var categoriesResult = await _categoryService.GetAllAsync();
+
+            var model = new ProductSaveViewModel();
+
+            if (categoriesResult.IsSuccess)
+                model.Categories = categoriesResult.Value;
+
+            return View(model);
         }
 
         [HttpPost("create")]
         [Authorize(Roles = "seller")]
         public async Task<IActionResult> Create([FromForm] ProductSaveViewModel newProductModel)
         {
-            if (!ModelState.IsValid)
-            {   
-                return View(newProductModel);
-            }
-
             var jwt = HttpContext.Request.Cookies["access_token"];
 
             if (string.IsNullOrEmpty(jwt))
                 return RedirectToAction("Login", "Auth");
+
+            // ❗ ModelState invalid → dropdown tekrar doldurulmalı
+            if (!ModelState.IsValid)
+            {
+                var categoriesResult = await _categoryService.GetAllAsync();
+                if (categoriesResult.IsSuccess)
+                    newProductModel.Categories = categoriesResult.Value;
+
+                return View(newProductModel);
+            }
 
             var dto = new CreateProductRequestDto
             {
@@ -61,27 +76,34 @@ namespace App.Eticaret.Controllers
 
             if (!result.IsSuccess)
             {
+                var categoriesResult = await _categoryService.GetAllAsync();
+                if (categoriesResult.IsSuccess)
+                    newProductModel.Categories = categoriesResult.Value;
+
                 ModelState.AddModelError("", "Ürün oluşturulamadı.");
                 return View(newProductModel);
-            }   
+            }
 
             var productId = result.Value;
 
             if (newProductModel.Images != null && newProductModel.Images.Any())
             {
-                var uploadResult = await _productService.UploadImagesAsync(jwt, productId,newProductModel.Images.ToList());
+                var uploadResult =
+                    await _productService.UploadImagesAsync(jwt, productId, newProductModel.Images.ToList());
 
                 if (!uploadResult.IsSuccess)
                 {
+                    var categoriesResult = await _categoryService.GetAllAsync();
+                    if (categoriesResult.IsSuccess)
+                        newProductModel.Categories = categoriesResult.Value;
+
                     ModelState.AddModelError("", "Ürün görselleri yüklenemedi.");
                     return View(newProductModel);
                 }
             }
 
             TempData["SuccessMessage"] = "Ürün başarıyla oluşturuldu.";
-
-            return RedirectToAction("Edit", new { productId });
-
+            return RedirectToAction("MyProducts", "Profile");
         }
 
         [HttpGet("{productId:int}/edit")]
@@ -100,6 +122,8 @@ namespace App.Eticaret.Controllers
 
             var product = result.Value;
 
+            var categoriesResult = await _categoryService.GetAllAsync();
+
             var viewModel = new ProductSaveViewModel
             {
                 Name = product.Name,
@@ -107,23 +131,34 @@ namespace App.Eticaret.Controllers
                 Details = product.Details,
                 StockAmount = product.StockAmount,
                 CategoryId = product.CategoryId,
-                ExistingImages = product.Images // mevcut görseller (edit ekranında göstermek için)
+                ExistingImages = product.Images,
+                Categories = categoriesResult.IsSuccess
+                    ? categoriesResult.Value
+                    : new()
             };
 
             return View(viewModel);
-
         }
 
         [HttpPost("{productId:int}/edit")]
         [Authorize(Roles = "seller")]
-        public async Task<IActionResult> Edit([FromRoute] int productId, [FromForm] ProductSaveViewModel editProductModel)
+        public async Task<IActionResult> Edit(
+      [FromRoute] int productId,
+      [FromForm] ProductSaveViewModel editProductModel)
         {
-            if (!ModelState.IsValid)
-                return View(editProductModel);
-
             var jwt = HttpContext.Request.Cookies["access_token"];
             if (string.IsNullOrEmpty(jwt))
                 return RedirectToAction("Login", "Auth");
+
+            // ❌ Validation hatası
+            if (!ModelState.IsValid)
+            {
+                var categoriesResult = await _categoryService.GetAllAsync();
+                if (categoriesResult.IsSuccess)
+                    editProductModel.Categories = categoriesResult.Value;
+
+                return View(editProductModel);
+            }
 
             var dto = new UpdateProductRequestDto
             {
@@ -136,31 +171,42 @@ namespace App.Eticaret.Controllers
 
             var result = await _productService.UpdateAsync(jwt, productId, dto);
 
+            // ❌ Güncelleme başarısız
             if (!result.IsSuccess)
             {
-                ModelState.AddModelError("", "Ürün güncellenemedi.");
+                var categoriesResult = await _categoryService.GetAllAsync();
+                if (categoriesResult.IsSuccess)
+                    editProductModel.Categories = categoriesResult.Value;
+
+                TempData["ErrorMessage"] = "Ürün güncellenemedi.";
                 return View(editProductModel);
             }
 
+            // ✅ Başarılı
             TempData["SuccessMessage"] = "Ürün başarıyla güncellendi.";
             return RedirectToAction("Edit", new { productId });
         }
 
-        [HttpPost("{productId:int}/delete")]
+
+        [HttpPost("Delete/{productId:int}")]
         [Authorize(Roles = "seller")]
-        public async Task<IActionResult> Delete([FromRoute] int productId)
+        public async Task<IActionResult> Delete(int productId)
         {
             var jwt = HttpContext.Request.Cookies["access_token"];
+
             if (string.IsNullOrEmpty(jwt))
                 return RedirectToAction("Login", "Auth");
 
             var result = await _productService.DeleteAsync(jwt, productId);
 
             if (!result.IsSuccess)
-                return BadRequest();
+            {
+                TempData["ErrorMessage"] = "Ürün silinemedi.";
+                return RedirectToAction("MyProducts", "Profile");
+            };
 
             TempData["SuccessMessage"] = "Ürün başarıyla silindi.";
-            return RedirectToAction("Index", "Profile");
+            return RedirectToAction("MyProducts", "Profile");
 
         }
 
@@ -198,7 +244,7 @@ namespace App.Eticaret.Controllers
             if (images == null || !images.Any())
             {
                 TempData["ErrorMessage"] = "Lütfen en az bir görsel seçin.";
-                return RedirectToAction("Edit", new { productId });
+                return RedirectToAction("MyProducts", "Profile");
             }
 
             var jwt = HttpContext.Request.Cookies["access_token"];
@@ -211,11 +257,11 @@ namespace App.Eticaret.Controllers
             if (!result.IsSuccess)
             {
                 TempData["ErrorMessage"] = "Görseller yüklenemedi.";
-                return RedirectToAction("Edit", new { productId });
+                return RedirectToAction("MyProducts", "Profile");
             }
 
             TempData["SuccessMessage"] = "Görseller başarıyla eklendi.";
-            return RedirectToAction("Edit", new { productId });
+            return RedirectToAction("MyProducts", "Profile");
         }
 
         [HttpPost("{productId:int}/delete-image")]
@@ -225,7 +271,7 @@ namespace App.Eticaret.Controllers
             if (string.IsNullOrWhiteSpace(fileName))
             {
                 TempData["ErrorMessage"] = "Silinecek görsel seçilmedi.";
-                return RedirectToAction("Edit", new { productId });
+                return RedirectToAction("MyProducts", "Profile");
             }
 
             var jwt = HttpContext.Request.Cookies["access_token"];
@@ -238,11 +284,11 @@ namespace App.Eticaret.Controllers
             if (!result.IsSuccess)
             {
                 TempData["ErrorMessage"] = "Görsel silinemedi.";
-                return RedirectToAction("Edit", new { productId });
+                return RedirectToAction("MyProducts", "Profile");
             }
 
             TempData["SuccessMessage"] = "Görsel başarıyla silindi.";
-            return RedirectToAction("Edit", new { productId });
+            return RedirectToAction("MyProducts", "Profile");
         }
 
     }

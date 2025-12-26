@@ -14,8 +14,5 @@ namespace App.Eticaret.Models.ViewModels
 
         [Required, MaxLength(256), EmailAddress]
         public string Email { get; set; } = null!;
-        public List<OrderDto> Orders { get; set; } = new();
-        public List<ProductListItemDto> Products { get; set; } = new();
-        public bool HasSellerRequest { get; set; }
     }
 }
