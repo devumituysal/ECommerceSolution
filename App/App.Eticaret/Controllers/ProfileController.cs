@@ -50,7 +50,9 @@ namespace App.Eticaret.Controllers
             {
                 FirstName = dto.FirstName,
                 LastName = dto.LastName,
+
                 Email = dto.Email
+
             };
 
             return View(model);
@@ -125,6 +127,24 @@ namespace App.Eticaret.Controllers
             }
 
             return View(result.Value);
+        }
+
+        [HttpPost("/profile/request-seller")]
+        [Authorize(Roles = "buyer")]
+        public async Task<IActionResult> RequestSeller()
+        {
+            var jwt = HttpContext.Request.Cookies["access_token"];
+            if (string.IsNullOrEmpty(jwt))
+                return RedirectToAction("Login", "Auth");
+
+            var result = await _profileService.RequestSellerAsync(jwt);
+
+            if (!result.IsSuccess)
+                TempData["ErrorMessage"] = "Seller request failed.";
+            else
+                TempData["SuccessMessage"] = "Seller request sent successfully.";
+
+            return RedirectToAction(nameof(Details));
         }
     }
 }
