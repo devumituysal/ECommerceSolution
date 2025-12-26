@@ -11,7 +11,7 @@ namespace App.Api.Data.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "Seller")]
+    [Authorize(Roles = "seller")]
     public class ProductController : ControllerBase
     {
         private readonly IDataRepository _repo;
@@ -22,9 +22,11 @@ namespace App.Api.Data.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "seller")]
         public async Task<IActionResult> Create([FromBody] CreateProductRequestDto createProductRequestDto)
         {
-            var userId = int.Parse(User.FindFirst(ClaimTypes.Sid)!.Value);
+
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
 
             var product = new ProductEntity
@@ -34,6 +36,7 @@ namespace App.Api.Data.Controllers
                 Details = createProductRequestDto.Details,
                 StockAmount = createProductRequestDto.StockAmount,
                 CategoryId = createProductRequestDto.CategoryId,
+                CreatedAt = DateTime.UtcNow,
                 SellerId = userId
             };
 
@@ -66,22 +69,21 @@ namespace App.Api.Data.Controllers
         [HttpDelete("{productId:int}")]
         public async Task<IActionResult> Delete(int productId)
         {
+            var sellerId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
             var product = await _repo
                 .GetAll<ProductEntity>()
-                .FirstOrDefaultAsync(p => p.Id == productId);
+                .FirstOrDefaultAsync(p => p.Id == productId && p.SellerId == sellerId);
 
             if (product == null)
-            {
                 return NotFound();
-            }
 
             await _repo.Delete(product);
-
             return NoContent();
         }
 
         [HttpPost("{productId:int}/comment")]
-        [Authorize(Roles = "Buyer,Seller")]
+        [Authorize(Roles = "buyer,seller")]
         public async Task<IActionResult> CreateComment(int productId,[FromBody] CreateProductCommentRequestDto createProductCommentRequest)
         {
             var productExists = await _repo
@@ -93,7 +95,7 @@ namespace App.Api.Data.Controllers
                 return NotFound();
             }
 
-            var userId = int.Parse(User.FindFirst(ClaimTypes.Sid)!.Value);
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
             var comment = new ProductCommentEntity
             {
@@ -140,7 +142,7 @@ namespace App.Api.Data.Controllers
         [HttpGet]
         public async Task<IActionResult> GetMyProducts()
         {
-            var userId = int.Parse(User.FindFirst(ClaimTypes.Sid)!.Value);
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
             var products = await _repo.GetAll<ProductEntity>()
                 .Include(p => p.Images)
@@ -170,29 +172,24 @@ namespace App.Api.Data.Controllers
 
         [HttpPost("{productId:int}/images")]
         [Authorize(Roles = "seller")]
-        public async Task<IActionResult> UploadImages([FromForm] List<IFormFile> images,int productId)
+        public async Task<IActionResult> UploadImages([FromBody] AddProductImagesRequestDto dto,int productId)
         {
-            if (images == null || images.Count == 0)
-            {
-                return BadRequest("No images uploaded");
-            }
-                
-            var productExists = await _repo.GetAll<ProductEntity>()
+            if (dto.ImageUrls == null || !dto.ImageUrls.Any())
+                return BadRequest();
+
+            var productExists = await _repo
+                .GetAll<ProductEntity>()
                 .AnyAsync(p => p.Id == productId);
 
             if (!productExists)
-            {
                 return NotFound();
-            }
-                
-            foreach (var image in images)
-            {
-                
 
+            foreach (var url in dto.ImageUrls)
+            {
                 await _repo.Add(new ProductImageEntity
                 {
                     ProductId = productId,
-                    Url = $"/uploads/{image}"
+                    Url = url
                 });
             }
 

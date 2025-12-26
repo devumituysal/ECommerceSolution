@@ -1,22 +1,51 @@
-﻿
-@model List<MyProductsViewModel>
+﻿@using App.Models.DTO.Product
+@model List<ProductListItemDto>
+
 @{
     ViewData["Title"] = "My Products";
 }
 
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["SuccessMessage"]
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+
+
 <div class="container">
-    <h2>@ViewData["Title"]</h2>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>@ViewData["Title"]</h2>
+
+        <!-- ➕ ADD PRODUCT -->
+        <a asp-controller="Product"
+           asp-action="Create"
+           class="btn btn-success">
+            + Add Product
+        </a>
+    </div>
+
     <partial name="Partials/ViewMessages" />
 
-    <table class="table table-striped">
+    <table class="table table-striped align-middle">
         <thead>
             <tr>
                 <th>Image</th>
-                <th>Product Name</th>
+                <th>Name</th>
+                <th>Category</th>
                 <th>Price</th>
-                <th>Has Discount</th>
                 <th>Stock</th>
-                <th>Actions</th>
+                <th>Created</th>
+                <th style="width:320px;">Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -26,33 +55,68 @@
                     <td>
                         @if (!string.IsNullOrEmpty(product.ImageUrl))
                         {
-                            <img src="@product.ImageUrl" alt="Product Image" style="width:60px;height:60px;object-fit:cover;border-radius:4px;" />
+                            <img src="@product.ImageUrl"
+                                 alt="Product Image"
+                                 style="width:60px;height:60px;object-fit:cover;border-radius:4px;" />
                         }
                         else
                         {
                             <span class="text-muted">No Image</span>
                         }
                     </td>
-                    <td>@product.Name</td>
-                    <td>@product.Price.ToString("C")</td>
-                    <td>@(product.HasDiscount ? "Yes" : "No")</td>
-                    <td>@product.Stock</td>
-                    <td>
-                        <a asp-action="Edit" asp-controller="Product" asp-route-productId="@product.Id" class="btn btn-primary btn-sm">Edit</a>
-                        <a asp-action="Delete" asp-controller="Product" asp-route-productId="@product.Id" class="btn btn-danger btn-sm">Delete</a>
 
-                        <!-- Görsel ekle -->
-                        <form asp-action="AddImages" asp-controller="Product" asp-route-productId="@product.Id" method="post" enctype="multipart/form-data" style="display:inline-block;">
-                            <input type="file" name="images" multiple style="display:inline-block;" />
-                            <button type="submit" class="btn btn-success btn-sm">Add Image</button>
+                    <td>@product.Name</td>
+                    <td>@product.CategoryName</td>
+                    <td>@product.Price.ToString("C")</td>
+                    <td>@product.Stock</td>
+                    <td>@product.CreatedAt.ToShortDateString()</td>
+
+                    <td>
+                        <a asp-action="Edit"
+                           asp-controller="Product"
+                           asp-route-productId="@product.Id"
+                           class="btn btn-primary btn-sm">
+                            Edit
+                        </a>
+
+                        <form asp-action="Delete"
+                              asp-controller="Product"
+                              asp-route-productId="@product.Id"
+                              method="post"
+                              style="display:inline-block;"
+                              onsubmit="return confirm('Are you sure you want to delete this product?');">
+                            <button type="submit" class="btn btn-danger btn-sm">
+                                Delete
+                            </button>
                         </form>
 
-                        <!-- Mevcut görsel varsa silme -->
+                        <!-- Add Images -->
+                        <form asp-action="AddImages"
+                              asp-controller="Product"
+                              asp-route-productId="@product.Id"
+                              method="post"
+                              enctype="multipart/form-data"
+                              style="display:inline-block;">
+                            <input type="file" name="images" multiple />
+                            <button type="submit" class="btn btn-success btn-sm">
+                                Add Image
+                            </button>
+                        </form>
+
+                        <!-- Delete Image -->
                         @if (!string.IsNullOrEmpty(product.ImageUrl))
                         {
-                            <form asp-action="DeleteImage" asp-controller="Product" asp-route-productId="@product.Id" method="post" style="display:inline-block;">
-                                <input type="hidden" name="fileName" value="@System.IO.Path.GetFileName(product.ImageUrl)" />
-                                <button type="submit" class="btn btn-warning btn-sm">Delete Image</button>
+                            <form asp-action="DeleteImage"
+                                  asp-controller="Product"
+                                  asp-route-productId="@product.Id"
+                                  method="post"
+                                  style="display:inline-block;">
+                                <input type="hidden"
+                                       name="fileName"
+                                       value="@System.IO.Path.GetFileName(product.ImageUrl)" />
+                                <button type="submit" class="btn btn-warning btn-sm">
+                                    Delete Image
+                                </button>
                             </form>
                         }
                     </td>
@@ -60,4 +124,11 @@
             }
         </tbody>
     </table>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info mt-3">
+            You don't have any products yet.
+        </div>
+    }
 </div>

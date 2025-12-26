@@ -1,7 +1,8 @@
-using App.Data.Repositories.Extensions;
+ï»¿using App.Data.Repositories.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -32,13 +33,15 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
 
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Secret"]))
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Secret"])),
+
+            RoleClaimType = ClaimTypes.Role
 
         };
 
         options.Events = new JwtBearerEvents
         {
-            // her http isteği geldiğinde
+            // her http isteÄŸi geldiÄŸinde
             OnMessageReceived = context =>
             {
                 var accessToken = context.Request.Cookies["access_token"];
@@ -51,14 +54,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 return Task.CompletedTask;
             },
 
-            // Login.Path için;
+            // Login.Path iÃ§in;
 
             OnChallenge = async context =>
             {
-                // zorlama davranışını engelle
+                // zorlama davranÄ±ÅŸÄ±nÄ± engelle
                 context.HandleResponse();
 
-                // Şu adrese yönlendir.
+                // Åu adrese yÃ¶nlendir.
                 context.Response.Redirect("/Auth/Login");
 
                 await Task.CompletedTask;
@@ -68,7 +71,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
 
         options.MapInboundClaims = false;
-        // kendi oluşturduğumuz claim key isimleri olursa, bunları soap mimarisine göre map'lemesin 
+        // kendi oluÅŸturduÄŸumuz claim key isimleri olursa, bunlarÄ± soap mimarisine gÃ¶re map'lemesin 
 
 
     });

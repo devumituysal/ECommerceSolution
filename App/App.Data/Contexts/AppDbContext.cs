@@ -73,7 +73,7 @@ namespace App.Data.Contexts
                 new ProductEntity
                 {
                     Id = 1,
-                    SellerId = 1,
+                    SellerId = 2,
                     CategoryId = 1, // CategoryId = 1'in DB'de olduğundan emin olundu
                     Name = "Test Product",
                     Price = 149.99m,
@@ -89,7 +89,7 @@ namespace App.Data.Contexts
                 {
                     Id = 1,
                     ProductId = 1,      
-                    Url = "/uploads/test-product.png"
+                    Url = "https://localhost:7132/uploads/test-product.png"
                 }
             );
         }

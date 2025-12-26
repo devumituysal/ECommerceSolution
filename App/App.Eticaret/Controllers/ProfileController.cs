@@ -33,24 +33,16 @@ namespace App.Eticaret.Controllers
         [HttpGet("/profile")]
         public async Task<IActionResult> Details()
         {
+            TempData.Remove("SuccessMessage");
+            TempData.Remove("ErrorMessage");
+
             var jwt = HttpContext.Request.Cookies["access_token"];
             if (string.IsNullOrEmpty(jwt))
                 return RedirectToAction("Login", "Auth");
 
-            // PROFILE
             var profileResult = await _profileService.GetMyProfileAsync(jwt);
             if (!profileResult.IsSuccess)
                 return RedirectToAction("Login", "Auth");
-
-            // ORDERS
-            var ordersResult = await _orderService.GetMyOrdersAsync(jwt);
-
-            // PRODUCTS (seller only)
-            Result<List<ProductListItemDto>>? productsResult = null;
-            if (User.IsInRole("seller"))
-            {
-                productsResult = await _productService.GetMyProductsAsync(jwt);
-            }
 
             var dto = profileResult.Value;
 
@@ -58,19 +50,10 @@ namespace App.Eticaret.Controllers
             {
                 FirstName = dto.FirstName,
                 LastName = dto.LastName,
-                Email = dto.Email,
-
-                Orders = ordersResult.IsSuccess
-                    ? ordersResult.Value
-                    : new List<OrderDto>(),
-
-                Products = productsResult != null && productsResult.IsSuccess
-                    ? productsResult.Value
-                    : new List<ProductListItemDto>()
+                Email = dto.Email
             };
 
             return View(model);
-
         }
 
         [HttpPost("/profile")]
@@ -100,7 +83,7 @@ namespace App.Eticaret.Controllers
                 return RedirectToAction(nameof(Details));
             }
 
-            TempData["SuccessMessage"] = "Profiliniz başarıyla güncellendi.";
+            TempData["ProfileSuccessMessage"] = "Profiliniz başarıyla güncellendi.";
             return RedirectToAction(nameof(Details));
         }
 
@@ -138,7 +121,7 @@ namespace App.Eticaret.Controllers
             if (!result.IsSuccess)
             {
                 TempData["ErrorMessage"] = "Ürünler alınamadı.";
-                return View(new List<MyProductsViewModel>());
+                return View(new List<ProductListItemDto>());
             }
 
             return View(result.Value);
