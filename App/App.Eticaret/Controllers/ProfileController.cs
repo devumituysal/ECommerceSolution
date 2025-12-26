@@ -59,10 +59,6 @@ namespace App.Eticaret.Controllers
                 FirstName = dto.FirstName,
                 LastName = dto.LastName,
                 Email = dto.Email,
-                ProfileImagePath = dto.ProfileImage,
-                ProfileImageUrl = string.IsNullOrEmpty(dto.ProfileImage)
-                    ? null
-                    : $"/uploads/{dto.ProfileImage}",
 
                 Orders = ordersResult.IsSuccess
                     ? ordersResult.Value
@@ -81,9 +77,7 @@ namespace App.Eticaret.Controllers
         public async Task<IActionResult> Edit([FromForm] ProfileDetailsViewModel editMyProfileModel)
         {
             if (!ModelState.IsValid)
-            {
-                return View("Details", editMyProfileModel);
-            }
+                return RedirectToAction(nameof(Details));
 
             var jwt = HttpContext.Request.Cookies["access_token"];
             if (string.IsNullOrEmpty(jwt))
@@ -93,8 +87,7 @@ namespace App.Eticaret.Controllers
             {
                 FirstName = editMyProfileModel.FirstName,
                 LastName = editMyProfileModel.LastName,
-                Email = editMyProfileModel.Email,
-                ProfileImage = editMyProfileModel.ProfileImagePath
+                Email = editMyProfileModel.Email
             };
 
             var result = await _profileService.UpdateMyProfileAsync(jwt, dto);

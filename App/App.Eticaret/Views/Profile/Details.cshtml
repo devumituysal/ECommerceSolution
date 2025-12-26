@@ -12,7 +12,7 @@
     @if (TempData["SuccessMessage"] != null)
     {
         <div class="alert alert-success alert-dismissible fade show">
-            <span>@TempData["SuccessMessage"]</span>
+            <strong>@TempData["SuccessMessage"]</strong>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     }
@@ -20,7 +20,7 @@
     @if (TempData["ErrorMessage"] != null)
     {
         <div class="alert alert-danger alert-dismissible fade show">
-            <span>@TempData["ErrorMessage"]</span>
+            <strong>@TempData["ErrorMessage"]</strong>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     }
@@ -28,48 +28,30 @@
     <!-- ================= PROFILE SECTION ================= -->
     <div class="card mb-4">
         <div class="card-body">
-            <form asp-action="Edit" asp-controller="Profile" method="post" enctype="multipart/form-data">
+            <form asp-action="Edit" asp-controller="Profile" method="post">
 
-                <div class="row">
-
-                    <!-- PROFILE IMAGE -->
-                    <div class="col-md-4 text-center">
-                        <img src="@(Model.ProfileImageUrl ?? "/images/default-avatar.png")"
-                             class="img-fluid rounded-circle mb-3"
-                             style="width:150px;height:150px;object-fit:cover" />
-
-                        <div class="mb-3">
-                            <input asp-for="ProfileImage" type="file" class="form-control" />
-                        </div>
-                    </div>
-
-                    <!-- PROFILE FORM -->
-                    <div class="col-md-8">
-
-                        <div class="mb-3">
-                            <label asp-for="FirstName" class="form-label"></label>
-                            <input asp-for="FirstName" class="form-control" />
-                            <span asp-validation-for="FirstName" class="text-danger"></span>
-                        </div>
-
-                        <div class="mb-3">
-                            <label asp-for="LastName" class="form-label"></label>
-                            <input asp-for="LastName" class="form-control" />
-                            <span asp-validation-for="LastName" class="text-danger"></span>
-                        </div>
-
-                        <div class="mb-3">
-                            <label asp-for="Email" class="form-label"></label>
-                            <input asp-for="Email" class="form-control" />
-                            <span asp-validation-for="Email" class="text-danger"></span>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary">
-                            Save Changes
-                        </button>
-
-                    </div>
+                <div class="mb-3">
+                    <label asp-for="FirstName" class="form-label"></label>
+                    <input asp-for="FirstName" class="form-control" />
+                    <span asp-validation-for="FirstName" class="text-danger"></span>
                 </div>
+
+                <div class="mb-3">
+                    <label asp-for="LastName" class="form-label"></label>
+                    <input asp-for="LastName" class="form-control" />
+                    <span asp-validation-for="LastName" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label"></label>
+                    <input asp-for="Email" class="form-control" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                    Save Changes
+                </button>
+
             </form>
         </div>
     </div>
@@ -124,7 +106,7 @@
             </div>
             <div class="card-body">
 
-                @if (Model.Products.Any())
+                @if (Model.Products != null && Model.Products.Any())
                 {
                     <table class="table table-hover">
                         <thead>

@@ -43,7 +43,6 @@ namespace App.Api.Data.Controllers
                 LastName = user.LastName,
                 Email = user.Email,
                 Role = user.Role.Name,
-                ProfileImage = user.ProfileImage
             });
         }
 
@@ -51,33 +50,27 @@ namespace App.Api.Data.Controllers
         [HttpPut]
         public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileDto updateProfileDetail)
         {
-            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-     
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null)
+                return Unauthorized();
+
+            var userId = int.Parse(userIdClaim.Value);
+
             var user = await _repo.GetAll<UserEntity>()
-                .Include(u => u.Role)
                 .FirstOrDefaultAsync(u => u.Id == userId);
 
             if (user == null)
-            {
                 return NotFound();
-            }
 
             var emailExists = await _repo.GetAll<UserEntity>()
                 .AnyAsync(u => u.Email == updateProfileDetail.Email && u.Id != userId);
 
             if (emailExists)
-            {
                 return BadRequest(new { message = "Bu email zaten kayıtlı." });
-            }
 
             user.FirstName = updateProfileDetail.FirstName;
             user.LastName = updateProfileDetail.LastName;
             user.Email = updateProfileDetail.Email;
-
-            if (!string.IsNullOrWhiteSpace(updateProfileDetail.ProfileImage))
-            {
-                user.ProfileImage = updateProfileDetail.ProfileImage;
-            }
 
             await _repo.Update(user);
 
