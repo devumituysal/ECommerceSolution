@@ -96,6 +96,24 @@ namespace App.Eticaret.Controllers
             return RedirectToAction(nameof(Edit));
         }
 
+        [HttpPost("/cart/remove")]
+        public async Task<IActionResult> Remove(int cartItemId)
+        {
+            var jwt = HttpContext.Request.Cookies["access_token"];
+
+            if (string.IsNullOrEmpty(jwt))
+                return RedirectToAction("Login", "Auth");
+
+            var result = await _cartService.RemoveItemAsync(jwt, cartItemId);
+
+            if (!result.IsSuccess)
+            {
+                TempData["ErrorMessage"] = "Product could not be removed from cart.";
+            }
+
+            return RedirectToAction(nameof(Edit));
+        }
+
 
 
         [HttpGet("/checkout")]

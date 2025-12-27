@@ -99,6 +99,23 @@ namespace App.Api.Data.Controllers
             return NoContent();
         }
 
+        [HttpDelete("{cartItemId:int}")]
+        public async Task<IActionResult> RemoveCartItem(int cartItemId)
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            var cartItem = await _repo.GetAll<CartItemEntity>()
+                .FirstOrDefaultAsync(ci => ci.Id == cartItemId && ci.UserId == userId);
+
+            if (cartItem == null)
+                return NotFound();
+
+            await _repo.Delete(cartItem);
+
+            return NoContent();
+        }
+
+
         [HttpPost("checkout")]
         public async Task<IActionResult> Checkout()
         {
