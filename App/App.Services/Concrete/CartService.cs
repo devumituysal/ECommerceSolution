@@ -39,11 +39,11 @@ namespace App.Services.Concrete
             return Result.Success(items ?? new List<CartItemDto>());
         }
 
-        public async Task<Result> AddProductAsync(string jwt, int productId)
+        public async Task<Result> AddProductAsync(string jwt, int productId, byte? quantity)
         {
             var response = await SendAsync(
                 HttpMethod.Post,
-                $"api/cart/{productId}",
+                $"api/cart/add/{productId}?quantity={quantity}",
                 jwt
             );
 
@@ -58,6 +58,7 @@ namespace App.Services.Concrete
 
             return Result.Success();
         }
+
 
         public async Task<Result> UpdateItemAsync(
             string jwt,

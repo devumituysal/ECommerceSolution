@@ -9,7 +9,7 @@ using System.Security.Claims;
 
 namespace App.Api.Data.Controllers
 {
-    [Authorize(Roles = "Buyer,Seller")]
+    [Authorize(Roles = "buyer,seller")]
     [Route("api/[controller]")]
     [ApiController]
     public class CartController : ControllerBase
@@ -21,9 +21,12 @@ namespace App.Api.Data.Controllers
         }
 
         [HttpPost("add/{productId:int}")]
-        public async Task<IActionResult> AddToCart(int productId)
+        public async Task<IActionResult> AddToCart(int productId, [FromQuery] byte? quantity)
         {
-            var userId = int.Parse(User.FindFirst(ClaimTypes.Sid)!.Value);
+            if (quantity < 1)
+                quantity = 1;
+
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
             var productExists = await _repo.GetAll<ProductEntity>()
                 .AnyAsync(p => p.Id == productId);
@@ -34,9 +37,11 @@ namespace App.Api.Data.Controllers
             var cartItem = await _repo.GetAll<CartItemEntity>()
                 .FirstOrDefaultAsync(ci => ci.UserId == userId && ci.ProductId == productId);
 
+            var qty = quantity.GetValueOrDefault(1);
+
             if (cartItem != null)
             {
-                cartItem.Quantity++;
+                cartItem.Quantity += qty;
                 await _repo.Update(cartItem);
             }
             else
@@ -45,7 +50,7 @@ namespace App.Api.Data.Controllers
                 {
                     UserId = userId,
                     ProductId = productId,
-                    Quantity = 1,
+                    Quantity = qty,
                     CreatedAt = DateTime.UtcNow
                 };
                 await _repo.Add(cartItem);
@@ -57,7 +62,7 @@ namespace App.Api.Data.Controllers
         [HttpGet]
         public async Task<IActionResult> GetCartItems()
         {
-            var userId = int.Parse(User.FindFirst(ClaimTypes.Sid)!.Value);
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
             var cartItems = await _repo.GetAll<CartItemEntity>()
                 .Include(ci => ci.Product.Images)
@@ -79,7 +84,7 @@ namespace App.Api.Data.Controllers
         [HttpPut("{cartItemId:int}")]
         public async Task<IActionResult> UpdateCartItem(int cartItemId, [FromBody] UpdateCartItemDto updateCartItemDto)
         {
-            var userId = int.Parse(User.FindFirst(ClaimTypes.Sid)!.Value);
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
             var cartItem = await _repo.GetAll<CartItemEntity>()
                 .Include(ci => ci.Product)
@@ -97,7 +102,7 @@ namespace App.Api.Data.Controllers
         [HttpPost("checkout")]
         public async Task<IActionResult> Checkout()
         {
-            var userId = int.Parse(User.FindFirst(ClaimTypes.Sid)!.Value);
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
             var cartItems = await _repo.GetAll<CartItemEntity>()
                 .Include(ci => ci.Product)

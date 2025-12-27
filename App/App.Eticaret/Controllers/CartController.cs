@@ -16,15 +16,18 @@ namespace App.Eticaret.Controllers
             _cartService = cartService;
         }
 
-        [HttpGet("/add-to-cart/{productId:int}")]
-        public async Task<IActionResult> AddProduct([FromRoute] int productId)
+        [HttpPost("/add-to-cart")]
+        public async Task<IActionResult> AddProduct(int productId, byte quantity)
         {
             var jwt = HttpContext.Request.Cookies["access_token"];
 
             if (string.IsNullOrEmpty(jwt))
                 return RedirectToAction("Login", "Auth");
 
-            var result = await _cartService.AddProductAsync(jwt, productId);
+            if (quantity < 1)
+                quantity = 1;
+
+            var result = await _cartService.AddProductAsync(jwt, productId, quantity);
 
             if (!result.IsSuccess)
             {
@@ -33,13 +36,12 @@ namespace App.Eticaret.Controllers
 
             var prevUrl = Request.Headers.Referer.FirstOrDefault();
 
-            if(prevUrl is null)
-            {
-              return RedirectToAction(nameof(Edit));
-            }
+            if (prevUrl is null)
+                return RedirectToAction(nameof(Edit));
 
-            return  Redirect(prevUrl);
+            return Redirect(prevUrl);
         }
+
 
 
         [HttpGet("/cart")]
