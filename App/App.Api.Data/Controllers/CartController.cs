@@ -28,10 +28,10 @@ namespace App.Api.Data.Controllers
 
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
-            var productExists = await _repo.GetAll<ProductEntity>()
-                .AnyAsync(p => p.Id == productId);
+            var product = await _repo.GetAll<ProductEntity>()
+                .FirstOrDefaultAsync(p => p.Id == productId);
 
-            if (!productExists)
+            if (product == null)
                 return NotFound("Product not found");
 
             var cartItem = await _repo.GetAll<CartItemEntity>()
@@ -41,11 +41,17 @@ namespace App.Api.Data.Controllers
 
             if (cartItem != null)
             {
+                if (cartItem.Quantity + qty > product.StockAmount)
+                    return BadRequest("Yeterli stok yok");
+
                 cartItem.Quantity += qty;
                 await _repo.Update(cartItem);
             }
             else
             {
+                if (qty > product.StockAmount)
+                    return BadRequest("Yeterli stok yok");
+
                 cartItem = new CartItemEntity
                 {
                     UserId = userId,
@@ -53,11 +59,13 @@ namespace App.Api.Data.Controllers
                     Quantity = qty,
                     CreatedAt = DateTime.UtcNow
                 };
+
                 await _repo.Add(cartItem);
             }
 
             return Ok(cartItem);
         }
+
 
         [HttpGet]
         public async Task<IActionResult> GetCartItems()
@@ -74,12 +82,14 @@ namespace App.Api.Data.Controllers
                     ProductName = ci.Product.Name,
                     ProductImage = ci.Product.Images.OrderBy(i => i.Id).Select(i => i.Url).FirstOrDefault(),
                     Quantity = ci.Quantity,
-                    Price = ci.Product.Price
+                    Price = ci.Product.Price,
+                    ProductStockAmount = ci.Product.StockAmount // <- stok bilgisi eklendi
                 })
                 .ToListAsync();
 
             return Ok(cartItems);
         }
+
 
         [HttpPut("{cartItemId:int}")]
         public async Task<IActionResult> UpdateCartItem(int cartItemId, [FromBody] UpdateCartItemDto updateCartItemDto)
@@ -93,11 +103,24 @@ namespace App.Api.Data.Controllers
             if (cartItem == null)
                 return NotFound();
 
+            // Quantity 0 veya negatifse ürünü sepetten sil
+            if (updateCartItemDto.Quantity <= 0)
+            {
+                await _repo.Delete(cartItem);
+                return NoContent();
+            }
+
+            // Stok kontrolü
+            if (updateCartItemDto.Quantity > cartItem.Product.StockAmount)
+                return BadRequest($"Yeterli stok yok. Maksimum alınabilecek adet: {cartItem.Product.StockAmount}");
+
+            // Quantity güncelle
             cartItem.Quantity = updateCartItemDto.Quantity;
             await _repo.Update(cartItem);
 
             return NoContent();
         }
+
 
         [HttpDelete("{cartItemId:int}")]
         public async Task<IActionResult> RemoveCartItem(int cartItemId)

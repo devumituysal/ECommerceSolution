@@ -66,7 +66,8 @@ namespace App.Eticaret.Controllers
                 ProductName = x.ProductName,
                 ProductImage = x.ProductImage,
                 Quantity = x.Quantity,
-                Price = x.Price
+                Price = x.Price,
+                ProductStockAmount = x.ProductStockAmount 
             }).ToList();
 
             return View(cartItems);
@@ -129,25 +130,43 @@ namespace App.Eticaret.Controllers
                 return RedirectToAction(nameof(Edit));
             }
 
-            var cartItems = result.Value.Select(x => new CartItemViewModel
+            bool stockAdjusted = false;
+
+            var cartItems = result.Value.Select(x =>
             {
-                Id = x.Id,
-                ProductName = x.ProductName,
-                ProductImage = x.ProductImage,
-                Quantity = x.Quantity,
-                Price = x.Price
+                // Eğer servis modelinde stok bilgisi varsa burası çalışır
+                if (x.ProductStockAmount > 0 && x.Quantity > x.ProductStockAmount)
+                {
+                    stockAdjusted = true;
+                }
+
+                return new CartItemViewModel
+                {
+                    Id = x.Id,
+                    ProductName = x.ProductName,
+                    ProductImage = x.ProductImage,
+                    Quantity = x.Quantity,
+                    Price = x.Price
+                };
             }).ToList();
+
+            if (stockAdjusted)
+            {
+                TempData["StockAdjusted"] =
+                    "Sepetinizdeki bazı ürünlerin adedi stok durumuna göre güncellendi. Lütfen siparişinizi kontrol ediniz.";
+            }
 
             var checkoutModel = new CheckoutViewModel
             {
-                CartItems = cartItems ?? new List<CartItemViewModel>(),
-                Address = "" // boş bırakabiliriz veya kullanıcı adresini çekebiliriz
+                CartItems = cartItems,
+                Address = ""
             };
 
             ViewBag.CartTotal = cartItems.Sum(x => x.TotalPrice);
 
-            return View(checkoutModel); // artık CheckoutViewModel gönderiyoruz
+            return View(checkoutModel);
         }
+
 
 
 

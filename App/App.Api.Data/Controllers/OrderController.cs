@@ -27,7 +27,7 @@ namespace App.Api.Data.Controllers
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
             var cartItems = await _repo.GetAll<CartItemEntity>()
-                .Include(ci=>ci.Product)
+                .Include(ci => ci.Product)
                 .Where(ci => ci.UserId == userId)
                 .ToListAsync();
 
@@ -40,14 +40,25 @@ namespace App.Api.Data.Controllers
             {
                 UserId = userId,
                 Address = createOrderRequestDto.Address,
-                OrderCode = await CreateOrderCodeAsync(), // direk guid yapmaktansa %100 unique olması için aşağıdaki metodla yapıldı
+                OrderCode = await CreateOrderCodeAsync(), // %100 unique
                 CreatedAt = DateTime.UtcNow
             };
 
             await _repo.Add(order);
 
-            foreach(var item in cartItems)
+            foreach (var item in cartItems)
             {
+                // Stok kontrolü
+                if (item.Product.StockAmount < item.Quantity)
+                {
+                    return BadRequest($"{item.Product.Name} için yeterli stok yok");
+                }
+
+                // Stok güncellemesi
+                item.Product.StockAmount -= item.Quantity;
+                await _repo.Update(item.Product); // stok değişikliği DB'ye yansıyor
+
+                // Order item oluşturma
                 var orderItem = new OrderItemEntity
                 {
                     OrderId = order.Id,
@@ -59,9 +70,17 @@ namespace App.Api.Data.Controllers
                 await _repo.Add(orderItem);
             }
 
-            return Ok(new CreateOrderResponseDto{ OrderCode = order.OrderCode });
+            foreach (var item in cartItems)
+            {
+                await _repo.Delete(item);
+            }
 
+
+            return Ok(new CreateOrderResponseDto { OrderCode = order.OrderCode });
         }
+
+
+
         private async Task<string> CreateOrderCodeAsync()
         {
             var orderCode = Guid.NewGuid().ToString("n")[..16].ToUpperInvariant();

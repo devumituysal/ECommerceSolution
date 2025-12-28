@@ -10,8 +10,8 @@
                     <div class="product__details__pic__item">
                         <img class="product__details__pic__item--large"
                              src="@(Model.ImageUrls != null && Model.ImageUrls.Length > 0
-                                                                 ? Model.ImageUrls[0]
-                                                                 : "/img/product/default.jpg")"
+                                                                                              ? Model.ImageUrls[0]
+                                                                                              : "/img/product/default.jpg")"
                              alt="@Model.Name">
                     </div>
 
@@ -38,28 +38,39 @@
                         @Model.Price.ToString("C")
                     </div>
 
-                    <form asp-controller="Cart"
-                          asp-action="AddProduct"
-                          method="post">
+                    @* 🔴 ADD TO CART – stok varsa *@
+                    @if (Model.StockAmount > 0)
+                    {
+                        <form asp-controller="Cart"
+                              asp-action="AddProduct"
+                              method="post">
 
-                        <input type="hidden" name="productId" value="@Model.Id" />
+                            <input type="hidden" name="productId" value="@Model.Id" />
 
-                        <div class="product__details__quantity">
-                            <div class="quantity">
-                                <div class="pro-qty">
-                                    <input type="number"
-                                           name="quantity"
-                                           value="1"
-                                           min="1"
-                                           max="255" />
+                            <div class="product__details__quantity">
+                                <div class="quantity">
+                                    <div class="pro-qty">
+                                        <input type="number"
+                                               name="quantity"
+                                               value="1"
+                                               min="1"
+                                               max="@Model.StockAmount"
+                                               title="Maksimum alınabilecek adet @Model.StockAmount" />
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <button type="submit" class="primary-btn">
-                            ADD TO CART
+                            <button type="submit" class="primary-btn">
+                                ADD TO CART
+                            </button>
+                        </form>
+                    }
+                    else
+                    {
+                        <button class="primary-btn disabled" disabled>
+                            SOLD OUT
                         </button>
-                    </form>
+                    }
 
                     <ul>
                         <li>
@@ -68,7 +79,18 @@
                         </li>
                         <li>
                             <b>Availability</b>
-                            <span>In Stock</span>
+                            @if (Model.StockAmount > 0)
+                            {
+                                <span class="text-success">
+                                    In Stock (@Model.StockAmount)
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="text-danger">
+                                    Sold Out
+                                </span>
+                            }
                         </li>
                         <li>
                             <b>Shipping</b>
