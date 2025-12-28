@@ -12,5 +12,7 @@
         public decimal Price { get; set; }
 
         public decimal TotalPrice => Quantity * Price;
+
+        public int ProductStockAmount { get; set; }
     }
 }

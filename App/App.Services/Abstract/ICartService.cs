@@ -12,7 +12,7 @@ namespace App.Services.Abstract
     {
         Task<Result<List<CartItemDto>>> GetMyCartAsync(string jwt);
 
-        Task<Result> AddProductAsync(string jwt, int productId);
+        Task<Result> AddProductAsync(string jwt, int productId,byte? quantity);
 
         Task<Result> UpdateItemAsync(string jwt, int cartItemId, UpdateCartItemDto dto);
 

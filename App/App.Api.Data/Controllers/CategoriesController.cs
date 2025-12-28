@@ -38,7 +38,7 @@ namespace App.Api.Data.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> Create([FromBody] SaveCategoryDto newCategory)
         {
             if (!ModelState.IsValid)
@@ -57,7 +57,7 @@ namespace App.Api.Data.Controllers
         }
 
         [HttpPut("{categoryId:int}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> Edit(int categoryId, [FromBody] SaveCategoryDto editCategory)
         {
             var category = await _repo.GetAll<CategoryEntity>()
@@ -75,7 +75,7 @@ namespace App.Api.Data.Controllers
         }
 
         [HttpDelete("{categoryId:int}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> Delete(int categoryId)
         {
             var category = await _repo.GetAll<CategoryEntity>()

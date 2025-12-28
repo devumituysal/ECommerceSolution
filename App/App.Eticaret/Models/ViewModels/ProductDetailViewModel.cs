@@ -8,5 +8,6 @@
         public decimal Price { get; set; }
         public string Details { get; set; } = null!;
         public string[] ImageUrls { get; set; } = [];
+        public int StockAmount { get; set; }
     }
 }

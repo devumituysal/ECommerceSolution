@@ -10,7 +10,7 @@ namespace App.Api.Data.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "admin")]
     public class UserController : ControllerBase
     {
         private readonly IDataRepository _repo;

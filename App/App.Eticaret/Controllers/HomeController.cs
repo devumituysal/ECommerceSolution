@@ -120,7 +120,10 @@ namespace App.Eticaret.Controllers
                 Details = dto.Details,
                 Price = dto.Price,
                 CategoryName = dto.CategoryName,
-                ImageUrls = dto.Images.Count > 0? new[] { dto.Images[0] }: Array.Empty<string>()};
+                ImageUrls = dto.Images.Count > 0 ? new[] { dto.Images[0] } : Array.Empty<string>(),
+                StockAmount = dto.StockAmount
+            };
+                
 
             return View(productDetail);
 

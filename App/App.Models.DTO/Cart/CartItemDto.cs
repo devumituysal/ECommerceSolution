@@ -8,5 +8,7 @@
         public string? ProductImage { get; set; } 
         public byte Quantity { get; set; }      
         public decimal Price { get; set; }
+
+        public int ProductStockAmount { get; set; }
     }
 }

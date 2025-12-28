@@ -16,15 +16,18 @@ namespace App.Eticaret.Controllers
             _cartService = cartService;
         }
 
-        [HttpGet("/add-to-cart/{productId:int}")]
-        public async Task<IActionResult> AddProduct([FromRoute] int productId)
+        [HttpPost("/add-to-cart")]
+        public async Task<IActionResult> AddProduct(int productId, byte quantity)
         {
             var jwt = HttpContext.Request.Cookies["access_token"];
 
             if (string.IsNullOrEmpty(jwt))
                 return RedirectToAction("Login", "Auth");
 
-            var result = await _cartService.AddProductAsync(jwt, productId);
+            if (quantity < 1)
+                quantity = 1;
+
+            var result = await _cartService.AddProductAsync(jwt, productId, quantity);
 
             if (!result.IsSuccess)
             {
@@ -33,13 +36,12 @@ namespace App.Eticaret.Controllers
 
             var prevUrl = Request.Headers.Referer.FirstOrDefault();
 
-            if(prevUrl is null)
-            {
-              return RedirectToAction(nameof(Edit));
-            }
+            if (prevUrl is null)
+                return RedirectToAction(nameof(Edit));
 
-            return  Redirect(prevUrl);
+            return Redirect(prevUrl);
         }
+
 
 
         [HttpGet("/cart")]
@@ -64,7 +66,8 @@ namespace App.Eticaret.Controllers
                 ProductName = x.ProductName,
                 ProductImage = x.ProductImage,
                 Quantity = x.Quantity,
-                Price = x.Price
+                Price = x.Price,
+                ProductStockAmount = x.ProductStockAmount 
             }).ToList();
 
             return View(cartItems);
@@ -94,27 +97,78 @@ namespace App.Eticaret.Controllers
             return RedirectToAction(nameof(Edit));
         }
 
-
-
-        [HttpGet("/checkout")]
-        public async Task<IActionResult> Checkout()
+        [HttpPost("/cart/remove")]
+        public async Task<IActionResult> Remove(int cartItemId)
         {
             var jwt = HttpContext.Request.Cookies["access_token"];
 
             if (string.IsNullOrEmpty(jwt))
                 return RedirectToAction("Login", "Auth");
 
-            var result = await _cartService.CheckoutAsync(jwt);
+            var result = await _cartService.RemoveItemAsync(jwt, cartItemId);
 
             if (!result.IsSuccess)
             {
-                TempData["ErrorMessage"] = "Checkout failed.";
+                TempData["ErrorMessage"] = "Product could not be removed from cart.";
+            }
+
+            return RedirectToAction(nameof(Edit));
+        }
+
+
+        [HttpGet("/checkout")]
+        public async Task<IActionResult> Checkout()
+        {
+            var jwt = HttpContext.Request.Cookies["access_token"];
+            if (string.IsNullOrEmpty(jwt))
+                return RedirectToAction("Login", "Auth");
+
+            var result = await _cartService.GetMyCartAsync(jwt);
+            if (!result.IsSuccess || !result.Value.Any())
+            {
+                TempData["ErrorMessage"] = "Your cart is empty.";
                 return RedirectToAction(nameof(Edit));
             }
 
-            TempData["SuccessMessage"] = "Checkout successful!";
-            return RedirectToAction("Index", "Home");
+            bool stockAdjusted = false;
+
+            var cartItems = result.Value.Select(x =>
+            {
+                // Eğer servis modelinde stok bilgisi varsa burası çalışır
+                if (x.ProductStockAmount > 0 && x.Quantity > x.ProductStockAmount)
+                {
+                    stockAdjusted = true;
+                }
+
+                return new CartItemViewModel
+                {
+                    Id = x.Id,
+                    ProductName = x.ProductName,
+                    ProductImage = x.ProductImage,
+                    Quantity = x.Quantity,
+                    Price = x.Price
+                };
+            }).ToList();
+
+            if (stockAdjusted)
+            {
+                TempData["StockAdjusted"] =
+                    "Sepetinizdeki bazı ürünlerin adedi stok durumuna göre güncellendi. Lütfen siparişinizi kontrol ediniz.";
+            }
+
+            var checkoutModel = new CheckoutViewModel
+            {
+                CartItems = cartItems,
+                Address = ""
+            };
+
+            ViewBag.CartTotal = cartItems.Sum(x => x.TotalPrice);
+
+            return View(checkoutModel);
         }
+
+
+
 
     }
 }

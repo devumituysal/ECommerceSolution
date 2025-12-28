@@ -3,7 +3,7 @@
 @{
     ViewData["Title"] = "Shopping Cart";
 }
-<!-- Breadcrumb Section Begin -->
+
 <section class="breadcrumb-section set-bg" data-setbg="img/breadcrumb.jpg">
     <div class="container">
         <div class="row">
@@ -19,8 +19,7 @@
         </div>
     </div>
 </section>
-<!-- Breadcrumb Section End -->
-<!-- Shoping Cart Section Begin -->
+
 <section class="shoping-cart spad">
     <div class="container">
         <div class="row">
@@ -41,7 +40,7 @@
                             {
                                 <tr>
                                     <td class="shoping__cart__item">
-                                        <img src="@(item.ProductImage)" alt="">
+                                        <img src="@item.ProductImage" alt="">
                                         <h5>@item.ProductName</h5>
                                     </td>
                                     <td class="shoping__cart__price">
@@ -50,7 +49,12 @@
                                     <td class="shoping__cart__quantity">
                                         <div class="quantity">
                                             <div class="pro-qty">
-                                                <input type="text" value="@item.Quantity">
+                                                <input type="number"
+                                                       value="@item.Quantity"
+                                                       min="1"
+                                                       max="@item.ProductStockAmount"
+                                                       data-max="@item.ProductStockAmount"
+                                                       class="qty-input" />
                                             </div>
                                         </div>
                                     </td>
@@ -58,80 +62,117 @@
                                         $@item.TotalPrice
                                     </td>
                                     <td class="shoping__cart__item__close">
-                                        <a asp-controller="Cart" asp-action="Remove" asp-route-cartItemId="@item.Id" class="icon_close" data-cartItemId="@item.Id"></a>
+                                        <form asp-controller="Cart"
+                                              asp-action="Remove"
+                                              method="post"
+                                              style="display:inline;">
+                                            <input type="hidden" name="cartItemId" value="@item.Id" />
+                                            <button type="submit"
+                                                    class="icon_close"
+                                                    style="border:none;background:none;">
+                                            </button>
+                                        </form>
                                     </td>
                                 </tr>
                             }
-                            </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
+
         <div class="row">
             <div class="col-lg-12">
                 <div class="shoping__cart__btns">
-                    <a asp-controller="Home" asp-action="Listing" class="primary-btn cart-btn"><< CONTINUE SHOPPING</a>
-                    @* <a href="#" class="primary-btn cart-btn cart-btn-right">
-                        <span class="icon_loading"></span>
-                        Update Cart
-                    </a> *@
+                    <a asp-controller="Home" asp-action="Listing" class="primary-btn cart-btn">
+                        << CONTINUE SHOPPING
+                    </a>
                 </div>
             </div>
+
             <div class="col-lg-12">
                 <div class="shoping__checkout">
                     <h5>Cart Total</h5>
                     <ul>
-                        <li>Total <span class="cart-total-price">$@(Model.Sum(item => item.TotalPrice))</span></li>
+                        <li>Total <span class="cart-total-price">$@(Model.Sum(x => x.TotalPrice))</span></li>
                     </ul>
-                    <a asp-controller="Cart" asp-action="Checkout" class="primary-btn">PROCEED TO CHECKOUT</a>
+                    <a asp-controller="Cart" asp-action="Checkout" class="primary-btn">
+                        PROCEED TO CHECKOUT
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 </section>
-<!-- Shoping Cart Section End -->
+
 @section Scripts {
     <script>
         $(function () {
+
             $(".pro-qty").on("click", ".qtybtn", function () {
+
                 const input = $(this).closest(".pro-qty").find("input");
-                const tr = $(this).closest("tr");
-                const quantity = input.val();
-                const removeBtn = tr.find("a.icon_close");
-                const cartItemId = removeBtn.attr("data-cartItemId");
-                const currentPrice = parseFloat(tr.find(".shoping__cart__price").text().replace("$", "").replace(",", "."));
+                const max = parseInt(input.data("max"));
+                let quantity = parseInt(input.val());
 
-                console.log({
-                    quantity,
-                    cartItemId,
-                    removeBtn
-                });
-
-                if(quantity <= 0) {
-                    removeBtn[0].click();
-                    return;
+                if (quantity > max) {
+                    quantity = max;
+                    input.val(max);
+                    alert("Bu ürün için maksimum stok miktarına ulaştınız.");
                 }
 
+                if (quantity < 1 || isNaN(quantity)) {
+                    quantity = 1;
+                    input.val(1);
+                }
+
+                const tr = $(this).closest("tr");
+                const cartItemId = tr.find("input[name='cartItemId']").val();
+                const currentPrice = parseFloat(
+                    tr.find(".shoping__cart__price").text().replace("$", "").replace(",", ".")
+                );
+
                 $.ajax({
-                    url: "@(Url.Action(nameof(CartController.UpdateCart), "Cart"))",
+                    url: "@Url.Action(nameof(CartController.UpdateCart), "Cart")",
                     type: "POST",
                     data: {
                         cartItemId: cartItemId,
                         quantity: quantity
                     },
-                    success: function (response) {
-                        tr.find(".shoping__cart__total").text("$" + (currentPrice * quantity).toFixed(2));
+                    success: function () {
 
-                        const cartTotalPrice = $(".cart-total-price");
-                        const total = Array.from(document.getElementsByClassName("shoping__cart__total"))
-                            .map(x => parseFloat(x.innerText.replace("$", "").replace(",", ".")))
-                            .reduce((a, b) => a + b, 0);
+                        tr.find(".shoping__cart__total")
+                          .text("$" + (currentPrice * quantity).toFixed(2));
 
-                        cartTotalPrice.text("$" + total.toFixed(2));
+                        const total = Array.from(
+                            document.getElementsByClassName("shoping__cart__total")
+                        )
+                        .map(x => parseFloat(x.innerText.replace("$", "").replace(",", ".")))
+                        .reduce((a, b) => a + b, 0);
+
+                        $(".cart-total-price").text("$" + total.toFixed(2));
                     }
                 });
             });
+
+            $(".qty-input").on("input", function () {
+
+                const max = parseInt($(this).data("max"));
+                let val = parseInt($(this).val());
+
+                if (isNaN(val) || val < 1) {
+                    $(this).val(1);
+                    return;
+                }
+
+                if (val > max) {
+                    $(this).val(max);
+                    alert("Bu ürün için maksimum stok miktarı: " + max);
+                }
+            });
+
         });
     </script>
 }
+
+

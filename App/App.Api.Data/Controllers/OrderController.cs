@@ -9,7 +9,7 @@ using System.Security.Claims;
 
 namespace App.Api.Data.Controllers
 {
-    [Authorize(Roles = "Buyer,Seller")]
+    [Authorize(Roles = "buyer,seller")]
     [Route("api/[controller]")]
     [ApiController]
     public class OrderController : ControllerBase
@@ -24,10 +24,10 @@ namespace App.Api.Data.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateOrderRequestDto createOrderRequestDto)
         {
-            var userId = int.Parse(User.FindFirst(ClaimTypes.Sid)!.Value);
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
             var cartItems = await _repo.GetAll<CartItemEntity>()
-                .Include(ci=>ci.Product)
+                .Include(ci => ci.Product)
                 .Where(ci => ci.UserId == userId)
                 .ToListAsync();
 
@@ -40,13 +40,25 @@ namespace App.Api.Data.Controllers
             {
                 UserId = userId,
                 Address = createOrderRequestDto.Address,
-                OrderCode = await CreateOrderCodeAsync() // direk guid yapmaktansa %100 unique olması için aşağıdaki metodla yapıldı
+                OrderCode = await CreateOrderCodeAsync(), // %100 unique
+                CreatedAt = DateTime.UtcNow
             };
 
             await _repo.Add(order);
 
-            foreach(var item in cartItems)
+            foreach (var item in cartItems)
             {
+                // Stok kontrolü
+                if (item.Product.StockAmount < item.Quantity)
+                {
+                    return BadRequest($"{item.Product.Name} için yeterli stok yok");
+                }
+
+                // Stok güncellemesi
+                item.Product.StockAmount -= item.Quantity;
+                await _repo.Update(item.Product); // stok değişikliği DB'ye yansıyor
+
+                // Order item oluşturma
                 var orderItem = new OrderItemEntity
                 {
                     OrderId = order.Id,
@@ -58,9 +70,17 @@ namespace App.Api.Data.Controllers
                 await _repo.Add(orderItem);
             }
 
-            return Ok(new CreateOrderResponseDto{ OrderCode = order.OrderCode });
+            foreach (var item in cartItems)
+            {
+                await _repo.Delete(item);
+            }
 
+
+            return Ok(new CreateOrderResponseDto { OrderCode = order.OrderCode });
         }
+
+
+
         private async Task<string> CreateOrderCodeAsync()
         {
             var orderCode = Guid.NewGuid().ToString("n")[..16].ToUpperInvariant();
@@ -76,9 +96,11 @@ namespace App.Api.Data.Controllers
         [HttpGet("{orderCode}")]
         public async Task<IActionResult> GetDetails(string orderCode)
         {
-            var userId = int.Parse(User.FindFirst(ClaimTypes.Sid)!.Value);
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
             var order = await _repo.GetAll<OrderEntity>()
+                .Include(o => o.OrderItems)
+                .ThenInclude(oi => oi.Product)
                 .Where(o => o.OrderCode == orderCode && o.UserId == userId)
                 .Select(o => new OrderDetailsResponseDto
                 {
@@ -94,7 +116,7 @@ namespace App.Api.Data.Controllers
                 })
                 .FirstOrDefaultAsync();
 
-            if(order == null)
+            if (order == null)
             {
                 return NotFound();
             }
@@ -105,7 +127,7 @@ namespace App.Api.Data.Controllers
         [HttpGet("my-orders")]
         public async Task<IActionResult> GetMyOrders()
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.Sid)?.Value;
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             if (userIdClaim is null)
             {
