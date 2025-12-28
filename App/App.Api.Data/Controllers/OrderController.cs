@@ -9,7 +9,7 @@ using System.Security.Claims;
 
 namespace App.Api.Data.Controllers
 {
-    [Authorize(Roles = "Buyer,Seller")]
+    [Authorize(Roles = "buyer,seller")]
     [Route("api/[controller]")]
     [ApiController]
     public class OrderController : ControllerBase
@@ -24,7 +24,7 @@ namespace App.Api.Data.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateOrderRequestDto createOrderRequestDto)
         {
-            var userId = int.Parse(User.FindFirst(ClaimTypes.Sid)!.Value);
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
             var cartItems = await _repo.GetAll<CartItemEntity>()
                 .Include(ci=>ci.Product)
@@ -40,7 +40,8 @@ namespace App.Api.Data.Controllers
             {
                 UserId = userId,
                 Address = createOrderRequestDto.Address,
-                OrderCode = await CreateOrderCodeAsync() // direk guid yapmaktansa %100 unique olması için aşağıdaki metodla yapıldı
+                OrderCode = await CreateOrderCodeAsync(), // direk guid yapmaktansa %100 unique olması için aşağıdaki metodla yapıldı
+                CreatedAt = DateTime.UtcNow
             };
 
             await _repo.Add(order);
@@ -76,9 +77,11 @@ namespace App.Api.Data.Controllers
         [HttpGet("{orderCode}")]
         public async Task<IActionResult> GetDetails(string orderCode)
         {
-            var userId = int.Parse(User.FindFirst(ClaimTypes.Sid)!.Value);
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
             var order = await _repo.GetAll<OrderEntity>()
+                .Include(o => o.OrderItems)
+                .ThenInclude(oi => oi.Product)
                 .Where(o => o.OrderCode == orderCode && o.UserId == userId)
                 .Select(o => new OrderDetailsResponseDto
                 {
@@ -94,7 +97,7 @@ namespace App.Api.Data.Controllers
                 })
                 .FirstOrDefaultAsync();
 
-            if(order == null)
+            if (order == null)
             {
                 return NotFound();
             }
@@ -105,7 +108,7 @@ namespace App.Api.Data.Controllers
         [HttpGet("my-orders")]
         public async Task<IActionResult> GetMyOrders()
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.Sid)?.Value;
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             if (userIdClaim is null)
             {

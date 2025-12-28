@@ -39,7 +39,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.Cookie.Name = "auth-cookie";
         options.Cookie.HttpOnly = true;
         options.Cookie.IsEssential = true;
-        options.LoginPath = "/Auth/Login";
+        options.LoginPath = "/login";
         options.AccessDeniedPath = "/Auth/AccessDenied";
     });
 

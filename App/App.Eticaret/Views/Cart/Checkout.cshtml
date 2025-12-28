@@ -1,4 +1,4 @@
-﻿@model List<CartItemViewModel>
+﻿@model App.Eticaret.Models.ViewModels.CheckoutViewModel
 @{
     ViewData["Title"] = "Checkout";
 }
@@ -19,7 +19,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var item in Model)
+                    @foreach (var item in Model.CartItems)
                     {
                         <tr>
                             <td>@item.ProductName</td>
@@ -37,11 +37,10 @@
                 <h2>Checkout Information</h2>
                 <div class="form-floating mb-3">
                     <label for="floatingTextarea">Address</label>
-                    <textarea class="form-control" placeholder="Enter your address" id="floatingTextarea" name="Address"></textarea>
+                    <textarea class="form-control" placeholder="Enter your address" id="floatingTextarea" name="Address">@Model.Address</textarea>
                 </div>
                 <button type="submit" class="primary-btn">Place Order</button>
             </form>
-
         </div>
     </div>
 </div>

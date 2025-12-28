@@ -39,7 +39,7 @@ namespace App.Api.Data.Controllers
         }
 
         [HttpPost("{commentId:int}/approve")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> Approve(int commentId)
         {
             var comment = await _repo.GetAll<CommentEntity>()

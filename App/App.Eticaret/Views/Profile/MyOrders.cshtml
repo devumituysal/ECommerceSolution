@@ -1,4 +1,5 @@
-﻿@model List<OrderViewModel>
+﻿@model List<App.Models.DTO.Order.OrderDto>
+
 @{
     ViewData["Title"] = "My Orders";
 }
@@ -6,6 +7,7 @@
 <div class="container">
     <h2>@ViewData["Title"]</h2>
     <partial name="Partials/ViewMessages" />
+
     <table class="table">
         <thead>
             <tr>
@@ -25,7 +27,12 @@
                     <td>@order.TotalQuantity</td>
                     <td>@order.TotalPrice</td>
                     <td>
-                        <a asp-action="Details" asp-controller="Order" asp-route-orderCode="@order.OrderCode" class="btn btn-primary">Details</a>
+                        <a asp-action="Details"
+                           asp-controller="Order"
+                           asp-route-orderCode="@order.OrderCode"
+                           class="btn btn-primary">
+                            Details
+                        </a>
                     </td>
                 </tr>
             }

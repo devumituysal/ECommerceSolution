@@ -4,6 +4,7 @@ using App.Data.Repositories.Abstractions;
 using App.Eticaret.Models.ViewModels;
 using App.Models.DTO.Order;
 using App.Services.Abstract;
+using App.Services.Concrete;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -15,44 +16,67 @@ namespace App.Eticaret.Controllers
     public class OrderController : Controller
     {
         private readonly IOrderService _orderService;
+        private readonly ICartService _cartService;
 
-        public OrderController(IOrderService orderService)
+        public OrderController(IOrderService orderService ,ICartService cartService)
         {
             _orderService = orderService;
+            _cartService = cartService;
         }
 
         [HttpPost("/order")]
         public async Task<IActionResult> Create([FromForm] CheckoutViewModel model)
         {
-            if(!ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                return View(model);
+                // Checkout view'ına geri dönerken CartItems listesini tekrar doldur
+                var jwt = Request.Cookies["access_token"];
+                var resultCart = await _cartService.GetMyCartAsync(jwt);
+                model.CartItems = resultCart?.Value?.Select(x => new CartItemViewModel
+                {
+                    Id = x.Id,
+                    ProductName = x.ProductName,
+                    ProductImage = x.ProductImage,
+                    Quantity = x.Quantity,
+                    Price = x.Price
+                }).ToList() ?? new List<CartItemViewModel>();
+
+                return View("~/Views/Cart/Checkout.cshtml", model);
             }
 
-            var jwt = Request.Cookies["access_token"];
+            var jwtToken = Request.Cookies["access_token"];
 
-            if (string.IsNullOrEmpty(jwt))
-            {
+            if (string.IsNullOrEmpty(jwtToken))
                 return RedirectToAction("Login", "Auth");
-            }
 
             var request = new CreateOrderRequestDto
             {
                 Address = model.Address
             };
 
-            var result = await _orderService.CreateAsync(jwt, request);
+            var result = await _orderService.CreateAsync(jwtToken, request);
 
             if (!result.IsSuccess)
             {
                 ModelState.AddModelError("", "Sipariş oluşturulamadı.");
-                return View(model);
+
+                // Hata durumunda da CartItems listesini doldur
+                var resultCart = await _cartService.GetMyCartAsync(jwtToken);
+                model.CartItems = resultCart?.Value?.Select(x => new CartItemViewModel
+                {
+                    Id = x.Id,
+                    ProductName = x.ProductName,
+                    ProductImage = x.ProductImage,
+                    Quantity = x.Quantity,
+                    Price = x.Price
+                }).ToList() ?? new List<CartItemViewModel>();
+
+                return View("~/Views/Cart/Checkout.cshtml", model);
             }
 
             return RedirectToAction(nameof(Details), new { orderCode = result.Value });
-
-
         }
+
 
         [HttpGet("/order/{orderCode}/details")]
         public async Task<IActionResult> Details([FromRoute] string orderCode)
@@ -66,12 +90,22 @@ namespace App.Eticaret.Controllers
 
             var result = await _orderService.GetOrderDetailsAsync(jwt, orderCode);
 
-            if (!result.IsSuccess)
-            {
-                return NotFound();
-            }
+            var dto = result.Value;
 
-            return View(result.Value);
+            var vm = new OrderDetailsViewModel
+            {
+                OrderCode = dto.OrderCode,
+                Address = dto.Address,
+                CreatedAt = dto.CreatedAt,
+                Items = dto.Items.Select(i => new OrderItemViewModel
+                {
+                    ProductName = i.ProductName,
+                    Quantity = i.Quantity,
+                    UnitPrice = i.UnitPrice
+                }).ToList()
+            };
+
+            return View(vm);
         }
     }
 }

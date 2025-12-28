@@ -115,26 +115,41 @@ namespace App.Eticaret.Controllers
         }
 
 
-
         [HttpGet("/checkout")]
         public async Task<IActionResult> Checkout()
         {
             var jwt = HttpContext.Request.Cookies["access_token"];
-
             if (string.IsNullOrEmpty(jwt))
                 return RedirectToAction("Login", "Auth");
 
-            var result = await _cartService.CheckoutAsync(jwt);
-
-            if (!result.IsSuccess)
+            var result = await _cartService.GetMyCartAsync(jwt);
+            if (!result.IsSuccess || !result.Value.Any())
             {
-                TempData["ErrorMessage"] = "Checkout failed.";
+                TempData["ErrorMessage"] = "Your cart is empty.";
                 return RedirectToAction(nameof(Edit));
             }
 
-            TempData["SuccessMessage"] = "Checkout successful!";
-            return RedirectToAction("Index", "Home");
+            var cartItems = result.Value.Select(x => new CartItemViewModel
+            {
+                Id = x.Id,
+                ProductName = x.ProductName,
+                ProductImage = x.ProductImage,
+                Quantity = x.Quantity,
+                Price = x.Price
+            }).ToList();
+
+            var checkoutModel = new CheckoutViewModel
+            {
+                CartItems = cartItems ?? new List<CartItemViewModel>(),
+                Address = "" // boş bırakabiliriz veya kullanıcı adresini çekebiliriz
+            };
+
+            ViewBag.CartTotal = cartItems.Sum(x => x.TotalPrice);
+
+            return View(checkoutModel); // artık CheckoutViewModel gönderiyoruz
         }
+
+
 
     }
 }

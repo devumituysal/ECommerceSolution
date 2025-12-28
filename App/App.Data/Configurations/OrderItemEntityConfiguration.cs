@@ -28,7 +28,7 @@ namespace App.Data.Configurations
                 .IsRequired();
 
             builder.HasOne(oi => oi.Order)
-                .WithMany()
+                .WithMany(oi => oi.OrderItems)
                 .HasForeignKey(oi => oi.OrderId)
                 .OnDelete(DeleteBehavior.NoAction);
 
