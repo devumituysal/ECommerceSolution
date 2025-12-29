@@ -23,16 +23,6 @@
                                                 <i class="fa fa-user-circle"></i> My Profile
                                             </a>
                                         </li>
-
-                                        @if (User.IsInRole("admin"))
-                                        {
-                                            <li>
-                                                <a href="https://localhost:7223/Home/Index" target="_blank" style="color:#d63031; font-weight:bold;">
-                                                    <i class="fa fa-cog"></i> Admin Paneli
-                                                </a>
-                                            </li>
-                                        }
-
                                         <li>
                                             <a href="/logout">
                                                 <i class="fa fa-sign-out"></i> Logout
