@@ -13,6 +13,5 @@ namespace App.Admin.Controllers
         {
             return View();
         }
-
     }
 }

@@ -52,8 +52,8 @@ namespace App.Data.Contexts
             );
 
             modelBuilder.Entity<UserEntity>().HasData(
-                new UserEntity() { Id = 1, FirstName = "admin", LastName = "admin", Email = "admin@gmail.com", Enabled = true, RoleId = 1, Password = "AQAAAAIAAYagAAAAEH0gFVqsVLuAPXM/7gJ6gFdjfL3SYwdVAnCtoeodowDdKYFbnudwySNiePyQ66N7nA==", CreatedAt = DateTime.UtcNow },
-                new UserEntity() { Id = 2, FirstName = "seller", LastName = "seller", Email = "seller@gmail.com", Enabled = true, RoleId = 2, Password = "AQAAAAIAAYagAAAAEH0gFVqsVLuAPXM/7gJ6gFdjfL3SYwdVAnCtoeodowDdKYFbnudwySNiePyQ66N7nA==", CreatedAt = DateTime.UtcNow }
+                new UserEntity() { Id = 1, FirstName = "admin", LastName = "admin", Email = "admin@gmail.com", Enabled = true, IsBanned = false, RoleId = 1, Password = "AQAAAAIAAYagAAAAEH0gFVqsVLuAPXM/7gJ6gFdjfL3SYwdVAnCtoeodowDdKYFbnudwySNiePyQ66N7nA==", CreatedAt = DateTime.UtcNow },
+                new UserEntity() { Id = 2, FirstName = "seller", LastName = "seller", Email = "seller@gmail.com", Enabled = true, IsBanned = false, RoleId = 2, Password = "AQAAAAIAAYagAAAAEH0gFVqsVLuAPXM/7gJ6gFdjfL3SYwdVAnCtoeodowDdKYFbnudwySNiePyQ66N7nA==", CreatedAt = DateTime.UtcNow }
             );
 
             modelBuilder.Entity<CategoryEntity>().HasData(

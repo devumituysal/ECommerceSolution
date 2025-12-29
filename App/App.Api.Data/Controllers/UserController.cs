@@ -24,7 +24,8 @@ namespace App.Api.Data.Controllers
         public async Task<ActionResult<List<UserListItemDto>>> List()
         {
             var users = await _repo.GetAll<UserEntity>()
-                .Where(u => u.RoleId != 1)
+                .Include(u => u.Role)
+                .Where(u => u.Role.Name != "admin") // opsiyonel
                 .Select(u => new UserListItemDto
                 {
                     Id = u.Id,
@@ -33,6 +34,7 @@ namespace App.Api.Data.Controllers
                     Email = u.Email,
                     Role = u.Role.Name,
                     Enabled = u.Enabled,
+                    IsBanned = u.IsBanned,
                     HasSellerRequest = u.HasSellerRequest
                 })
                 .ToListAsync();
@@ -60,6 +62,38 @@ namespace App.Api.Data.Controllers
             await _repo.Update(user);
 
             return Ok(new { message = "Kullanıcı başarıyla onaylandı." });
+        }
+
+        [HttpPost("{id:int}/enable")]
+        public async Task<IActionResult> Enable([FromRoute] int id)
+        {
+            var user = await _repo.GetAll<UserEntity>()
+                .FirstOrDefaultAsync(u => u.Id == id);
+
+            if (user == null)
+                return NotFound();
+
+            user.Enabled = true;
+            user.IsBanned = false;
+            await _repo.Update(user);
+
+            return Ok();
+        }
+
+        [HttpPost("{id:int}/disable")]
+        public async Task<IActionResult> Disable([FromRoute] int id)
+        {
+            var user = await _repo.GetAll<UserEntity>()
+                .FirstOrDefaultAsync(u => u.Id == id);
+
+            if (user == null)
+                return NotFound();
+
+            user.Enabled = false;
+            user.IsBanned = true;
+            await _repo.Update(user);
+
+            return Ok();
         }
     }
 }

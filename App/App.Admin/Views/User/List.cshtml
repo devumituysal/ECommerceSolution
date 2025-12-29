@@ -11,6 +11,7 @@
                 <th>Email</th>
                 <th>Role</th>
                 <th>Is Enabled</th>
+                <th>Status</th>
                 <th></th>
             </tr>
         </thead>
@@ -24,19 +25,53 @@
                     <td>@user.Email</td>
                     <td>@user.Role</td>
                     <td>@(user.Enabled ? "YES" : "NO")</td>
+
+                    <!-- ✅ STATUS -->
                     <td>
-                        @if (user.Enabled)
+                        @if (user.IsBanned)
                         {
-                            <a asp-controller="User" asp-action="Disable" asp-route-id="@user.Id" class="btn btn-danger">Disable</a>
+                            <span class="badge badge-danger">Banned</span>
+                        }
+                        else if (!user.Enabled)
+                        {
+                            <span class="badge badge-warning">Not Activated</span>
                         }
                         else
                         {
-                            <a asp-controller="User" asp-action="Enable" asp-route-id="@user.Id" class="btn btn-success">Enable</a>
+                            <span class="badge badge-success">Active</span>
+                        }
+                    </td>
+
+                    <td>
+                        @if (user.Enabled)
+                        {
+                            <form asp-controller="User"
+                                  asp-action="Disable"
+                                  asp-route-id="@user.Id"
+                                  method="post"
+                                  style="display:inline">
+                                <button type="submit" class="btn btn-danger">Disable</button>
+                            </form>
+                        }
+                        else
+                        {
+                            <form asp-controller="User"
+                                  asp-action="Enable"
+                                  asp-route-id="@user.Id"
+                                  method="post"
+                                  style="display:inline">
+                                <button type="submit" class="btn btn-success">Enable</button>
+                            </form>
                         }
 
                         @if (user.HasSellerRequest)
                         {
-                            <a asp-controller="User" asp-action="ApproveSellerRequest" asp-route-id="@user.Id" class="btn btn-success">Approve Seller Request</a>
+                            <a asp-controller="User"
+                               asp-action="Approve"
+                               asp-route-id="@user.Id"
+                               class="btn btn-success">
+                                Approve Seller Request
+                            </a>
                         }
                     </td>
                 </tr>
@@ -44,3 +79,4 @@
         </tbody>
     </table>
 </div>
+    

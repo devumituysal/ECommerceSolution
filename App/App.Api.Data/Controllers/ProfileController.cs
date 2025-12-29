@@ -85,18 +85,22 @@ namespace App.Api.Data.Controllers
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
             var user = await _repo.GetAll<UserEntity>()
+                .Include(x => x.Role)
                 .FirstOrDefaultAsync(x => x.Id == userId);
 
             if (user == null)
                 return NotFound();
 
+            if (user.Role.Name != "buyer")
+                return BadRequest("Only buyers can request seller role.");
+
             if (user.HasSellerRequest)
-                return BadRequest(new { message = "Seller request already sent." });
+                return BadRequest("Seller request already sent.");
 
             user.HasSellerRequest = true;
             await _repo.Update(user);
 
-            return Ok();
+            return Ok(new { message = "Seller request sent." });
         }
 
 

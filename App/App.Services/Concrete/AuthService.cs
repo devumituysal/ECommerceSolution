@@ -25,10 +25,17 @@ namespace App.Services.Concrete
         {
             var response = await DataClient.PostAsJsonAsync(
                 "api/auth/login",
-                dto);
+                dto
+            );
 
-            if (response.StatusCode == HttpStatusCode.NotFound)
-                return Result.NotFound("Email veya şifre hatalı");
+            if (response.StatusCode == HttpStatusCode.Forbidden)
+            {
+                var message = await response.Content.ReadAsStringAsync();
+                return Result.Forbidden(message);
+            }
+
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+                return Result.Unauthorized("Email veya şifre hatalı");
 
             if (!response.IsSuccessStatusCode)
                 return Result.Error("Login failed");

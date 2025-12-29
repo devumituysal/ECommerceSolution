@@ -12,5 +12,9 @@ namespace App.Services.Abstract
     {
         Task<Result<List<UserListItemDto>>> GetUsersAsync(string jwt);
         Task<Result> ApproveAsync(string jwt, int userId);
+        Task<Result> EnableAsync(string jwt, int userId);
+        Task<Result> DisableAsync(string jwt, int userId);
+
+
     }
 }
