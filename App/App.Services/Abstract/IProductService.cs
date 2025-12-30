@@ -21,10 +21,12 @@ namespace App.Services.Abstract
         Task<Result> DeleteImageAsync(string jwt, int productId, string fileName);
         Task<Result<ProductDetailDto>> GetByIdAsync(string jwt, int productId);
 
-        Task<Result<List<ProductListItemDto>>> GetPublicProductsAsync(int? categoryId , string? q);
+        Task<Result<List<ProductListItemDto>>> GetPublicProductsAsync(int? categoryId, string? q);
         Task<Result<ProductDetailDto>> GetPublicByIdAsync(int productId);
 
         Task<Result<List<ProductListItemDto>>> GetLatestAsync(int count);
+
+        
 
     }
 }
