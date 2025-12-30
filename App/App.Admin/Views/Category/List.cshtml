@@ -3,6 +3,27 @@
     ViewData["Title"] = "Kategoriler";
 }
 
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["SuccessMessage"]
+    </div>
+}
+@if (TempData["WarningMessage"] != null)
+{
+    <div class="alert alert-warning">
+        @TempData["WarningMessage"]
+    </div>
+}
+
+
 <div class="row">
     <div class="col-md-12">
         <div class="card">
@@ -25,8 +46,25 @@
                                 <tr>
                                     <td>@item.Name</td>
                                     <td>
-                                        <a asp-action="Edit" asp-route-categoryId="@item.Id" class="btn btn-primary">Düzenle</a>
-                                        <a asp-action="Delete" asp-route-categoryId="@item.Id" class="btn btn-danger">Sil</a>
+                                        <a asp-controller="Category"
+                                           asp-action="Edit"
+                                           asp-route-categoryId="@item.Id"
+                                           class="btn btn-primary">
+                                            Düzenle
+                                        </a>
+
+                                        <form asp-action="Delete"
+                                              asp-route-categoryId="@item.Id"
+                                              method="post"
+                                              style="display:inline"
+                                              onsubmit="return confirm('Silmek istediğine emin misin?')">
+
+                                            @Html.AntiForgeryToken()
+
+                                            <button type="submit" class="btn btn-danger btn-sm">
+                                                Sil
+                                            </button>
+                                        </form>
                                     </td>
                                 </tr>
                             }

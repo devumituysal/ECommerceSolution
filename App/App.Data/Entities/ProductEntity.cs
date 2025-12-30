@@ -24,7 +24,7 @@ namespace App.Data.Entities
        
 
 
-        public ICollection<ProductImageEntity> Images { get; set; } = null!;
+        public ICollection<ProductImageEntity> Images { get; set; } = new List<ProductImageEntity>();
         public ICollection<ProductCommentEntity> Comments { get; set; } = null!;
     }
 }

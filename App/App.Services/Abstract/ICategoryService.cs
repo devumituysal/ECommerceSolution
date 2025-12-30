@@ -11,9 +11,9 @@ namespace App.Services.Abstract
     public interface ICategoryService
     {
         Task<Result<List<CategoryListItemDto>>> GetAllAsync();
-        Task<Result> CreateAsync(SaveCategoryDto dto);
-        Task<Result> UpdateAsync(int categoryId, SaveCategoryDto dto);
-        Task<Result> DeleteAsync(int categoryId);
+        Task<Result> CreateAsync(string jwt, SaveCategoryDto dto);
+        Task<Result> UpdateAsync(int categoryId, string jwt, SaveCategoryDto dto);
+        Task<Result> DeleteAsync(int categoryId,string jwt);
         Task<Result<List<CategoryWithImageDto>>> GetCategoriesWithFirstProductImageAsync();
     }
 }

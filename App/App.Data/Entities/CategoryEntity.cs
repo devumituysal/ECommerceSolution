@@ -12,5 +12,7 @@ namespace App.Data.Entities
         public string Name { get; set; } = null!;
         public string Color { get; set; } = null!;
         public string IconCssClass { get; set; } = null!;
+
+        public ICollection<ProductEntity> Products { get; set; } = null!;
     }
 }

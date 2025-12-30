@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Xml.Linq;
 
 namespace App.Api.Data.Controllers
 {
@@ -24,6 +25,7 @@ namespace App.Api.Data.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> GetAll()
         {
+          
             var categories = await _repo.GetAll<CategoryEntity>()
                 .Select(c => new CategoryListItemDto
                 {
@@ -60,26 +62,47 @@ namespace App.Api.Data.Controllers
         [Authorize(Roles = "admin")]
         public async Task<IActionResult> Edit(int categoryId, [FromBody] SaveCategoryDto editCategory)
         {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
             var category = await _repo.GetAll<CategoryEntity>()
-                                      .FirstOrDefaultAsync(c => c.Id == categoryId);
+                .FirstOrDefaultAsync(c => c.Id == categoryId);
+
             if (category == null)
                 return NotFound();
 
+            var nameExists = await _repo.GetAll<CategoryEntity>()
+                .AnyAsync(c => c.Id != categoryId && c.Name == editCategory.Name);
+
+            if (nameExists)
+                return Conflict(new { message = "Category name already exists." });
+
             category.Name = editCategory.Name;
             category.Color = editCategory.Color;
-            category.IconCssClass = editCategory.IconCssClass;
+            category.IconCssClass = editCategory.IconCssClass ?? "";
 
             await _repo.Update(category);
 
-            return Ok(new { message = "Category updated successfully." });
+            return Ok();
         }
+    
 
         [HttpDelete("{categoryId:int}")]
         [Authorize(Roles = "admin")]
         public async Task<IActionResult> Delete(int categoryId)
         {
+            var hasProducts = await _repo.GetAll<ProductEntity>()
+               .AnyAsync(p => p.CategoryId == categoryId);
+
+            if (hasProducts)
+                return Conflict(new
+                {
+                    message = "Category has products and cannot be deleted."
+                });
+
             var category = await _repo.GetAll<CategoryEntity>()
-                                      .FirstOrDefaultAsync(c => c.Id == categoryId);
+                .FirstOrDefaultAsync(c => c.Id == categoryId);
+
             if (category == null)
                 return NotFound();
 
@@ -87,6 +110,7 @@ namespace App.Api.Data.Controllers
 
             return NoContent();
         }
+
 
         [HttpGet("with-first-product")]
         public async Task<IActionResult> GetCategoriesWithFirstProduct()

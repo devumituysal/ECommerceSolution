@@ -1,15 +1,23 @@
 ﻿@model SaveCategoryViewModel
+
 @{
     ViewBag.Title = "Kategori Düzenle";
 }
 
-<div class="d-flex">
+<div class="d-flex align-items-center mb-3">
     <h2 class="m-0">@ViewBag.Title</h2>
     <a asp-action="List" class="btn btn-primary ml-auto">Listeye Dön</a>
 </div>
 
 <partial name="Partials/_ViewMessages" />
-<form asp-controller="Category" asp-action="Edit" asp-route-categoryId="@(Context.GetRouteValue("categoryId"))" method="post">
+
+<form asp-controller="Category"
+      asp-action="Edit"
+      asp-route-categoryId="@Model.Id"
+      method="post">
+
+    @Html.AntiForgeryToken()
+
     <div class="form-group">
         <label asp-for="Name">Kategori Adı</label>
         <input asp-for="Name" class="form-control" />
@@ -22,8 +30,10 @@
         <span asp-validation-for="Color" class="text-danger"></span>
     </div>
 
-    <div class="form-group">
-        <button type="submit" class="btn btn-primary">Kaydet</button>
+    <div class="form-group mt-3">
+        <button type="submit" class="btn btn-primary">
+            Kaydet
+        </button>
     </div>
 </form>
 
