@@ -73,22 +73,6 @@ namespace App.Services.Concrete
             return Result.Success();
         }
 
-        // POST /api/product/{productId}/comment
-        public async Task<Result> CreateCommentAsync(string jwt, int productId, CreateProductCommentRequestDto dto)
-        {
-            var response = await SendAsync(HttpMethod.Post, $"api/product/{productId}/comment", jwt, dto);
-
-            if (response.StatusCode == HttpStatusCode.NotFound)
-                return Result.NotFound();
-
-            if (response.StatusCode == HttpStatusCode.Unauthorized)
-                return Result.Unauthorized();
-
-            if (!response.IsSuccessStatusCode)
-                return Result.Error();
-
-            return Result.Success();
-        }
 
         // GET /api/product
         public async Task<Result<List<ProductListItemDto>>> GetMyProductsAsync(string jwt)

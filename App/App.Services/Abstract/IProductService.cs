@@ -15,7 +15,6 @@ namespace App.Services.Abstract
         Task<Result<int>> CreateAsync(string jwt, CreateProductRequestDto dto);
         Task<Result> UpdateAsync(string jwt, int productId, UpdateProductRequestDto dto);
         Task<Result> DeleteAsync(string jwt, int productId);
-        Task<Result> CreateCommentAsync(string jwt, int productId, CreateProductCommentRequestDto dto);
         Task<Result<List<ProductListItemDto>>> GetMyProductsAsync(string jwt);
         Task<Result> UploadImagesAsync(string jwt, int productId, List<IFormFile> files);
         Task<Result> DeleteImageAsync(string jwt, int productId, string fileName);

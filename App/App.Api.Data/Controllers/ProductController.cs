@@ -82,33 +82,7 @@ namespace App.Api.Data.Controllers
             return NoContent();
         }
 
-        [HttpPost("{productId:int}/comment")]
-        [Authorize(Roles = "buyer,seller")]
-        public async Task<IActionResult> CreateComment(int productId,[FromBody] CreateProductCommentRequestDto createProductCommentRequest)
-        {
-            var productExists = await _repo
-                .GetAll<ProductEntity>()
-                .AnyAsync(p => p.Id == productId);
-
-            if (!productExists)
-            {
-                return NotFound();
-            }
-
-            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-
-            var comment = new ProductCommentEntity
-            {
-                ProductId = productId,
-                UserId = userId,
-                StarCount = createProductCommentRequest.StarCount,
-                Text = createProductCommentRequest.Text
-            };
-
-            await _repo.Add(comment);
-
-            return NoContent();
-        }
+   
 
         [AllowAnonymous]
         [HttpGet("{productId:int}")]

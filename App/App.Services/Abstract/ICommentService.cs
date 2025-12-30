@@ -12,5 +12,6 @@ namespace App.Services.Abstract
     {
         Task<Result<List<CommentListItemDto>>> GetAllAsync(string jwt);
         Task<Result> ApproveAsync(string jwt, int commentId);
+        Task<Result> CreateAsync(string jwt, int productId, CreateProductCommentRequestDto dto);
     }
 }

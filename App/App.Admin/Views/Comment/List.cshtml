@@ -1,42 +1,66 @@
-﻿@{
+﻿@model List<App.Admin.Models.ViewModels.CommentListItemViewModel>
+
+@{
     ViewBag.Title = "Product Comments";
 }
 
 <h2>Ürün Yorumları</h2>
 
-<table class="table">
-    <thead>
+<table class="table table-bordered table-hover">
+    <thead class="table-dark">
         <tr>
             <th>Yorum</th>
             <th>Sahibi</th>
+            <th>Tarih</th>
+            <th>Durum</th>
             <th>İşlemler</th>
         </tr>
     </thead>
     <tbody>
-        <tr>
-            <td><i>Ürün çok güzel, çeyizime aldım.</i></td>
-            <td>Merve Yılmaz</td>
-            <td>
-                <button class="btn btn-primary" onclick="approveComment(1)">Approve</button>
-            </td>
-        </tr>
+        @foreach (var comment in Model)
+        {
+            <tr class="@(comment.Approved ? "" : "table-warning")">
+                <td>
+                    <i>@comment.Text</i>
+                </td>
+                <td>
+                    @comment.FirstName @comment.LastName
+                </td>
+                <td>
+                    @comment.CreatedAt.ToString("dd.MM.yyyy HH:mm")
+                </td>
+                <td>
+                    @if (comment.Approved)
+                    {
+                        <span class="badge bg-success">Approved</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-warning text-dark">Pending</span>
+                    }
+                </td>
+                <td>
+                    @if (!comment.Approved)
+                    {
+                        <form asp-controller="Comment"
+                              asp-action="Approve"
+                              asp-route-commentId="@comment.Id"
+                              method="post"
+                              class="d-inline">
+
+                            @Html.AntiForgeryToken()
+
+                            <button type="submit" class="btn btn-success btn-sm">
+                                Approve
+                            </button>
+                        </form>
+                    }
+                    else
+                    {
+                        <span class="text-muted">—</span>
+                    }
+                </td>
+            </tr>
+        }
     </tbody>
 </table>
-
-@section scripts {
-    <script>
-        function approveComment(commentId) {
-            // Make a fetch request to the server to approve the comment
-
-            fetch(`/comment/${commentId}/approve`)
-                .then(response => response.json())
-                .then(data => {
-                    // Refresh the page to update the approved status
-                    location.reload();
-                })
-                .catch(error => {
-                    alert('Yorum onaylanamadı...');
-                });
-        }
-    </script>
-}

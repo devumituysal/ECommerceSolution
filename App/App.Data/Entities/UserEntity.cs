@@ -21,7 +21,7 @@ namespace App.Data.Entities
 
         public string? ProfileImage { get; set; }
         public RoleEntity Role { get; set; } = null!;
-        public ICollection<CommentEntity> Comments { get; set; } = new List<CommentEntity>();
+        public ICollection<ProductCommentEntity> Comments { get; set; } = new List<ProductCommentEntity>();
 
     }
 }

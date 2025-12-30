@@ -25,7 +25,6 @@ namespace App.Data.Contexts
         public DbSet<CategoryEntity> Categories { get; set; }
         public DbSet<CartItemEntity> CartItems { get; set; }
         public DbSet<ContactMessageEntity> ContactMessages { get; set; }
-        public DbSet<CommentEntity> Comments { get; set; }
 
 
 
@@ -41,7 +40,6 @@ namespace App.Data.Contexts
             modelBuilder.ApplyConfiguration(new RoleEntityConfiguration());
             modelBuilder.ApplyConfiguration(new UserEntityConfiguration());
             modelBuilder.ApplyConfiguration(new ContactMessageEntityConfiguration());
-            modelBuilder.ApplyConfiguration(new CommentEntityConfiguration());
 
 
 

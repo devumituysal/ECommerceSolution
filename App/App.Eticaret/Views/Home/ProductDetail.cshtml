@@ -1,5 +1,19 @@
 ﻿@model ProductDetailViewModel
 
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["Success"]
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["Error"]
+    </div>
+}
+
 <section class="product-details spad">
     <div class="container">
         <div class="row">
@@ -7,22 +21,26 @@
             <!-- PRODUCT IMAGES -->
             <div class="col-lg-6 col-md-6">
                 <div class="product__details__pic">
-                    <div class="product__details__pic__item">
-                        <img class="product__details__pic__item--large"
-                             src="@(Model.ImageUrls != null && Model.ImageUrls.Length > 0
-                                                                                              ? Model.ImageUrls[0]
-                                                                                              : "/img/product/default.jpg")"
-                             alt="@Model.Name">
+
+                    <!-- Ana Görsel -->
+                    <div class="product__details__pic__item product-image-fixed">
+                        <img src="@(Model.ImageUrls != null && Model.ImageUrls.Length > 0
+                                                                 ? Model.ImageUrls[0]
+                                                                 : "/img/product/default.jpg")"
+                             alt="@Model.Name"
+                             class="img-fluid product-image" />
                     </div>
 
+                    <!-- Slider -->
                     @if (Model.ImageUrls != null && Model.ImageUrls.Length > 1)
                     {
                         <div class="product__details__pic__slider owl-carousel">
                             @foreach (var imageUrl in Model.ImageUrls)
                             {
-                                <img data-imgbigurl="@imageUrl"
-                                     src="@imageUrl"
-                                     alt="@Model.Name">
+                                <img src="@imageUrl"
+                                     data-imgbigurl="@imageUrl"
+                                     alt="@Model.Name"
+                                     class="product-thumb" />
                             }
                         </div>
                     }
@@ -38,7 +56,7 @@
                         @Model.Price.ToString("C")
                     </div>
 
-                    @* 🔴 ADD TO CART – stok varsa *@
+                    <!-- ADD TO CART -->
                     @if (Model.StockAmount > 0)
                     {
                         <form asp-controller="Cart"
@@ -54,8 +72,7 @@
                                                name="quantity"
                                                value="1"
                                                min="1"
-                                               max="@Model.StockAmount"
-                                               title="Maksimum alınabilecek adet @Model.StockAmount" />
+                                               max="@Model.StockAmount" />
                                     </div>
                                 </div>
                             </div>
@@ -97,10 +114,123 @@
                             <span>01 day shipping. <samp>Free pickup today</samp></span>
                         </li>
                     </ul>
-
                 </div>
             </div>
-
         </div>
+
+        <!-- COMMENTS SECTION -->
+        <div class="row mt-5">
+            <div class="col-lg-12">
+
+                <h4 class="mb-4">Customer Reviews</h4>
+
+                <!-- Comment List -->
+                @if (Model.Comments != null && Model.Comments.Any())
+                {
+                    foreach (var comment in Model.Comments)
+                    {
+                        <div class="border rounded p-3 mb-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <strong>@comment.UserName</strong>
+
+                                <span class="text-warning">
+                                    @for (int i = 1; i <= 5; i++)
+                                    {
+                                        if (i <= comment.StarCount)
+                                        {
+                                            <i class="fa fa-star"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="fa fa-star-o"></i>
+                                        }
+                                    }
+                                </span>
+                            </div>
+
+                            <span class="text-muted small">
+                                @comment.CreatedDate.ToString("dd.MM.yyyy")
+                            </span>
+
+                            <p class="mb-0 mt-2">@comment.Content</p>
+                        </div>
+
+                    }
+                }
+                else
+                {
+                    <p>No reviews yet. Be the first to comment!</p>
+                }
+
+                <!-- Add Comment -->
+                <div class="mt-4">
+                    <h5>Add a Review</h5>
+
+                    <form asp-controller="Comment"
+                          asp-action="Create"
+                          method="post">
+
+                        <input type="hidden" name="productId" value="@Model.Id" />
+
+                        <!-- Star Count -->
+                        <div class="form-group mb-3">
+                            <label>Rating</label>
+                            <select name="StarCount"
+                                    class="form-control"
+                                    required>
+                                <option value="">Select rating</option>
+                                <option value="1">1 ★</option>
+                                <option value="2">2 ★★</option>
+                                <option value="3">3 ★★★</option>
+                                <option value="4">4 ★★★★</option>
+                                <option value="5">5 ★★★★★</option>
+                            </select>
+                        </div>
+
+                        <!-- Comment Text -->
+                        <div class="form-group mb-3">
+                            <textarea name="Text"
+                                      class="form-control"
+                                      rows="4"
+                                      placeholder="Write your review..."
+                                      required></textarea>
+                        </div>
+
+                        <button type="submit" class="primary-btn">
+                            Submit Review
+                        </button>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+
     </div>
 </section>
+
+<!-- IMAGE FIX STYLES -->
+<style>
+    .product-image-fixed {
+        width: 100%;
+        height: 450px;          /* E-ticaret standart */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f5f5f5;
+        border-radius: 6px;
+        overflow: hidden;
+    }
+
+    .product-image {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+    }
+
+    .product-thumb {
+        width: 90px;
+        height: 90px;
+        object-fit: cover;
+        cursor: pointer;
+    }
+</style>

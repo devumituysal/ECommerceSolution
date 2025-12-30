@@ -9,5 +9,8 @@
         public string Details { get; set; } = null!;
         public string[] ImageUrls { get; set; } = [];
         public int StockAmount { get; set; }
+        public List<ProductCommentViewModel> Comments { get; set; } = new();
+        public SaveProductCommentViewModel NewComment { get; set; } = new();
+
     }
 }
