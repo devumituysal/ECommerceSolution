@@ -60,6 +60,7 @@ namespace App.Api.Data.Controllers
                     Name = p.Name,
                     Price = p.Price,
                     CategoryName = p.Category.Name,
+                    Enabled = p.Enabled,
                 })
                 .ToListAsync();
 
@@ -100,9 +101,48 @@ namespace App.Api.Data.Controllers
             if (product == null)
                 return NotFound();
 
+            var hasOrders = await _repo.GetAll<OrderItemEntity>()
+                .AnyAsync(oi => oi.ProductId == productId);
+
+            if (hasOrders)
+                return BadRequest("This product has orders and cannot be deleted.");
+
             await _repo.Delete(product);
             return NoContent();
         }
+
+        [HttpPatch("products/{productId:int}/disable")]
+        public async Task<IActionResult> DisableProduct(int productId)
+        {
+            var product = await _repo.GetAll<ProductEntity>()
+                .FirstOrDefaultAsync(p => p.Id == productId);
+
+            if (product == null)
+                return NotFound();
+
+            product.Enabled = false;
+            await _repo.Update(product);
+
+            return NoContent();
+        }
+
+        [HttpPatch("products/{productId:int}/enable")]
+        public async Task<IActionResult> EnableProduct(int productId)
+        {
+            var product = await _repo.GetAll<ProductEntity>()
+                .FirstOrDefaultAsync(p => p.Id == productId);
+
+            if (product == null)
+                return NotFound();
+
+            product.Enabled = true;
+            await _repo.Update(product);
+
+            return NoContent();
+        }
+
+
+
 
         [HttpGet("active-sellers")]
         public IActionResult GetActiveSellers()

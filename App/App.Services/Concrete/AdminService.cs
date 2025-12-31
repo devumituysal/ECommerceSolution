@@ -78,8 +78,40 @@ namespace App.Services.Concrete
                 response.StatusCode == HttpStatusCode.Forbidden)
                 return Result.Unauthorized();
 
+            if (response.StatusCode == HttpStatusCode.BadRequest)
+                return Result.Error("This product has orders and cannot be deleted.");
+
             if (!response.IsSuccessStatusCode)
                 return Result.Error();
+
+            return Result.Success();
+        }
+
+
+        public async Task<Result> DisableProductAsync(string jwt, int productId)
+        {
+            var response = await SendAsync(
+                HttpMethod.Patch,
+                $"api/Admin/products/{productId}/disable",
+                jwt
+            );
+
+            if (!response.IsSuccessStatusCode)
+                return Result.Error("Product could not be disabled.");
+
+            return Result.Success();
+        }
+
+        public async Task<Result> EnableProductAsync(string jwt, int productId)
+        {
+            var response = await SendAsync(
+                HttpMethod.Patch,
+                $"api/Admin/products/{productId}/enable",
+                jwt
+            );
+
+            if (!response.IsSuccessStatusCode)
+                return Result.Error("Product could not be enabled.");
 
             return Result.Success();
         }
@@ -135,6 +167,10 @@ namespace App.Services.Concrete
 
             return Result.Success(data ?? new());
         }
+
+
+
+
 
 
     }

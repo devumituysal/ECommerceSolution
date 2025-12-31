@@ -11,5 +11,6 @@
         public string CategoryName { get; set; } = "";
         public string? ImageUrl { get; set; } = "";
         public int SellerId { get; set; }
+        public bool Enabled { get; set; }
     }
 }
