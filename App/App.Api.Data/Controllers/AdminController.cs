@@ -66,7 +66,31 @@ namespace App.Api.Data.Controllers
             return Ok(products);
         }
 
-        
+        [HttpGet("orders")]
+        public async Task<ActionResult<List<OrderListDto>>> GetOrders()
+        {
+            var orders = await _repo.GetAll<OrderEntity>()
+                .Include(o => o.User)
+                .Include(o => o.OrderItems)
+                .OrderByDescending(o => o.CreatedAt)
+                .Select(o => new OrderListDto
+                {
+                    OrderNumber = o.OrderCode,
+
+                    UserFullName = o.User.FirstName + " " + o.User.LastName,
+
+                    TotalPrice = o.OrderItems
+                        .Sum(oi => oi.Quantity * oi.UnitPrice),
+
+                    CreatedAt = o.CreatedAt
+                })
+                .ToListAsync();
+
+            return Ok(orders);
+        }
+
+
+
         [HttpDelete("products/{productId:int}")]
         public async Task<IActionResult> DeleteProduct(int productId)
         {

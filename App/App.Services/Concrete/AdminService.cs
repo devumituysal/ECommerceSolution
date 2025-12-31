@@ -84,5 +84,24 @@ namespace App.Services.Concrete
             return Result.Success();
         }
 
+        public async Task<Result<List<OrderListDto>>> GetAdminOrdersAsync(string jwt)
+        {
+            
+            var response = await SendAsync(
+                HttpMethod.Get,
+                "api/Admin/orders",
+                jwt
+            );
+
+            if (!response.IsSuccessStatusCode)
+                return Result.Error("Orders could not be loaded.");
+
+            var orders =
+                await response.Content.ReadFromJsonAsync<List<OrderListDto>>();
+
+            return Result.Success(orders ?? new());
+        }
+
+
     }
 }
