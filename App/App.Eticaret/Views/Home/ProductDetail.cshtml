@@ -1,9 +1,15 @@
 ﻿@model ProductDetailViewModel
 
-@if (TempData["Success"] != null)
+@if (TempData["AddtoCartError"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["AddtoCartError"]
+    </div>
+}
+@if (TempData["AddtoCartSuccess"] != null)
 {
     <div class="alert alert-success">
-        @TempData["Success"]
+        @TempData["AddtoCartSuccess"]
     </div>
 }
 
@@ -11,6 +17,12 @@
 {
     <div class="alert alert-danger">
         @TempData["Error"]
+    </div>
+}
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["Success"]
     </div>
 }
 
@@ -22,7 +34,6 @@
             <div class="col-lg-6 col-md-6">
                 <div class="product__details__pic">
 
-                    <!-- Ana Görsel -->
                     <div class="product__details__pic__item product-image-fixed">
                         <img src="@(Model.ImageUrls != null && Model.ImageUrls.Length > 0
                                                                  ? Model.ImageUrls[0]
@@ -31,7 +42,6 @@
                              class="img-fluid product-image" />
                     </div>
 
-                    <!-- Slider -->
                     @if (Model.ImageUrls != null && Model.ImageUrls.Length > 1)
                     {
                         <div class="product__details__pic__slider owl-carousel">
@@ -56,7 +66,6 @@
                         @Model.Price.ToString("C")
                     </div>
 
-                    <!-- ADD TO CART -->
                     @if (Model.StockAmount > 0)
                     {
                         <form asp-controller="Cart"
@@ -124,7 +133,6 @@
 
                 <h4 class="mb-4">Customer Reviews</h4>
 
-                <!-- Comment List -->
                 @if (Model.Comments != null && Model.Comments.Any())
                 {
                     foreach (var comment in Model.Comments)
@@ -154,7 +162,6 @@
 
                             <p class="mb-0 mt-2">@comment.Content</p>
                         </div>
-
                     }
                 }
                 else
@@ -162,7 +169,7 @@
                     <p>No reviews yet. Be the first to comment!</p>
                 }
 
-                <!-- Add Comment -->
+                <!-- ADD COMMENT -->
                 <div class="mt-4">
                     <h5>Add a Review</h5>
 
@@ -171,23 +178,22 @@
                           method="post">
 
                         <input type="hidden" name="productId" value="@Model.Id" />
+                        <input type="hidden" name="StarCount" id="StarCount" value="0" />
 
-                        <!-- Star Count -->
+                        <!-- STAR RATING -->
                         <div class="form-group mb-3">
                             <label>Rating</label>
-                            <select name="StarCount"
-                                    class="form-control"
-                                    required>
-                                <option value="">Select rating</option>
-                                <option value="1">1 ★</option>
-                                <option value="2">2 ★★</option>
-                                <option value="3">3 ★★★</option>
-                                <option value="4">4 ★★★★</option>
-                                <option value="5">5 ★★★★★</option>
-                            </select>
+                            <div id="starRating" class="text-warning fs-4">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    <i class="fa fa-star-o star"
+                                       data-value="@i"
+                                       style="cursor:pointer;"></i>
+                                }
+                            </div>
                         </div>
 
-                        <!-- Comment Text -->
+                        <!-- COMMENT TEXT -->
                         <div class="form-group mb-3">
                             <textarea name="Text"
                                       class="form-control"
@@ -208,11 +214,10 @@
     </div>
 </section>
 
-<!-- IMAGE FIX STYLES -->
 <style>
     .product-image-fixed {
         width: 100%;
-        height: 450px;          /* E-ticaret standart */
+        height: 450px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -234,3 +239,25 @@
         cursor: pointer;
     }
 </style>
+
+<script>
+    const stars = document.querySelectorAll("#starRating .star");
+    const starInput = document.getElementById("StarCount");
+
+    stars.forEach(star => {
+        star.addEventListener("click", function () {
+            const value = this.getAttribute("data-value");
+            starInput.value = value;
+
+            stars.forEach(s => {
+                if (s.getAttribute("data-value") <= value) {
+                    s.classList.remove("fa-star-o");
+                    s.classList.add("fa-star");
+                } else {
+                    s.classList.remove("fa-star");
+                    s.classList.add("fa-star-o");
+                }
+            });
+        });
+    });
+</script>

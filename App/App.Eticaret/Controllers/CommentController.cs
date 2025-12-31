@@ -27,7 +27,7 @@ namespace App.Eticaret.Controllers
 
             if (!ModelState.IsValid)
             {
-                TempData["Error"] = "Invalid comment data.";
+                TempData["Error"] = "Please select a rating before submitting your comment.";
                 return Redirect($"/product/{productId}/details");
             }
 
@@ -53,7 +53,8 @@ namespace App.Eticaret.Controllers
             }
 
             TempData["Success"] = "Your comment has been sent for approval.";
-             return Redirect($"/product/{productId}/details");
+
+            return Redirect($"/product/{productId}/details?fromAddComment=true");
         }
 
     }
