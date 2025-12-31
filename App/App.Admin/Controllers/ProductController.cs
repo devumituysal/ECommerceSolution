@@ -40,7 +40,8 @@ namespace App.Admin.Controllers
                 Price = p.Price,
                 CategoryName = p.CategoryName,
                 ImageUrl = p.ImageUrl,
-                CreatedAt = p.CreatedAt
+                CreatedAt = p.CreatedAt,
+                Enabled = p.Enabled
             })
             .ToList();
 
@@ -59,10 +60,19 @@ namespace App.Admin.Controllers
 
             if (!result.IsSuccess)
             {
-                TempData["ErrorMessage"] =
-                    result.Status == Ardalis.Result.ResultStatus.NotFound
-                        ? "Product not found."
-                        : "Product could not be deleted.";
+                TempData["ErrorMessage"] = result.Status switch
+                {
+                    Ardalis.Result.ResultStatus.NotFound
+                        => "Product not found.",
+
+                    Ardalis.Result.ResultStatus.Unauthorized
+                        => "You are not authorized to perform this action.",
+
+                    Ardalis.Result.ResultStatus.Error when !string.IsNullOrEmpty(result.Errors?.FirstOrDefault())
+                        => result.Errors.First(),
+
+                    _ => "Product could not be deleted."
+                };
 
                 return RedirectToAction(nameof(List));
             }
@@ -70,6 +80,55 @@ namespace App.Admin.Controllers
             TempData["SuccessMessage"] = "Product deleted successfully.";
             return RedirectToAction(nameof(List));
         }
+
+        [HttpPost]
+        public async Task<IActionResult> Disable(int id)
+        {
+            var jwt = Request.Cookies["access_token"];
+
+            if (string.IsNullOrEmpty(jwt))
+                return RedirectToAction("Login", "Auth");
+
+            var result = await _adminService.DisableProductAsync(jwt, id);
+
+            if (!result.IsSuccess)
+            {
+                TempData["ErrorMessage"] =
+                    result.Status == Ardalis.Result.ResultStatus.NotFound
+                        ? "Product not found."
+                        : "Product could not be disabled.";
+
+                return RedirectToAction(nameof(List));
+            }
+
+            TempData["SuccessMessage"] = "Product disabled successfully.";
+            return RedirectToAction(nameof(List));
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Enable(int id)
+        {
+            var jwt = Request.Cookies["access_token"];
+
+            if (string.IsNullOrEmpty(jwt))
+                return RedirectToAction("Login", "Auth");
+
+            var result = await _adminService.EnableProductAsync(jwt, id);
+
+            if (!result.IsSuccess)
+            {
+                TempData["ErrorMessage"] =
+                    result.Status == Ardalis.Result.ResultStatus.NotFound
+                        ? "Product not found."
+                        : "Product could not be enabled.";
+
+                return RedirectToAction(nameof(List));
+            }
+
+            TempData["SuccessMessage"] = "Product enabled successfully.";
+            return RedirectToAction(nameof(List));
+        }
+
 
     }
 }
