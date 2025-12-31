@@ -131,6 +131,7 @@ namespace App.Api.Data.Controllers
                     Stock = p.StockAmount,
                     CreatedAt = p.CreatedAt,
                     CategoryName = p.Category.Name,
+                    Enabled = p.Enabled,
                     ImageUrl = p.Images
                         .OrderBy(i => i.Id)
                         .Select(i => i.Url)
