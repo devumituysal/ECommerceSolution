@@ -1,0 +1,80 @@
+﻿@model List<ProductListViewModel>
+
+@{
+    ViewData["Title"] = "Ürünler";
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["SuccessMessage"]
+    </div>
+}
+
+<div class="card">
+    <div class="card-header">
+        <h4 class="card-title mb-0">Ürünler</h4>
+    </div>
+
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Görsel</th>
+                        <th>Ürün Adı</th>
+                        <th>Kategori</th>
+                        <th>Fiyat</th>
+                        <th>Sil</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td style="width:100px">
+                                @if (!string.IsNullOrEmpty(item.ImageUrl))
+                                {
+                                    <img src="@item.ImageUrl"
+                                         class="img-fluid rounded"
+                                         style="max-height:60px;" />
+                                }
+                            </td>
+                            <td>@item.Name</td>
+                            <td>@item.CategoryName</td>
+                            <td>@item.Price.ToString("₺0.00")</td>
+                            <td>
+                                <form asp-action="Delete"
+                                      asp-route-id="@item.Id"
+                                      method="post"
+                                      onsubmit="return confirm('Bu ürünü silmek istediğine emin misin?')">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit"
+                                            class="btn btn-sm btn-danger">
+                                        Sil
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center">
+                                Ürün bulunamadı.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

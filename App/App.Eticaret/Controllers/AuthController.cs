@@ -83,9 +83,17 @@ namespace App.Eticaret.Controllers
 
             var result = await _authService.LoginAsync(dto);
 
+            
+            if (result.Status == Ardalis.Result.ResultStatus.Forbidden)
+            {
+                ModelState.AddModelError("", "Your account is not active.");
+                return View(loginModel);
+            }
+
+            
             if (!result.IsSuccess)
             {
-                ModelState.AddModelError("", "Email veya şifre hatalı.");
+                ModelState.AddModelError("", "Email or password is incorrect.");
                 return View(loginModel);
             }
 
@@ -110,12 +118,13 @@ namespace App.Eticaret.Controllers
 
             await LoginUser(userVm);
 
-            // Eticarete admin login olursa direk admin panel login ekranını görecek
+            
             if (userVm.Role == "admin")
                 return Redirect("https://localhost:7223/auth/login");
 
             return RedirectToAction("Index", "Home");
         }
+
 
 
         [Route("/forgot-password")]

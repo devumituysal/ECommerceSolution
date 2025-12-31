@@ -18,7 +18,7 @@ namespace App.Services.Concrete
         {
 
         }
-        // GET /api/user/list
+        
         public async Task<Result<List<UserListItemDto>>> GetUsersAsync(string jwt)
         {
             var response = await SendAsync(
@@ -38,12 +38,58 @@ namespace App.Services.Concrete
             return Result.Success(users!);
         }
 
-        // POST /api/user/{id}/approve
+       
         public async Task<Result> ApproveAsync(string jwt, int userId)
         {
             var response = await SendAsync(
                 HttpMethod.Post,
                 $"api/user/{userId}/approve",
+                jwt);
+
+            if (response.StatusCode == HttpStatusCode.NotFound)
+                return Result.NotFound();
+
+            if (response.StatusCode == HttpStatusCode.BadRequest)
+                return Result.Invalid();
+
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+                return Result.Unauthorized();
+
+            if (!response.IsSuccessStatusCode)
+                return Result.Error();
+
+            return Result.Success();
+        }
+
+        public async Task<Result> EnableAsync(string jwt, int userId)
+        {
+            var response = await SendAsync(
+                HttpMethod.Post,
+                $"api/user/{userId}/enable",
+                jwt);
+
+            if (response.StatusCode == HttpStatusCode.NotFound)
+                return Result.NotFound();
+
+            if (response.StatusCode == HttpStatusCode.BadRequest)
+                return Result.Invalid();
+
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+                return Result.Unauthorized();
+
+            if (!response.IsSuccessStatusCode)
+                return Result.Error();
+
+            return Result.Success();
+        }
+
+
+        
+        public async Task<Result> DisableAsync(string jwt, int userId)
+        {
+            var response = await SendAsync(
+                HttpMethod.Post,
+                $"api/user/{userId}/disable",
                 jwt);
 
             if (response.StatusCode == HttpStatusCode.NotFound)

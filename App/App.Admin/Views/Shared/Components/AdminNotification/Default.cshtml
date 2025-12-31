@@ -1,0 +1,58 @@
+﻿@model App.Models.DTO.Admin.AdminNotificationDto
+
+<li class="nav-item dropdown no-arrow mx-1">
+    <a class="nav-link dropdown-toggle" href="#" id="alertsDropdown"
+       role="button" data-toggle="dropdown">
+        <i class="fas fa-bell fa-fw"></i>
+
+        @if (Model.TotalCount > 0)
+        {
+            <span class="badge badge-danger badge-counter">
+                @Model.TotalCount
+            </span>
+        }
+    </a>
+
+    <div class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in">
+
+        <h6 class="dropdown-header">Notifications</h6>
+
+        @if (Model.NewUsers > 0)
+        {
+            <a class="dropdown-item d-flex align-items-center"
+               asp-controller="User" asp-action="List">
+                <div class="mr-3">
+                    <div class="icon-circle bg-primary">
+                        <i class="fas fa-user text-white"></i>
+                    </div>
+                </div>
+                <div>
+                    <strong>@Model.NewUsers new user(s) awaiting approval</strong>
+                </div>
+            </a>
+        }
+
+        @if (Model.SellerRequests > 0)
+        {
+            <a class="dropdown-item d-flex align-items-center"
+               asp-controller="User" asp-action="List">
+                <div class="mr-3">
+                    <div class="icon-circle bg-success">
+                        <i class="fas fa-store text-white"></i>
+                    </div>
+                </div>
+                <div>
+                    <strong>@Model.SellerRequests seller request(s) pending</strong>
+                </div>
+            </a>
+        }
+
+        @if (Model.TotalCount == 0)
+        {
+            <div class="dropdown-item text-center small text-gray-500">
+                No new notifications
+            </div>
+        }
+
+    </div>
+</li>

@@ -9,5 +9,8 @@
         public string Role { get; set; } = null!;
         public bool Enabled { get; set; }
         public bool HasSellerRequest { get; set; }
+        public bool IsBanned { get; set; }
+
+
     }
 }

@@ -1,0 +1,40 @@
+﻿@model List<App.Admin.Models.ViewModels.OrderListViewModel>
+
+<ul class="list-group list-group-flush small">
+
+    @if (Model != null && Model.Any())
+    {
+        foreach (var order in Model)
+        {
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="font-weight-bold">
+                        @order.OrderNumber
+                    </div>
+                    <small class="text-muted">
+                        @order.UserFullName • @order.CreatedAt.ToString("dd.MM.yyyy")
+                    </small>
+                </div>
+
+                <span class="text-success font-weight-bold">
+                    @order.TotalPrice.ToString("C")
+                </span>
+            </li>
+        }
+    }
+    else
+    {
+        <li class="list-group-item text-center text-muted">
+            No orders found
+        </li>
+    }
+
+</ul>
+
+<div class="text-center mt-3">
+    <a asp-controller="Order"
+       asp-action="List"
+       class="btn btn-sm btn-outline-primary">
+        View All Orders
+    </a>
+</div>

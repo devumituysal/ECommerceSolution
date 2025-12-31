@@ -73,6 +73,26 @@
                 </a>
             }
 
+            <!-- BUYER → SELLER REQUEST -->
+            @if (Model.Role == "buyer" && !Model.HasSellerRequest)
+            {
+                <form asp-controller="Profile"
+                      asp-action="RequestSeller"
+                      method="post">
+                    <button type="submit" class="btn btn-warning">
+                        🚀 Become a Seller
+                    </button>
+                </form>
+            }
+
+            <!-- REQUEST SENT MESSAGE -->
+            @if (Model.Role == "buyer" && Model.HasSellerRequest)
+            {
+                <div class="alert alert-info mb-0">
+                    ⏳ Seller request sent. Waiting for admin approval.
+                </div>
+            }
+
         </div>
     </div>
 

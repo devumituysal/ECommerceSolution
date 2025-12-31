@@ -34,39 +34,48 @@ namespace App.Api.Data.Controllers
 
             if (user == null)
             {
-                return NotFound("Email veya şifre yanlış");
+                return Unauthorized("Email veya şifre yanlış");
+            }
+
+            if (!user.Enabled)
+            {
+                return StatusCode(
+                    StatusCodes.Status403Forbidden,
+                    "Your account is awaiting admin approval."
+                );
             }
 
             var hasher = new PasswordHasher<UserEntity>();
-
-            var verifyResult = hasher.VerifyHashedPassword(user,user.Password,loginRequestDto.Password);
+            var verifyResult = hasher.VerifyHashedPassword(
+                user,
+                user.Password,
+                loginRequestDto.Password
+            );
 
             if (verifyResult == PasswordVerificationResult.Failed)
             {
-                return NotFound("Email veya şifre yanlış");
+                return Unauthorized("Email veya şifre yanlış");
             }
 
             var claims = new[]
             {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),   
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
-                new Claim(ClaimTypes.Name, user.FirstName + " " + user.LastName),
+                new Claim(ClaimTypes.Name, $"{user.FirstName} {user.LastName}"),
                 new Claim(ClaimTypes.Role, user.Role.Name)
             };
-
+    
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(HttpContext.RequestServices.GetRequiredService<IConfiguration>()["Jwt:Secret"]));
 
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-            var expires = DateTime.Now.AddMinutes(60);
-
             var token = new JwtSecurityToken(
-                issuer: "App.Api.Data",       
-                audience: "App",              
+                issuer: "App.Api.Data",
+                audience: "App",
                 claims: claims,
-                expires: expires,
+                expires: DateTime.Now.AddMinutes(60),
                 signingCredentials: creds
-                );
+            );
 
             var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
 
@@ -82,6 +91,8 @@ namespace App.Api.Data.Controllers
 
             return Ok(response);
         }
+
+
 
         [HttpPost("Register")]
         [AllowAnonymous]
@@ -104,7 +115,8 @@ namespace App.Api.Data.Controllers
                 Email = registerRequestDto.Email,
                 Password = hasher.HashPassword(null!, registerRequestDto.Password),
                 RoleId =  3,
-                Enabled = true,
+                Enabled = false,
+                IsBanned = false,
                 HasSellerRequest = false,
             };
 

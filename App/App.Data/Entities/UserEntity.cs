@@ -15,12 +15,13 @@ namespace App.Data.Entities
         public string Password { get; set; } = null!;
         public string? ResetPasswordToken { get; set; }
         public int RoleId { get; set; }
-        public bool Enabled { get; set; } = true;
+        public bool Enabled { get; set; } = false;
         public bool HasSellerRequest { get; set; } = false;
+        public bool IsBanned { get; set; } = false;
 
         public string? ProfileImage { get; set; }
         public RoleEntity Role { get; set; } = null!;
-        public ICollection<CommentEntity> Comments { get; set; } = new List<CommentEntity>();
+        public ICollection<ProductCommentEntity> Comments { get; set; } = new List<ProductCommentEntity>();
 
     }
 }

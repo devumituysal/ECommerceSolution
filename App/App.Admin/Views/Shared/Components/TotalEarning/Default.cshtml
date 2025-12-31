@@ -1,0 +1,26 @@
+﻿@model App.Admin.Models.ViewModels.TotalEarningViewModel
+
+<div class="card shadow h-100 border-left-success">
+    <div class="card-body">
+        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+            Total Earnings
+        </div>
+
+        <div class="h4 font-weight-bold text-gray-800 mb-3">
+            @Model.AnnualEarning.ToString("N2") ₺
+        </div>
+
+        <div class="small text-muted">
+            Annual
+        </div>
+
+        <hr />
+
+        <div class="h6 text-gray-600 mb-0">
+            This Month
+        </div>
+        <div class="font-weight-bold text-success">
+            @Model.MonthlyEarning.ToString("N2") ₺
+        </div>
+    </div>
+</div>

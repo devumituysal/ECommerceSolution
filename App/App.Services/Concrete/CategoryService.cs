@@ -34,11 +34,9 @@ namespace App.Services.Concrete
         }
 
         // POST /api/categories
-        public async Task<Result> CreateAsync(SaveCategoryDto dto)
+        public async Task<Result> CreateAsync(string jwt, SaveCategoryDto dto)
         {
-            var response = await DataClient.PostAsJsonAsync(
-                "api/categories",
-                dto);
+            var response = await SendAsync( HttpMethod.Post, "api/categories", jwt, dto);
 
             if (response.StatusCode == HttpStatusCode.BadRequest)
                 return Result.Invalid();
@@ -50,14 +48,26 @@ namespace App.Services.Concrete
         }
 
         // PUT /api/categories/{id}
-        public async Task<Result> UpdateAsync(int categoryId, SaveCategoryDto dto)
+        public async Task<Result> UpdateAsync(int categoryId,string jwt,SaveCategoryDto dto)
         {
-            var response = await DataClient.PutAsJsonAsync(
-                $"api/categories/{categoryId}",
-                dto);
+            var response = await SendAsync(
+                HttpMethod.Put,
+                $"api/Categories/{categoryId}",
+                jwt,
+                dto
+            );
 
             if (response.StatusCode == HttpStatusCode.NotFound)
                 return Result.NotFound();
+
+            if (response.StatusCode == HttpStatusCode.Conflict)
+            {
+                var message = await response.Content.ReadAsStringAsync();
+                return Result.Conflict(message);
+            }
+
+            if (response.StatusCode == HttpStatusCode.BadRequest)
+                return Result.Invalid();
 
             if (!response.IsSuccessStatusCode)
                 return Result.Error();
@@ -66,13 +76,19 @@ namespace App.Services.Concrete
         }
 
         // DELETE /api/categories/{id}
-        public async Task<Result> DeleteAsync(int categoryId)
+        public async Task<Result> DeleteAsync(int categoryId, string jwt)
         {
-            var response = await DataClient.DeleteAsync(
-                $"api/categories/{categoryId}");
+
+            var response = await SendAsync(HttpMethod.Delete,$"api/Categories/{categoryId}",jwt);
 
             if (response.StatusCode == HttpStatusCode.NotFound)
                 return Result.NotFound();
+
+            if (response.StatusCode == HttpStatusCode.Conflict)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                return Result.Conflict(content);
+            }
 
             if (!response.IsSuccessStatusCode)
                 return Result.Error();

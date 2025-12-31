@@ -1,5 +1,7 @@
 ﻿using App.Admin.Models.ViewModels;
+using App.Models.DTO.Comment;
 using App.Services.Abstract;
+using Ardalis.Result;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -34,24 +36,31 @@ namespace App.Admin.Controllers
                 return View(new List<CommentListItemViewModel>());
             }
 
-            var viewModels = result.Value
+            var viewModels = (result.Value ?? new List<CommentListItemDto>())
+                .OrderByDescending(c => c.CreatedAt)
                 .Select(c => new CommentListItemViewModel
                 {
                     Id = c.Id,
                     Text = c.Text,
                     FirstName = c.FirstName,
                     LastName = c.LastName,
-                    Approved = c.Approved,
+                    Approved = c.IsConfirmed,
                     CreatedAt = c.CreatedAt
                 })
                 .ToList();
 
+            if (!viewModels.Any())
+                TempData["InfoMessage"] = "No comments found.";
+
             return View(viewModels);
         }
 
+
+
         [Route("{commentId:int}/approve")]
-        [HttpGet]
-        public async Task<IActionResult> Approve([FromRoute] int commentId)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Approve(int commentId)
         {
             var jwt = Request.Cookies["access_token"];
 
@@ -59,6 +68,12 @@ namespace App.Admin.Controllers
                 return RedirectToAction("Login", "Auth");
 
             var result = await _commentService.ApproveAsync(jwt, commentId);
+
+            if (result.Status == ResultStatus.NotFound)
+            {
+                TempData["ErrorMessage"] = "Comment not found.";
+                return RedirectToAction(nameof(List));
+            }
 
             if (!result.IsSuccess)
             {
@@ -69,5 +84,6 @@ namespace App.Admin.Controllers
             TempData["SuccessMessage"] = "Comment approved successfully.";
             return RedirectToAction(nameof(List));
         }
+
     }
 }

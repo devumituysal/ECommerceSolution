@@ -88,8 +88,14 @@ namespace App.Services.Concrete
                 jwt
             );
 
+            if (response.StatusCode == HttpStatusCode.BadRequest)
+                return Result.Invalid();
+
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+                return Result.Unauthorized();
+
             if (!response.IsSuccessStatusCode)
-                return Result.Error("Seller request failed.");
+                return Result.Error();
 
             return Result.Success();
         }

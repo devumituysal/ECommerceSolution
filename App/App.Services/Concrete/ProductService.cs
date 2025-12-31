@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 
 namespace App.Services.Concrete
 {
-    public class ProductService : BaseService, IProductService 
+    public class ProductService : BaseService, IProductService
     {
         public ProductService(IHttpClientFactory factory) : base(factory)
         {
@@ -73,22 +73,6 @@ namespace App.Services.Concrete
             return Result.Success();
         }
 
-        // POST /api/product/{productId}/comment
-        public async Task<Result> CreateCommentAsync(string jwt, int productId, CreateProductCommentRequestDto dto)
-        {
-            var response = await SendAsync(HttpMethod.Post, $"api/product/{productId}/comment", jwt, dto);
-
-            if (response.StatusCode == HttpStatusCode.NotFound)
-                return Result.NotFound();
-
-            if (response.StatusCode == HttpStatusCode.Unauthorized)
-                return Result.Unauthorized();
-
-            if (!response.IsSuccessStatusCode)
-                return Result.Error();
-
-            return Result.Success();
-        }
 
         // GET /api/product
         public async Task<Result<List<ProductListItemDto>>> GetMyProductsAsync(string jwt)
@@ -143,7 +127,7 @@ namespace App.Services.Concrete
                 var uploadResult =
                     await uploadResponse.Content
                         .ReadFromJsonAsync<FileUploadResponseDto>();
-               
+
 
                 var fileApiBaseUrl = "https://localhost:7132";
                 imageUrls.Add($"{fileApiBaseUrl}/uploads/{uploadResult!.FileName}");
@@ -160,7 +144,7 @@ namespace App.Services.Concrete
                 $"api/product/{productId}/images",
                 jwt,
                 dto);
-          
+
 
             if (!imageResponse.IsSuccessStatusCode)
                 return Result.Error("Image relation failed");
@@ -264,5 +248,8 @@ namespace App.Services.Concrete
             var products = await response.Content.ReadFromJsonAsync<List<ProductListItemDto>>();
             return Result.Success(products ?? new());
         }
+
+      
+
     }
 }

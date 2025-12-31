@@ -50,9 +50,9 @@ namespace App.Eticaret.Controllers
             {
                 FirstName = dto.FirstName,
                 LastName = dto.LastName,
-
-                Email = dto.Email
-
+                Email = dto.Email,
+                Role = dto.Role,
+                HasSellerRequest = dto.HasSellerRequest,
             };
 
             return View(model);
@@ -129,20 +129,27 @@ namespace App.Eticaret.Controllers
             return View(result.Value);
         }
 
-        [HttpPost("/profile/request-seller")]
         [Authorize(Roles = "buyer")]
+        [HttpPost]
         public async Task<IActionResult> RequestSeller()
         {
-            var jwt = HttpContext.Request.Cookies["access_token"];
+            var jwt = Request.Cookies["access_token"];
+
             if (string.IsNullOrEmpty(jwt))
                 return RedirectToAction("Login", "Auth");
 
             var result = await _profileService.RequestSellerAsync(jwt);
 
             if (!result.IsSuccess)
-                TempData["ErrorMessage"] = "Seller request failed.";
+            {
+                TempData["ProfileErrorMessage"] =
+                    "Seller request could not be sent or already exists.";
+            }
             else
-                TempData["SuccessMessage"] = "Seller request sent successfully.";
+            {
+                TempData["ProfileSuccessMessage"] =
+                    "Seller request sent successfully. Please wait for admin approval.";
+            }
 
             return RedirectToAction(nameof(Details));
         }

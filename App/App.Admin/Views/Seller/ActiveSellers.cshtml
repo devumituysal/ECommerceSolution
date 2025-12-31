@@ -1,0 +1,29 @@
+﻿@model List<App.Admin.Models.ViewModels.ActiveSellerViewModel>
+
+<h4 class="mb-3">All Active Sellers</h4>
+
+<div class="table-responsive">
+    <table class="table table-bordered table-hover">
+        <thead class="thead-dark">
+            <tr>
+                <th>Seller</th>
+                <th>Total Product</th>
+                <th>Total Sales</th>
+                <th>Total Earning</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var s in Model)
+            {
+                <tr>
+                    <td>@s.SellerFullName</td>
+                    <td>@s.TotalProduct</td>
+                    <td>@s.TotalSales</td>
+                    <td class="font-weight-bold text-success">
+                        @s.TotalEarning.ToString("N2") ₺
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

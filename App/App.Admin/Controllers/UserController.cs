@@ -46,6 +46,7 @@ namespace App.Admin.Controllers
                     Email = u.Email,
                     Role = u.Role,
                     Enabled = u.Enabled,
+                    IsBanned = u.IsBanned,
                     HasSellerRequest = u.HasSellerRequest
                 })
                 .ToList();
@@ -53,8 +54,45 @@ namespace App.Admin.Controllers
             return View(users);
         }
 
+        [HttpPost]
+        [Route("/user/{id:int}/enable")]
+        public async Task<IActionResult> Enable(int id)
+        {
+            var jwt = Request.Cookies["access_token"];
+            if (string.IsNullOrEmpty(jwt))
+                return RedirectToAction("Login", "Auth");
 
-        [Route("/users/{id:int}/approve")]
+            var result = await _userService.EnableAsync(jwt, id);
+
+            if (!result.IsSuccess)
+                TempData["ErrorMessage"] = "Kullanıcı aktif edilemedi.";
+            else
+                TempData["SuccessMessage"] = "Kullanıcı aktif edildi.";
+
+            return RedirectToAction(nameof(List));
+        }
+
+        
+        [HttpPost]
+        [Route("/user/{id:int}/disable")]
+        public async Task<IActionResult> Disable(int id)
+        {
+            var jwt = Request.Cookies["access_token"];
+            if (string.IsNullOrEmpty(jwt))
+                return RedirectToAction("Login", "Auth");
+
+            var result = await _userService.DisableAsync(jwt, id);
+
+            if (!result.IsSuccess)
+                TempData["ErrorMessage"] = "Kullanıcı pasif edilemedi.";
+            else
+                TempData["SuccessMessage"] = "Kullanıcı pasif edildi.";
+
+            return RedirectToAction(nameof(List));
+        }
+
+
+        [Route("/user/{id:int}/approve")]
         [HttpGet]
         public async Task<IActionResult> Approve([FromRoute] int id)
         {

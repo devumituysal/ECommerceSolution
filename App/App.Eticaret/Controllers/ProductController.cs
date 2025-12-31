@@ -150,7 +150,7 @@ namespace App.Eticaret.Controllers
             if (string.IsNullOrEmpty(jwt))
                 return RedirectToAction("Login", "Auth");
 
-            // ❌ Validation hatası
+            
             if (!ModelState.IsValid)
             {
                 var categoriesResult = await _categoryService.GetAllAsync();
@@ -171,7 +171,7 @@ namespace App.Eticaret.Controllers
 
             var result = await _productService.UpdateAsync(jwt, productId, dto);
 
-            // ❌ Güncelleme başarısız
+            
             if (!result.IsSuccess)
             {
                 var categoriesResult = await _categoryService.GetAllAsync();
@@ -182,7 +182,7 @@ namespace App.Eticaret.Controllers
                 return View(editProductModel);
             }
 
-            // ✅ Başarılı
+            
             TempData["SuccessMessage"] = "Ürün başarıyla güncellendi.";
             return RedirectToAction("Edit", new { productId });
         }
@@ -210,33 +210,7 @@ namespace App.Eticaret.Controllers
 
         }
 
-        [HttpPost("{productId:int}/comment")]
-        [Authorize(Roles = "buyer, seller")]
-        public async Task<IActionResult> Comment([FromRoute] int productId, [FromForm] SaveProductCommentViewModel newProductCommentModel)
-        {
-
-            if (!ModelState.IsValid)
-                return BadRequest();
-
-            var jwt = HttpContext.Request.Cookies["access_token"];
-            if (string.IsNullOrEmpty(jwt))
-                return Unauthorized();
-
-            var dto = new CreateProductCommentRequestDto
-            {
-                StarCount = newProductCommentModel.StarCount,
-                Text = newProductCommentModel.Text
-            };
-
-            var result =
-                await _productService.CreateCommentAsync(jwt, productId, dto);
-
-            if (!result.IsSuccess)
-                return BadRequest();
-
-            return Ok();
-        }
-
+        
         [HttpPost("{productId:int}/add-images")]
         [Authorize(Roles = "seller")]
         public async Task<IActionResult> AddImages([FromRoute] int productId, [FromForm] List<IFormFile> images)

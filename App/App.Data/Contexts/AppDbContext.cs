@@ -25,7 +25,6 @@ namespace App.Data.Contexts
         public DbSet<CategoryEntity> Categories { get; set; }
         public DbSet<CartItemEntity> CartItems { get; set; }
         public DbSet<ContactMessageEntity> ContactMessages { get; set; }
-        public DbSet<CommentEntity> Comments { get; set; }
 
 
 
@@ -41,7 +40,6 @@ namespace App.Data.Contexts
             modelBuilder.ApplyConfiguration(new RoleEntityConfiguration());
             modelBuilder.ApplyConfiguration(new UserEntityConfiguration());
             modelBuilder.ApplyConfiguration(new ContactMessageEntityConfiguration());
-            modelBuilder.ApplyConfiguration(new CommentEntityConfiguration());
 
 
 
@@ -52,8 +50,8 @@ namespace App.Data.Contexts
             );
 
             modelBuilder.Entity<UserEntity>().HasData(
-                new UserEntity() { Id = 1, FirstName = "admin", LastName = "admin", Email = "admin@gmail.com", Enabled = true, RoleId = 1, Password = "AQAAAAIAAYagAAAAEH0gFVqsVLuAPXM/7gJ6gFdjfL3SYwdVAnCtoeodowDdKYFbnudwySNiePyQ66N7nA==", CreatedAt = DateTime.UtcNow },
-                new UserEntity() { Id = 2, FirstName = "seller", LastName = "seller", Email = "seller@gmail.com", Enabled = true, RoleId = 2, Password = "AQAAAAIAAYagAAAAEH0gFVqsVLuAPXM/7gJ6gFdjfL3SYwdVAnCtoeodowDdKYFbnudwySNiePyQ66N7nA==", CreatedAt = DateTime.UtcNow }
+                new UserEntity() { Id = 1, FirstName = "admin", LastName = "admin", Email = "admin@gmail.com", Enabled = true, IsBanned = false, RoleId = 1, Password = "AQAAAAIAAYagAAAAEH0gFVqsVLuAPXM/7gJ6gFdjfL3SYwdVAnCtoeodowDdKYFbnudwySNiePyQ66N7nA==", CreatedAt = DateTime.UtcNow },
+                new UserEntity() { Id = 2, FirstName = "seller", LastName = "seller", Email = "seller@gmail.com", Enabled = true, IsBanned = false, RoleId = 2, Password = "AQAAAAIAAYagAAAAEH0gFVqsVLuAPXM/7gJ6gFdjfL3SYwdVAnCtoeodowDdKYFbnudwySNiePyQ66N7nA==", CreatedAt = DateTime.UtcNow }
             );
 
             modelBuilder.Entity<CategoryEntity>().HasData(
