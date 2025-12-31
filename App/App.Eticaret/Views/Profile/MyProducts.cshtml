@@ -44,6 +44,7 @@
                 <th>Category</th>
                 <th>Price</th>
                 <th>Stock</th>
+                <th>Status</th>
                 <th>Created</th>
                 <th style="width:320px;">Actions</th>
             </tr>
@@ -69,6 +70,16 @@
                     <td>@product.CategoryName</td>
                     <td>@product.Price.ToString("C")</td>
                     <td>@product.Stock</td>
+                    <td>
+                        @if (product.Enabled)
+                        {
+                            <span class="badge bg-success">On Sale</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-danger">Removed from Sale</span>
+                        }
+                    </td>
                     <td>@product.CreatedAt.ToShortDateString()</td>
 
                     <td>

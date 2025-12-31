@@ -23,10 +23,12 @@ public class PublicProductsController : ControllerBase
         var query = _repo.GetAll<ProductEntity>()
                .Include(p => p.Images)
                .Include(p => p.Category)
+               .Where(p => p.Enabled == true)
                .AsQueryable();
 
         if (categoryId.HasValue)
             query = query.Where(p => p.CategoryId == categoryId.Value);
+
         if (!string.IsNullOrWhiteSpace(q))
             query = query.Where(p => p.Name.Contains(q) || p.Details.Contains(q));
 

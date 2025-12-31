@@ -1,8 +1,19 @@
 ﻿@using App.Eticaret.Controllers
 @model List<CartItemViewModel>
+
 @{
     ViewData["Title"] = "Shopping Cart";
 }
+
+<style>
+    .shoping__cart__item img {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 6px;
+        border: 1px solid #eee;
+    }
+</style>
 
 <section class="breadcrumb-section set-bg" data-setbg="img/breadcrumb.jpg">
     <div class="container">
@@ -40,12 +51,14 @@
                             {
                                 <tr>
                                     <td class="shoping__cart__item">
-                                        <img src="@item.ProductImage" alt="">
+                                        <img src="@item.ProductImage" alt="@item.ProductName">
                                         <h5>@item.ProductName</h5>
                                     </td>
+
                                     <td class="shoping__cart__price">
                                         $@item.Price
                                     </td>
+
                                     <td class="shoping__cart__quantity">
                                         <div class="quantity">
                                             <div class="pro-qty">
@@ -58,9 +71,11 @@
                                             </div>
                                         </div>
                                     </td>
+
                                     <td class="shoping__cart__total">
                                         $@item.TotalPrice
                                     </td>
+
                                     <td class="shoping__cart__item__close">
                                         <form asp-controller="Cart"
                                               asp-action="Remove"
@@ -84,8 +99,10 @@
         <div class="row">
             <div class="col-lg-12">
                 <div class="shoping__cart__btns">
-                    <a asp-controller="Home" asp-action="Listing" class="primary-btn cart-btn">
-                        << CONTINUE SHOPPING
+                    <a asp-controller="Home"
+                       asp-action="Listing"
+                       class="primary-btn cart-btn">
+                        &lt;&lt; CONTINUE SHOPPING
                     </a>
                 </div>
             </div>
@@ -94,9 +111,16 @@
                 <div class="shoping__checkout">
                     <h5>Cart Total</h5>
                     <ul>
-                        <li>Total <span class="cart-total-price">$@(Model.Sum(x => x.TotalPrice))</span></li>
+                        <li>
+                            Total
+                            <span class="cart-total-price">
+                                $@(Model.Sum(x => x.TotalPrice))
+                            </span>
+                        </li>
                     </ul>
-                    <a asp-controller="Cart" asp-action="Checkout" class="primary-btn">
+                    <a asp-controller="Cart"
+                       asp-action="Checkout"
+                       class="primary-btn">
                         PROCEED TO CHECKOUT
                     </a>
                 </div>
@@ -174,5 +198,3 @@
         });
     </script>
 }
-
-

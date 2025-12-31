@@ -31,15 +31,22 @@ namespace App.Eticaret.Controllers
 
             if (!result.IsSuccess)
             {
-                TempData["ErrorMessage"] = "Product could not be added to cart.";
+                TempData["AddtoCartError"] = "An error occurred while adding the product to the cart.";
+            }
+            else
+            {
+                TempData["AddtoCartSuccess"] = "Product successfully added to cart.";
             }
 
             var prevUrl = Request.Headers.Referer.FirstOrDefault();
 
-            if (prevUrl is null)
-                return RedirectToAction(nameof(Edit));
 
-            return Redirect(prevUrl);
+            if (string.IsNullOrEmpty(prevUrl))
+            {
+                return RedirectToAction("Edit", "Cart");
+            }
+
+            return Redirect(prevUrl + "?fromAddtoCart=true");
         }
 
 
