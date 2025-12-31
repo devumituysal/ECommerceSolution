@@ -102,6 +102,40 @@ namespace App.Services.Concrete
             return Result.Success(orders ?? new());
         }
 
+        public async Task<Result<List<ActiveSellerDto>>> GetActiveSellersAsync(string jwt)
+        {
+            var response = await SendAsync(
+                HttpMethod.Get,
+                "api/Admin/active-sellers",
+                jwt
+            );
+
+            if (!response.IsSuccessStatusCode)
+                return Result.Error("Active sellers could not be loaded.");
+
+            var data =
+                await response.Content.ReadFromJsonAsync<List<ActiveSellerDto>>();
+
+            return Result.Success(data ?? new());
+        }
+
+        public async Task<Result<TotalEarningDto>> GetTotalEarningsAsync(string jwt)
+        {
+            var response = await SendAsync(
+                HttpMethod.Get,
+                "api/Admin/total-earnings",
+                jwt
+            );
+
+            if (!response.IsSuccessStatusCode)
+                return Result.Error("Total earnings could not be loaded.");
+
+            var data =
+                await response.Content.ReadFromJsonAsync<TotalEarningDto>();
+
+            return Result.Success(data ?? new());
+        }
+
 
     }
 }

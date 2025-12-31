@@ -16,6 +16,8 @@ namespace App.Services.Abstract
         Task<Result<List<ProductListItemDto>>> GetAdminProductsAsync(string jwt, int? categoryId, string? search);
         Task<Result> DeleteAsync(string jwt, int productId);
         Task<Result<List<OrderListDto>>> GetAdminOrdersAsync(string jwt);
+        Task<Result<List<ActiveSellerDto>>> GetActiveSellersAsync(string jwt);
+        Task<Result<TotalEarningDto>> GetTotalEarningsAsync(string jwt);
 
     }
 }

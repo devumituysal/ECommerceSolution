@@ -104,6 +104,72 @@ namespace App.Api.Data.Controllers
             return NoContent();
         }
 
+        [HttpGet("active-sellers")]
+        public IActionResult GetActiveSellers()
+        {
+            var result = _repo.GetAll<OrderItemEntity>()
+                .Include(oi => oi.Product)
+                .ThenInclude(p => p.Seller)
+               .Select(oi => new
+               {
+                   SellerId = oi.Product.Seller.Id,
+                   SellerFullName = oi.Product.Seller.FirstName + " " + oi.Product.Seller.LastName,
+                   ProductId = oi.ProductId,
+                   Quantity = oi.Quantity,
+                   Earning = oi.Quantity * oi.UnitPrice
+               })
+                .GroupBy(x => new { x.SellerId, x.SellerFullName })
+                .Select(g => new ActiveSellerDto
+                {
+                    SellerFullName = g.Key.SellerFullName,
+
+                    // satıcının sattığı farklı ürün sayısı
+                    TotalProduct = g
+                        .Select(x => x.ProductId)
+                        .Distinct()
+                        .Count(),
+
+                    // toplam satış adedi (quantity)
+                    TotalSales = g.Sum(x => x.Quantity),
+
+                    // satıcının toplam kazancı
+                    TotalEarning = g.Sum(x => x.Earning)
+                })
+                .OrderByDescending(x => x.TotalEarning)
+                .Take(5)
+                .ToList();
+
+            return Ok(result);
+        }
+
+        [HttpGet("total-earnings")]
+        public IActionResult GetTotalEarnings()
+        {
+            var now = DateTime.UtcNow;
+
+            var items = _repo.GetAll<OrderItemEntity>()
+                .Include(oi => oi.Order);
+
+            var annual = items
+                .Where(x => x.Order.CreatedAt.Year == now.Year)
+                .Sum(x => x.Quantity * x.UnitPrice);
+
+            var monthly = items
+                .Where(x =>
+                    x.Order.CreatedAt.Year == now.Year &&
+                    x.Order.CreatedAt.Month == now.Month)
+                .Sum(x => x.Quantity * x.UnitPrice);
+
+            var result = new TotalEarningDto
+            {
+                AnnualEarning = annual,
+                MonthlyEarning = monthly
+            };
+
+            return Ok(result);
+        }
+
+
 
     }
 }

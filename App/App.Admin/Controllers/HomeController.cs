@@ -16,26 +16,14 @@ namespace App.Admin.Controllers
         {
             _adminService = adminService;
         }
-        public async Task<IActionResult> Index()
+        public IActionResult Index()
         {
             var jwt = Request.Cookies["access_token"];
 
             if (string.IsNullOrEmpty(jwt))
                 return RedirectToAction("Login", "Auth");
 
-            var result = await _adminService.GetAdminOrdersAsync(jwt);
-
-            var orders = result.IsSuccess
-                ? result.Value.Select(o => new OrderListViewModel
-                {
-                    OrderNumber = o.OrderNumber,
-                    UserFullName = o.UserFullName,
-                    TotalPrice = o.TotalPrice,
-                    CreatedAt = o.CreatedAt
-                }).ToList()
-                : new List<OrderListViewModel>();
-
-            return View(orders);
+            return View();
         }
     }
 }
