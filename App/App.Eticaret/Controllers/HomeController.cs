@@ -21,24 +21,28 @@ namespace App.Eticaret.Controllers
         private readonly IProductService _productService;
         private readonly ICategoryService _categoryService;
         private readonly ICommentService _commentService;
+        private readonly IFavoriteService _favoriteService;
 
-        public HomeController(IContactService contactService,IProductService productService,ICategoryService categoryService,ICommentService commentService)
+        public HomeController(IContactService contactService,IProductService productService,ICategoryService categoryService,ICommentService commentService,IFavoriteService favoriteService)
         {
             _contactService = contactService;
             _productService = productService;
             _categoryService = categoryService;
             _commentService = commentService;
+            _favoriteService = favoriteService;
         }
 
         public async Task<IActionResult> Index()
         {
             var categoryResult = await _categoryService.GetCategoriesWithFirstProductImageAsync();
             var productsResult = await _productService.GetLatestAsync(8);
+            var featuredResult = await _favoriteService.GetMostFavoritedAsync(8);
 
             var vm = new HomeIndexViewModel
             {
-                Categories = categoryResult.Value ?? new(),
-                LatestProducts = productsResult.IsSuccess ? productsResult.Value : new List<ProductListItemDto>()
+                Categories = categoryResult,
+                LatestProducts = productsResult,
+                FeaturedProducts = featuredResult
             };
 
             return View(vm);
@@ -72,7 +76,7 @@ namespace App.Eticaret.Controllers
             var result = await _contactService.SendMessageAsync(dto);
 
             if (!result.IsSuccess)
-            {
+            { 
                 ModelState.AddModelError(
                     "",
                     result.Errors.FirstOrDefault() ?? "Mesaj gönderilemedi."
@@ -86,41 +90,62 @@ namespace App.Eticaret.Controllers
         }
 
         [Route("/products/list")]
-        public async Task<IActionResult> Listing(int? categoryId, string? q, bool fromAddtoCart = false,bool fromAddComment = false)
+        public async Task<IActionResult> Listing(int? categoryId, string? q,bool fromMyFavorites = false)
         {
-            if (!fromAddtoCart)
+           
+            if(!fromMyFavorites)
             {
-                TempData.Remove("AddtoCartError");
-                TempData.Remove("AddtoCartSuccess");
-            }
-            if(!fromAddComment)
-            {
-                TempData.Remove("Error");
-                TempData.Remove("Success");
+                TempData.Remove("ErrorFavorite");
             }
 
             var result = await _productService.GetPublicProductsAsync(categoryId,q);
 
-            if (!result.IsSuccess)
+            if (!result.IsSuccess || result.Value == null)
                 return View(new List<ProductListItemViewModel>());
 
-            var products = result.Value
-                .Select(p => new ProductListItemViewModel
+            var jwt = HttpContext.Request.Cookies["access_token"];
+
+            var products = new List<ProductListItemViewModel>();
+
+            foreach (var p in result.Value)
+            {
+                bool isFavorite = false;
+
+                if (!string.IsNullOrEmpty(jwt))
+                {
+                    isFavorite = await _favoriteService.IsFavoriteAsync(jwt, p.Id);
+                }
+
+                products.Add(new ProductListItemViewModel
                 {
                     Id = p.Id,
                     Name = p.Name,
                     Price = p.Price,
-                    ImageUrl = p.ImageUrl
-                })
-                .ToList();
+                    ImageUrl = p.ImageUrl,
+                    CategoryName = p.CategoryName,
+                    IsFavorite = isFavorite
+                });
+            }
+
 
             return View(products);
         }
 
 
         [HttpGet("/product/{productId:int}/details")]
-        public async Task<IActionResult> ProductDetail([FromRoute] int productId)
+        public async Task<IActionResult> ProductDetail([FromRoute] int productId, bool fromAddtoCart = false, bool fromAddComment = false)
         {
+            if (!fromAddtoCart)
+            {
+                TempData.Remove("AddtoCartError");
+                TempData.Remove("AddtoCartSuccess");
+            }
+            if (!fromAddComment)
+            {
+                TempData.Remove("Error");
+                TempData.Remove("Success");
+            }
+
             var result = await _productService.GetPublicByIdAsync(productId);
 
             if (!result.IsSuccess)
@@ -137,10 +162,16 @@ namespace App.Eticaret.Controllers
                 CategoryName = dto.CategoryName,
                 ImageUrls = dto.Images.Count > 0 ? new[] { dto.Images[0] } : Array.Empty<string>(),
                 StockAmount = dto.StockAmount,
-                Comments = new List<ProductCommentViewModel>()
+                Comments = new List<ProductCommentViewModel>(),
+                IsFavorite = false
             };
 
             var jwt = HttpContext.Request.Cookies["access_token"] ?? string.Empty;
+
+            if (!string.IsNullOrEmpty(jwt))
+            {
+                productDetail.IsFavorite = await _favoriteService.IsFavoriteAsync(jwt, productId);
+            }
 
             var commentResult = await _commentService.GetAllAsync(jwt);
 

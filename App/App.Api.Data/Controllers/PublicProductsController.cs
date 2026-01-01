@@ -84,21 +84,27 @@ public class PublicProductsController : ControllerBase
     }
 
     [HttpGet("latest")]
-    public async Task<IActionResult> GetLatest(int count = 8)
+    public async Task<IActionResult> GetLatest([FromQuery] int take = 8)
     {
+        take = Math.Clamp(take, 1, 50);
+
         var products = await _repo.GetAll<ProductEntity>()
             .Include(p => p.Images)
             .OrderByDescending(p => p.CreatedAt)
-            .Take(count)
+            .Take(take)
             .Select(p => new ProductListItemDto
             {
                 Id = p.Id,
                 Name = p.Name,
                 Price = p.Price,
-                ImageUrl = p.Images.FirstOrDefault() != null ? $"https://localhost:7132/{p.Images.First().Url.TrimStart('/')}" : ""
+                ImageUrl = p.Images
+                    .OrderBy(i => i.Id)
+                    .Select(i => i.Url)
+                    .FirstOrDefault()
             })
             .ToListAsync();
 
         return Ok(products);
     }
+
 }

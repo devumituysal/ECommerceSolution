@@ -72,6 +72,9 @@
                         <li>
                             <a href="/contact">Contact</a>
                         </li>
+                        <li>
+                            <a href="@Url.Action("MyFavorites", "Favorite")">My Favorites</a>
+                        </li>
                     </ul>
                 </nav>
             </div>
@@ -79,8 +82,6 @@
             <div class="col-lg-3">
                 <div class="header__cart">
                     <ul>
-                        @* Kalp iconu kaldırıldı *@
-
                         @if (User.Identity.IsAuthenticated)
                         {
                             <li>

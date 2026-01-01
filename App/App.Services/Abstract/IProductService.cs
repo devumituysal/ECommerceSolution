@@ -23,7 +23,7 @@ namespace App.Services.Abstract
         Task<Result<List<ProductListItemDto>>> GetPublicProductsAsync(int? categoryId, string? q);
         Task<Result<ProductDetailDto>> GetPublicByIdAsync(int productId);
 
-        Task<Result<List<ProductListItemDto>>> GetLatestAsync(int count);
+        Task<List<ProductListItemDto>> GetLatestAsync(int count);
 
         
 

@@ -14,6 +14,6 @@ namespace App.Services.Abstract
         Task<Result> CreateAsync(string jwt, SaveCategoryDto dto);
         Task<Result> UpdateAsync(int categoryId, string jwt, SaveCategoryDto dto);
         Task<Result> DeleteAsync(int categoryId,string jwt);
-        Task<Result<List<CategoryWithImageDto>>> GetCategoriesWithFirstProductImageAsync();
+        Task<List<CategoryWithImageDto>> GetCategoriesWithFirstProductImageAsync();
     }
 }

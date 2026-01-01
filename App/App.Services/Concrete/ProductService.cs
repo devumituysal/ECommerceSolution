@@ -4,6 +4,7 @@ using App.Services.Abstract;
 using App.Services.Base;
 using Ardalis.Result;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,9 +18,10 @@ namespace App.Services.Concrete
 {
     public class ProductService : BaseService, IProductService
     {
-        public ProductService(IHttpClientFactory factory) : base(factory)
+        private readonly IConfiguration _config;
+        public ProductService(IHttpClientFactory factory, IConfiguration config) : base(factory)
         {
-
+            _config = config;
         }
 
         // POST /api/product
@@ -239,17 +241,22 @@ namespace App.Services.Concrete
             return Result.Success(dto!);
         }
 
-        public async Task<Result<List<ProductListItemDto>>> GetLatestAsync(int count)
+        public async Task<List<ProductListItemDto>> GetLatestAsync(int take)
         {
-            var response = await DataClient.GetAsync($"api/products/latest?count={count}");
-            if (!response.IsSuccessStatusCode)
-                return Result.Error("Products could not be loaded");
+            var response = await DataClient.GetAsync($"/api/products/latest?take={take}");
 
-            var products = await response.Content.ReadFromJsonAsync<List<ProductListItemDto>>();
-            return Result.Success(products ?? new());
+            if (!response.IsSuccessStatusCode)
+                return new List<ProductListItemDto>();
+
+            var items = await response.Content
+                .ReadFromJsonAsync<List<ProductListItemDto>>();
+
+            return items ?? new List<ProductListItemDto>();
         }
 
-      
+
+
+
 
     }
 }

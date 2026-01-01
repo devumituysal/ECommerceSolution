@@ -120,7 +120,7 @@ namespace App.Api.Data.Controllers
                 {
                     c.Id,
                     c.Name,
-                    FirstProductImage = _repo.GetAll<ProductEntity>()
+                    ImageUrl = _repo.GetAll<ProductEntity>()
                         .Where(p => p.CategoryId == c.Id)
                         .OrderBy(p => p.Id)
                         .SelectMany(p => p.Images)

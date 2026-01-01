@@ -25,6 +25,7 @@ namespace App.Data.Contexts
         public DbSet<CategoryEntity> Categories { get; set; }
         public DbSet<CartItemEntity> CartItems { get; set; }
         public DbSet<ContactMessageEntity> ContactMessages { get; set; }
+        public DbSet<FavoriteEntity> Favorites { get; set; }
 
 
 
@@ -40,6 +41,8 @@ namespace App.Data.Contexts
             modelBuilder.ApplyConfiguration(new RoleEntityConfiguration());
             modelBuilder.ApplyConfiguration(new UserEntityConfiguration());
             modelBuilder.ApplyConfiguration(new ContactMessageEntityConfiguration());
+            modelBuilder.ApplyConfiguration(new FavoriteEntityConfiguration());
+
 
 
 
@@ -72,7 +75,7 @@ namespace App.Data.Contexts
                 {
                     Id = 1,
                     SellerId = 2,
-                    CategoryId = 1, // CategoryId = 1'in DB'de olduğundan emin olundu
+                    CategoryId = 1, 
                     Name = "Test Product",
                     Price = 149.99m,
                     Details = "This is a test product used for checking the Product Detail page.",
