@@ -21,13 +21,15 @@ namespace App.Eticaret.Controllers
         private readonly IProductService _productService;
         private readonly ICategoryService _categoryService;
         private readonly ICommentService _commentService;
+        private readonly IFavoriteService _favoriteService;
 
-        public HomeController(IContactService contactService,IProductService productService,ICategoryService categoryService,ICommentService commentService)
+        public HomeController(IContactService contactService,IProductService productService,ICategoryService categoryService,ICommentService commentService,IFavoriteService favoriteService)
         {
             _contactService = contactService;
             _productService = productService;
             _categoryService = categoryService;
             _commentService = commentService;
+            _favoriteService = favoriteService;
         }
 
         public async Task<IActionResult> Index()
@@ -101,18 +103,33 @@ namespace App.Eticaret.Controllers
 
             var result = await _productService.GetPublicProductsAsync(categoryId,q);
 
-            if (!result.IsSuccess)
+            if (!result.IsSuccess || result.Value == null)
                 return View(new List<ProductListItemViewModel>());
 
-            var products = result.Value
-                .Select(p => new ProductListItemViewModel
+            var jwt = HttpContext.Request.Cookies["access_token"];
+
+            var products = new List<ProductListItemViewModel>();
+
+            foreach (var p in result.Value)
+            {
+                bool isFavorite = false;
+
+                if (!string.IsNullOrEmpty(jwt))
+                {
+                    isFavorite = await _favoriteService.IsFavoriteAsync(jwt, p.Id);
+                }
+
+                products.Add(new ProductListItemViewModel
                 {
                     Id = p.Id,
                     Name = p.Name,
                     Price = p.Price,
-                    ImageUrl = p.ImageUrl
-                })
-                .ToList();
+                    ImageUrl = p.ImageUrl,
+                    CategoryName = p.CategoryName,
+                    IsFavorite = isFavorite
+                });
+            }
+
 
             return View(products);
         }
@@ -137,10 +154,16 @@ namespace App.Eticaret.Controllers
                 CategoryName = dto.CategoryName,
                 ImageUrls = dto.Images.Count > 0 ? new[] { dto.Images[0] } : Array.Empty<string>(),
                 StockAmount = dto.StockAmount,
-                Comments = new List<ProductCommentViewModel>()
+                Comments = new List<ProductCommentViewModel>(),
+                IsFavorite = false
             };
 
             var jwt = HttpContext.Request.Cookies["access_token"] ?? string.Empty;
+
+            if (!string.IsNullOrEmpty(jwt))
+            {
+                productDetail.IsFavorite = await _favoriteService.IsFavoriteAsync(jwt, productId);
+            }
 
             var commentResult = await _commentService.GetAllAsync(jwt);
 

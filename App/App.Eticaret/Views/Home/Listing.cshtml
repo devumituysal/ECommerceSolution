@@ -106,7 +106,21 @@
                                     <div class="product__item__pic set-bg"
                                          data-setbg="@(product.ImageUrl ?? "/img/product/default.jpg")">
                                         <ul class="product__item__pic__hover">
-                                            <li><a href="#"><i class="fa fa-heart"></i></a></li>
+                                            <li>
+                                                <a asp-controller="Favorite"
+                                                      asp-action="@(product.IsFavorite ? "Remove" : "Add")"
+                                                      asp-route-productId="@product.Id"
+                                                      class="favorite-form">
+                                                        @if (product.IsFavorite)
+                                                        {
+                                                            <i class="fa fa-heart"></i>
+                                                        }
+                                                        else
+                                                        {
+                                                            <i class="fa fa-heart-o"></i>
+                                                        }
+                                                </a>
+                                            </li>
                                             <li><a href="#"><i class="fa fa-retweet"></i></a></li>
                                             <li>
                                                 <a asp-controller="Home"

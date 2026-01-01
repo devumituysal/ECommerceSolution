@@ -22,6 +22,7 @@ namespace App.Data.Entities
         public string? ProfileImage { get; set; }
         public RoleEntity Role { get; set; } = null!;
         public ICollection<ProductCommentEntity> Comments { get; set; } = new List<ProductCommentEntity>();
+        public ICollection<FavoriteEntity> Favorites { get; set; }= new List<FavoriteEntity>();
 
     }
 }

@@ -26,5 +26,6 @@ namespace App.Data.Entities
 
         public ICollection<ProductImageEntity> Images { get; set; } = new List<ProductImageEntity>();
         public ICollection<ProductCommentEntity> Comments { get; set; } = null!;
+        public ICollection<FavoriteEntity> Favorites { get; set; } = new List<FavoriteEntity>();
     }
 }

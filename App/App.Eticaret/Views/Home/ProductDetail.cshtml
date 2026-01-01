@@ -36,8 +36,8 @@
 
                     <div class="product__details__pic__item product-image-fixed">
                         <img src="@(Model.ImageUrls != null && Model.ImageUrls.Length > 0
-                                                                 ? Model.ImageUrls[0]
-                                                                 : "/img/product/default.jpg")"
+                                                                                                                                                        ? Model.ImageUrls[0]
+                                                                                                                                                        : "/img/product/default.jpg")"
                              alt="@Model.Name"
                              class="img-fluid product-image" />
                     </div>
@@ -60,6 +60,7 @@
             <!-- PRODUCT INFO -->
             <div class="col-lg-6 col-md-6">
                 <div class="product__details__text">
+
                     <h3>@Model.Name</h3>
 
                     <div class="product__details__price">
@@ -68,28 +69,49 @@
 
                     @if (Model.StockAmount > 0)
                     {
-                        <form asp-controller="Cart"
-                              asp-action="AddProduct"
-                              method="post">
+                        <div class="d-flex align-items-center gap-2">
 
-                            <input type="hidden" name="productId" value="@Model.Id" />
+                            <form asp-controller="Cart"
+                                  asp-action="AddProduct"
+                                  method="post">
 
-                            <div class="product__details__quantity">
-                                <div class="quantity">
-                                    <div class="pro-qty">
-                                        <input type="number"
-                                               name="quantity"
-                                               value="1"
-                                               min="1"
-                                               max="@Model.StockAmount" />
+                                <input type="hidden" name="productId" value="@Model.Id" />
+
+                                <div class="product__details__quantity">
+                                    <div class="quantity">
+                                        <div class="pro-qty">
+                                            <input type="number"
+                                                   name="quantity"
+                                                   value="1"
+                                                   min="1"
+                                                   max="@Model.StockAmount" />
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <button type="submit" class="primary-btn">
-                                ADD TO CART
-                            </button>
-                        </form>
+                                <button type="submit" class="primary-btn">
+                                    ADD TO CART
+                                </button>
+                            </form>
+
+                            <!-- FAVORITE BUTTON -->
+                            <a asp-controller="Favorite"
+                               asp-action="@(Model.IsFavorite ? "Remove" : "Add")"
+                               asp-route-productId="@Model.Id"
+                               class="btn btn-outline-danger favorite-btn d-flex align-items-center justify-content-center"
+                               style="width:45px;height:45px;">
+                                @if (Model.IsFavorite)
+                                {
+                                    <i class="fa fa-heart fs-5"></i>
+                                }
+                                else
+                                {
+                                    <i class="fa fa-heart-o fs-5"></i>
+                                }
+
+                            </a>
+
+                        </div>
                     }
                     else
                     {
@@ -180,7 +202,6 @@
                         <input type="hidden" name="productId" value="@Model.Id" />
                         <input type="hidden" name="StarCount" id="StarCount" value="0" />
 
-                        <!-- STAR RATING -->
                         <div class="form-group mb-3">
                             <label>Rating</label>
                             <div id="starRating" class="text-warning fs-4">
@@ -193,7 +214,6 @@
                             </div>
                         </div>
 
-                        <!-- COMMENT TEXT -->
                         <div class="form-group mb-3">
                             <textarea name="Text"
                                       class="form-control"
@@ -237,6 +257,10 @@
         height: 90px;
         object-fit: cover;
         cursor: pointer;
+    }
+
+    .favorite-btn:hover {
+        transform: scale(1.1);
     }
 </style>
 

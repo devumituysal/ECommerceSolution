@@ -32,6 +32,7 @@ builder.Services.AddScoped<IContactService, ContactService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<ICommentService, CommentService>();
+builder.Services.AddScoped<IFavoriteService, FavoriteService>();
 
 
 
