@@ -98,16 +98,9 @@
                             <a asp-controller="Favorite"
                                asp-action="@(Model.IsFavorite ? "Remove" : "Add")"
                                asp-route-productId="@Model.Id"
-                               class="btn btn-outline-danger favorite-btn d-flex align-items-center justify-content-center"
-                               style="width:45px;height:45px;">
-                                @if (Model.IsFavorite)
-                                {
-                                    <i class="fa fa-heart fs-5"></i>
-                                }
-                                else
-                                {
-                                    <i class="fa fa-heart-o fs-5"></i>
-                                }
+                               class="favorite-heart">
+
+                                <i class="fa @(Model.IsFavorite ? "fa-heart" : "fa-heart-o")"></i>
 
                             </a>
 
@@ -234,6 +227,8 @@
     </div>
 </section>
 
+
+
 <style>
     .product-image-fixed {
         width: 100%;
@@ -262,6 +257,26 @@
     .favorite-btn:hover {
         transform: scale(1.1);
     }
+
+    .favorite-heart {
+        color: #e74c3c;
+        text-decoration: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-left: 14px; 
+    }
+
+        .favorite-heart i {
+            font-size: 26px; 
+            transition: transform 0.15s ease, color 0.15s ease;
+        }
+
+        .favorite-heart:hover i {
+            transform: scale(1.15);
+            color: #c0392b;
+        }
 </style>
 
 <script>

@@ -1,10 +1,12 @@
 ﻿using App.Models.DTO.Favorite;
 using App.Services.Abstract;
 using App.Services.Base;
+using Ardalis.Result;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text;
 using System.Threading.Tasks;
@@ -67,6 +69,26 @@ namespace App.Services.Concrete
             );
 
             return response ?? new();
+        }
+
+        public async Task<Result<List<MyFavoriteProductDto>>> GetMyFavoritesAsync(string jwt)
+        {
+            var response = await SendAsync( 
+                HttpMethod.Get,
+                "/api/favorites/my", 
+                jwt
+            );
+
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+                return Result.Unauthorized();
+
+            if (!response.IsSuccessStatusCode)
+                return Result.Error("Favoriler alınamadı");
+
+            var items = await response.Content
+                .ReadFromJsonAsync<List<MyFavoriteProductDto>>();
+
+            return Result.Success(items ?? new List<MyFavoriteProductDto>());
         }
     }
 }

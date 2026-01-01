@@ -5,19 +5,11 @@
 
 @{
     ViewData["Hero"] = "hero-normal";
-    ViewData["Title"] = "Products";
+    ViewData["Title"] = "My Favorites";
 
     var categoryResult = await CategoryService.GetAllAsync();
     var categories = categoryResult.Value ?? new();
 }
-
-@if (TempData["ErrorFavorite"] != null)
-{
-    <div class="alert alert-warning">
-        @TempData["ErrorFavorite"]
-    </div>
-}
-
 
 <!-- Breadcrumb Section Begin -->
 <section class="breadcrumb-section set-bg" data-setbg="/img/breadcrumb.jpg">
@@ -116,17 +108,17 @@
                                         <ul class="product__item__pic__hover">
                                             <li>
                                                 <a asp-controller="Favorite"
-                                                      asp-action="@(product.IsFavorite ? "Remove" : "Add")"
-                                                      asp-route-productId="@product.Id"
-                                                      class="favorite-form">
-                                                        @if (product.IsFavorite)
-                                                        {
-                                                            <i class="fa fa-heart"></i>
-                                                        }
-                                                        else
-                                                        {
-                                                            <i class="fa fa-heart-o"></i>
-                                                        }
+                                                   asp-action="@(product.IsFavorite ? "Remove" : "Add")"
+                                                   asp-route-productId="@product.Id"
+                                                   class="favorite-form">
+                                                    @if (product.IsFavorite)
+                                                    {
+                                                        <i class="fa fa-heart"></i>
+                                                    }
+                                                    else
+                                                    {
+                                                        <i class="fa fa-heart-o"></i>
+                                                    }
                                                 </a>
                                             </li>
                                             <li><a href="#"><i class="fa fa-retweet"></i></a></li>

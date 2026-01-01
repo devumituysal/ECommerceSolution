@@ -98,6 +98,29 @@ namespace App.Api.Data.Controllers
             return Ok(products);
         }
 
+        [Authorize]
+        [HttpGet("my")]
+        public async Task<IActionResult> GetMyFavorites()
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
+            var products = await _repo.GetAll<FavoriteEntity>()
+                .Where(f => f.UserId == userId)
+                .Select(f => new MyFavoriteProductDto
+                {
+                    ProductId = f.Product.Id,
+                    Name = f.Product.Name,
+                    Price = f.Product.Price,
+                    ImageUrl = f.Product.Images
+                        .OrderBy(i => i.Id)
+                        .Select(i => i.Url)
+                        .FirstOrDefault(),
+                    CreatedAt = f.CreatedAt
+                })
+                .OrderByDescending(x => x.CreatedAt)
+                .ToListAsync();
+
+            return Ok(products);
+        }
     }
 }

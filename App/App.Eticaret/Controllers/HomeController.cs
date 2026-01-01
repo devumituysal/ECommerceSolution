@@ -74,7 +74,7 @@ namespace App.Eticaret.Controllers
             var result = await _contactService.SendMessageAsync(dto);
 
             if (!result.IsSuccess)
-            {
+            { 
                 ModelState.AddModelError(
                     "",
                     result.Errors.FirstOrDefault() ?? "Mesaj gönderilemedi."
@@ -88,17 +88,12 @@ namespace App.Eticaret.Controllers
         }
 
         [Route("/products/list")]
-        public async Task<IActionResult> Listing(int? categoryId, string? q, bool fromAddtoCart = false,bool fromAddComment = false)
+        public async Task<IActionResult> Listing(int? categoryId, string? q,bool fromMyFavorites = false)
         {
-            if (!fromAddtoCart)
+           
+            if(!fromMyFavorites)
             {
-                TempData.Remove("AddtoCartError");
-                TempData.Remove("AddtoCartSuccess");
-            }
-            if(!fromAddComment)
-            {
-                TempData.Remove("Error");
-                TempData.Remove("Success");
+                TempData.Remove("ErrorFavorite");
             }
 
             var result = await _productService.GetPublicProductsAsync(categoryId,q);
@@ -136,8 +131,19 @@ namespace App.Eticaret.Controllers
 
 
         [HttpGet("/product/{productId:int}/details")]
-        public async Task<IActionResult> ProductDetail([FromRoute] int productId)
+        public async Task<IActionResult> ProductDetail([FromRoute] int productId, bool fromAddtoCart = false, bool fromAddComment = false)
         {
+            if (!fromAddtoCart)
+            {
+                TempData.Remove("AddtoCartError");
+                TempData.Remove("AddtoCartSuccess");
+            }
+            if (!fromAddComment)
+            {
+                TempData.Remove("Error");
+                TempData.Remove("Success");
+            }
+
             var result = await _productService.GetPublicByIdAsync(productId);
 
             if (!result.IsSuccess)

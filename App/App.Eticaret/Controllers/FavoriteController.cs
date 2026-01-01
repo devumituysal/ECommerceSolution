@@ -1,4 +1,5 @@
-﻿using App.Services.Abstract;
+﻿using App.Eticaret.Models.ViewModels;
+using App.Services.Abstract;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -59,5 +60,46 @@ namespace App.Eticaret.Controllers
             var isFav = await _favoriteService.IsFavoriteAsync(jwt, productId);
             return Json(isFav);
         }
+
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> MyFavorites()
+        {
+            var jwt = HttpContext.Request.Cookies["access_token"];
+
+            if (string.IsNullOrEmpty(jwt))
+                return RedirectToAction("Login", "Auth");
+
+            var result = await _favoriteService.GetMyFavoritesAsync(jwt);
+
+            if (result.Status == Ardalis.Result.ResultStatus.Unauthorized)
+                return RedirectToAction("Login", "Auth");
+
+            if (!result.IsSuccess)
+            {
+                TempData["ErrorFavorite"] = "favorites could not be retrieved.";
+                return RedirectToAction("Listing", "Home", new { fromMyFavorites = true });
+            }
+
+            if (result.Value is null || !result.Value.Any())
+            {
+                TempData["ErrorFavorite"] = "You haven't added any products to your favorites yet.";
+                return RedirectToAction("Listing", "Home" , new { fromMyFavorites = true });
+            }
+
+            var model = result.Value.Select(p => new ProductListItemViewModel
+            {
+                Id = p.ProductId,
+                Name = p.Name,
+                Price = p.Price,
+                ImageUrl = p.ImageUrl,
+                IsFavorite = true,
+                CategoryName = string.Empty 
+            }).ToList();
+
+            return View(model );
+        }
+
     }
 }
+    
