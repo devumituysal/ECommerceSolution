@@ -37,17 +37,28 @@
             </div>
         </div>
 
-        <!-- static featured (şimdilik bırakıldı) -->
         <div class="row featured__filter">
-            <div class="col-lg-3 col-md-4 col-sm-6">
-                <div class="featured__item">
-                    <div class="featured__item__pic set-bg" data-setbg="/img/featured/feature-1.jpg"></div>
-                    <div class="featured__item__text">
-                        <h6>Sample Product</h6>
-                        <h5>$30.00</h5>
+            @foreach (var product in Model.FeaturedProducts)
+            {
+                <div class="col-lg-3 col-md-4 col-sm-6">
+                    <div class="featured__item">
+                        <div class="featured__item__pic set-bg"
+                             data-setbg="@(string.IsNullOrEmpty(product.ImageUrl)
+                                                     ? Url.Content("~/img/placeholder.png")
+                                                     : product.ImageUrl)">
+                        </div>
+
+                        <div class="featured__item__text">
+                            <h6>
+                                <a href="/product/@product.ProductId/details">
+                                    @product.Name
+                                </a>
+                            </h6>
+                            <h5>$@product.Price</h5>
+                        </div>
                     </div>
                 </div>
-            </div>
+            }
         </div>
     </div>
 </section>
@@ -81,18 +92,23 @@
                     <div class="latest-product__slider owl-carousel">
                         @foreach (var product in Model.LatestProducts)
                         {
+                            var imageUrl = string.IsNullOrWhiteSpace(product.ImageUrl)
+                            ? Url.Content("~/img/placeholder.png")
+                            : product.ImageUrl;
+
                             <a href="/product/@product.Id/details" class="latest-product__item">
+
                                 <div class="latest-product__item__pic">
-                                    <img src="@(string.IsNullOrEmpty(product.ImageUrl) ? Url.Content("~/img/placeholder.png"): product.ImageUrl)"
-                                     alt="@product.Name" />
-                            </div>
+                                    <img src="@imageUrl" alt="@product.Name" />
+                                </div>
 
                                 <div class="latest-product__item__text">
                                     <h6>@product.Name</h6>
                                     <span>$@product.Price</span>
                                 </div>
+
                             </a>
-                                                }
+                        }
                     </div>
 
                 </div>
@@ -100,4 +116,6 @@
         </div>
     </div>
 </section>
+
+
 <!-- Latest Product Section End -->

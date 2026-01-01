@@ -64,11 +64,15 @@ namespace App.Services.Concrete
 
         public async Task<List<MostFavoritedProductDto>> GetMostFavoritedAsync(int take)
         {
-            var response = await DataClient.GetFromJsonAsync<List<MostFavoritedProductDto>>(
-                $"/api/favorites/most-favorited?take={take}"
-            );
+            var response = await DataClient.GetAsync($"/api/favorites/most-favorited?take={take}");
 
-            return response ?? new();
+            if (!response.IsSuccessStatusCode)
+                return new List<MostFavoritedProductDto>();
+
+            var items = await response.Content
+                .ReadFromJsonAsync<List<MostFavoritedProductDto>>();
+
+            return items ?? new List<MostFavoritedProductDto>();
         }
 
         public async Task<Result<List<MyFavoriteProductDto>>> GetMyFavoritesAsync(string jwt)

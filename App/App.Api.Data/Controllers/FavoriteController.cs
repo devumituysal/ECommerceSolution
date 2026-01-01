@@ -78,15 +78,16 @@ namespace App.Api.Data.Controllers
             take = Math.Clamp(take, 1, 50);
 
             var products = await _repo.GetAll<FavoriteEntity>()
-                .GroupBy(f => f.Product)
+                .Include(f => f.Product)
+                .ThenInclude(p => p.Images)
+                .GroupBy(f => f.ProductId)
                 .Select(g => new MostFavoritedProductDto
                 {
-                    ProductId = g.Key.Id,
-                    Name = g.Key.Name,
-                    Price = g.Key.Price,
+                    ProductId = g.Key,
+                    Name = g.First().Product.Name,
+                    Price = g.First().Product.Price,
                     FavoriteCount = g.Count(),
-                    
-                    ImageUrl = g.Key.Images
+                    ImageUrl = g.First().Product.Images
                     .OrderBy(i => i.Id)
                     .Select(i => i.Url)
                     .FirstOrDefault()
@@ -94,7 +95,7 @@ namespace App.Api.Data.Controllers
                 .OrderByDescending(x => x.FavoriteCount)
                 .Take(take)
                 .ToListAsync();
-
+            
             return Ok(products);
         }
 

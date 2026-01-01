@@ -36,11 +36,13 @@ namespace App.Eticaret.Controllers
         {
             var categoryResult = await _categoryService.GetCategoriesWithFirstProductImageAsync();
             var productsResult = await _productService.GetLatestAsync(8);
+            var featuredResult = await _favoriteService.GetMostFavoritedAsync(8);
 
             var vm = new HomeIndexViewModel
             {
-                Categories = categoryResult.Value ?? new(),
-                LatestProducts = productsResult.IsSuccess ? productsResult.Value : new List<ProductListItemDto>()
+                Categories = categoryResult,
+                LatestProducts = productsResult,
+                FeaturedProducts = featuredResult
             };
 
             return View(vm);

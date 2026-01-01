@@ -96,17 +96,16 @@ namespace App.Services.Concrete
             return Result.Success();
         }
 
-        public async Task<Result<List<CategoryWithImageDto>>> GetCategoriesWithFirstProductImageAsync()
+        public async Task<List<CategoryWithImageDto>> GetCategoriesWithFirstProductImageAsync()
         {
             var response = await DataClient.GetAsync("api/categories/with-first-product");
 
             if (!response.IsSuccessStatusCode)
-                return Result.Error("Categories could not be loaded");
+                return new List<CategoryWithImageDto>();
 
-            var categories =
-                await response.Content.ReadFromJsonAsync<List<CategoryWithImageDto>>();
+            var categories = await response.Content.ReadFromJsonAsync<List<CategoryWithImageDto>>();
 
-            return Result.Success(categories ?? new());
+            return categories ?? new List<CategoryWithImageDto>();
         }
 
     }
