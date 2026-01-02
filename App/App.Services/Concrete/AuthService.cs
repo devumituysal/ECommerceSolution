@@ -83,7 +83,10 @@ namespace App.Services.Concrete
                 dto);
 
             if (response.StatusCode == HttpStatusCode.BadRequest)
-                return Result.Invalid();
+            {
+                var msg = await response.Content.ReadAsStringAsync();
+                return Result.Error(msg);
+            }
 
             if (!response.IsSuccessStatusCode)
                 return Result.Error();

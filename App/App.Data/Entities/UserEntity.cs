@@ -18,6 +18,7 @@ namespace App.Data.Entities
         public bool Enabled { get; set; } = false;
         public bool HasSellerRequest { get; set; } = false;
         public bool IsBanned { get; set; } = false;
+        public DateTime? ResetPasswordTokenExpiresAt { get; set; }
 
         public string? ProfileImage { get; set; }
         public RoleEntity Role { get; set; } = null!;

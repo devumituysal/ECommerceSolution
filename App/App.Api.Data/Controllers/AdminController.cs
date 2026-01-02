@@ -29,10 +29,19 @@ namespace App.Api.Data.Controllers
             var sellerRequestCount = await _repo.GetAll<UserEntity>()
                 .CountAsync(u => u.HasSellerRequest && !u.IsBanned);
 
+            var newProductCommentsCount = await _repo.GetAll<ProductCommentEntity>()
+                .CountAsync(c => !c.IsConfirmed);
+
+            var newContactMessagesCount = await _repo.GetAll<ContactMessageEntity>()
+                .CountAsync(x => !x.IsRead);
+
             var dto = new AdminNotificationDto
             {
                 NewUsers = newUsersCount,
-                SellerRequests = sellerRequestCount
+                SellerRequests = sellerRequestCount,
+                NewProductComments = newProductCommentsCount,
+                NewContactMessages = newContactMessagesCount
+
             };
 
             return Ok(dto);
@@ -209,6 +218,67 @@ namespace App.Api.Data.Controllers
             return Ok(result);
         }
 
+        [HttpGet("contacts")]
+        public async Task<ActionResult<List<AdminContactMessageDto>>> GetContacts()
+        {
+            var contacts = await _repo
+                .GetAll<ContactMessageEntity>()
+                .OrderByDescending(x => x.Id)
+                .Select(x => new AdminContactMessageDto
+                {
+                    Id = x.Id,
+                    Name = x.Name,
+                    Email = x.Email,
+                    Message = x.Message,
+                    CreatedAt = x.CreatedAt,
+                    IsRead = x.IsRead,
+
+                })
+                .ToListAsync();
+
+            return Ok(contacts);
+        }
+
+        [HttpGet("contacts/{id}")]
+        [Authorize(Roles = "admin")]
+        public async Task<IActionResult> GetContact(int id)
+        {
+            var contact = await _repo.GetById<ContactMessageEntity>(id);
+
+            if (contact == null)
+                return NotFound();
+
+            if (!contact.IsRead)
+            {
+                contact.IsRead = true;
+                await _repo.Update(contact);
+            }
+
+            var dto = new AdminContactMessageDto
+            {
+                Id = contact.Id,
+                Name = contact.Name,
+                Email = contact.Email,
+                Message = contact.Message,
+                CreatedAt = contact.CreatedAt,
+                IsRead = contact.IsRead
+            };
+
+            return Ok(dto);
+        }
+
+        [HttpDelete("contacts/{id}")]
+        [Authorize(Roles = "admin")]
+        public async Task<IActionResult> DeleteContact(int id)
+        {
+            var contact = await _repo.GetById<ContactMessageEntity>(id);
+
+            if (contact == null)
+                return NotFound();
+
+            await _repo.Delete(contact);
+            return NoContent();
+        }
 
 
     }

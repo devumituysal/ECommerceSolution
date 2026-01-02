@@ -63,8 +63,12 @@ namespace App.Eticaret.Controllers
 
         [Route("/login")]
         [HttpGet]
-        public IActionResult Login()
+        public IActionResult Login(bool? fromRenewPassword = false)
         {
+            if (fromRenewPassword != true)
+            {
+                TempData.Remove("Success");
+            }
             return View();
         }
 
@@ -161,37 +165,7 @@ namespace App.Eticaret.Controllers
             return View();
         }
 
-        //private async Task SendResetPasswordEmailAsync(UserEntity user)
-        //{
-        //    // Gönderici mail bilgileri güncellenmeli
-        //    const string host = "smtp.gmail.com";
-        //    const int port = 587;
-        //    const string from = "mail";
-        //    const string password = "şifre";
-
-        //    var resetPasswordToken = Guid.NewGuid().ToString("n");
-
-        //    user.ResetPasswordToken = resetPasswordToken;
-        //    await _repo.Update(user);
-
-        //    using SmtpClient client = new(host, port)
-        //    {
-        //        Credentials = new NetworkCredential(from, password)
-        //    };
-
-        //    MailMessage mail = new()
-        //    {
-        //        From = new MailAddress(from),
-        //        Subject = "Şifre Sıfırlama",
-        //        Body = $"Merhaba {user.FirstName}, <br> Şifrenizi sıfırlamak için <a href='https://localhost:5001/renew-password/{user.ResetPasswordToken}'>tıklayınız</a>.",
-        //        IsBodyHtml = true,
-        //    };
-
-        //    mail.To.Add(user.Email);
-
-        //    await client.SendMailAsync(mail);
-        //}
-
+    
         [Route("/renew-password/{token}")]
         [HttpGet]
         public IActionResult RenewPassword([FromRoute] string token)
@@ -226,11 +200,12 @@ namespace App.Eticaret.Controllers
 
             if (!result.IsSuccess)
             {
-                ModelState.AddModelError("", "Şifre yenileme işlemi başarısız.");
+                ModelState.AddModelError("", result.Errors.First());
                 return View(renewPasswordViewModel);
             }
 
-            return RedirectToAction(nameof(Login));
+            TempData["Success"] = "Şifreniz başarıyla yenilendi.";
+            return RedirectToAction(nameof(Login), new { fromRenewPassword = true });
         }
 
         [Route("/logout")]

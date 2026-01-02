@@ -47,6 +47,36 @@
             </a>
         }
 
+        @if (Model.NewProductComments > 0)
+        {
+            <a class="dropdown-item d-flex align-items-center"
+               asp-controller="Comment" asp-action="List">
+                <div class="mr-3">
+                    <div class="icon-circle bg-warning">
+                        <i class="fas fa-comment text-white"></i>
+                    </div>
+                </div>
+                <div>
+                    <strong>@Model.NewProductComments new product comment(s)</strong>
+                </div>
+            </a>
+        }
+
+        @if (Model.NewContactMessages > 0)
+        {
+            <a class="dropdown-item d-flex align-items-center"
+               asp-controller="Contact" asp-action="List">
+                <div class="mr-3">
+                    <div class="icon-circle bg-info">
+                        <i class="fas fa-envelope text-white"></i>
+                    </div>
+                </div>
+                <div>
+                    <strong>@Model.NewContactMessages new message(s)</strong>
+                </div>
+            </a>
+        }
+
         @if (Model.TotalCount == 0)
         {
             <div class="dropdown-item text-center small text-gray-500">

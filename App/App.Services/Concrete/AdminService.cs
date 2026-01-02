@@ -168,10 +168,58 @@ namespace App.Services.Concrete
             return Result.Success(data ?? new());
         }
 
+        public async Task<Result<List<AdminContactMessageDto>>> GetContactMessagesAsync(string jwt)
+        {
+            var response = await SendAsync(
+                HttpMethod.Get,
+                "api/Admin/contacts",
+                jwt
+            );
 
+            if (!response.IsSuccessStatusCode)
+                return Result.Error("Contact messages could not be loaded.");
 
+            var messages =
+                await response.Content.ReadFromJsonAsync<List<AdminContactMessageDto>>();
 
+            return Result.Success(messages ?? new());
+        }
 
+        public async Task<Result<AdminContactMessageDto>> GetContactByIdAsync(string jwt, int id)
+        {
+            var response = await SendAsync(
+                HttpMethod.Get,
+                $"api/admin/contacts/{id}",
+                jwt
+            );
 
+            if (response.StatusCode == HttpStatusCode.NotFound)
+                return Result.NotFound();
+
+            if (!response.IsSuccessStatusCode)
+                return Result.Error("Contact message could not be loaded.");
+
+            var data = await response.Content
+                .ReadFromJsonAsync<AdminContactMessageDto>();
+
+            return Result.Success(data!);
+        }
+
+        public async Task<Result> DeleteContactAsync(string jwt, int id)
+        {
+            var response = await SendAsync(
+                HttpMethod.Delete,
+                $"api/admin/contacts/{id}",
+                jwt
+            );
+
+            if (response.StatusCode == HttpStatusCode.NotFound)
+                return Result.NotFound();
+
+            if (!response.IsSuccessStatusCode)
+                return Result.Error("Contact message could not be deleted.");
+
+            return Result.Success();
+        }
     }
 }
