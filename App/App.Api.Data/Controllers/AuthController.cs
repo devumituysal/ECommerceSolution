@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
+using System.Net;
+using System.Net.Mail;
 using System.Security.Claims;
 using System.Text;
 
@@ -18,10 +20,12 @@ namespace App.Api.Data.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IDataRepository _repo;
+        private readonly IConfiguration _config;
 
-        public AuthController(IDataRepository repo)
+        public AuthController(IDataRepository repo,IConfiguration config)
         {
             _repo = repo;
+            _config = config;
         }
 
         [HttpPost("login")]
@@ -141,10 +145,22 @@ namespace App.Api.Data.Controllers
 
             user.ResetPasswordToken = resetToken;
 
+            user.ResetPasswordTokenExpiresAt = DateTime.UtcNow.AddMinutes(15);
+
             await _repo.Update(user);
 
-            // ŞİMDİLİK: mail gönderimi burada olacak
-            // (SMTP kodunu birazdan buraya taşıyacağız)
+            try
+            {
+                await SendResetPasswordEmailAsync(user.Email, user.FirstName, resetToken);
+            }
+            catch
+            {
+                user.ResetPasswordToken = null;
+                user.ResetPasswordTokenExpiresAt = null;
+                await _repo.Update(user);
+
+                return StatusCode(500, "Reset password email could not be sent.");
+            }
 
             return Ok();
         }
@@ -154,17 +170,60 @@ namespace App.Api.Data.Controllers
         public async Task<IActionResult> RenewPassword([FromBody] RenewPasswordRequestDto forgotPasswordRequestDto)
         {
             var user = await _repo.GetAll<UserEntity>()
-                .FirstOrDefaultAsync(u=>u.ResetPasswordToken == forgotPasswordRequestDto.Token);
+                .FirstOrDefaultAsync(u => u.ResetPasswordToken == forgotPasswordRequestDto.Token);
 
-            if(user is null)
+            if (user is null)
             {
-                return BadRequest("Invalid or expired token");
-            };
+                return BadRequest("Invalid token");
+            }
 
-            user.Password = forgotPasswordRequestDto.NewPassword;
+            if (!user.ResetPasswordTokenExpiresAt.HasValue || user.ResetPasswordTokenExpiresAt < DateTime.UtcNow)
+            {
+                return BadRequest("Token expired");
+            }
+
+            var hasher = new PasswordHasher<UserEntity>();
+
+            user.Password = hasher.HashPassword(user, forgotPasswordRequestDto.NewPassword);
             user.ResetPasswordToken = null;
+            user.ResetPasswordTokenExpiresAt = null;
+
+            await _repo.Update(user);
 
             return Ok();
+        }
+
+
+        private async Task SendResetPasswordEmailAsync(string toEmail, string firstName, string token)
+        {
+            var host = _config["Smtp:Host"];
+            var port = int.Parse(_config["Smtp:Port"]);
+            var from = _config["Smtp:From"];
+            var password = _config["Smtp:Password"];
+
+            var resetLink = $"https://localhost:7117/renew-password/{token}";
+
+            using var client = new SmtpClient(host, port)
+            {
+                Credentials = new NetworkCredential(from, password),
+                EnableSsl = true
+            };
+
+            var mail = new MailMessage
+            {
+                From = new MailAddress(from),
+                Subject = "Şifre Sıfırlama",
+                Body = $@"
+                         <p>Merhaba {firstName},</p>
+                         <p>Şifrenizi sıfırlamak için aşağıdaki linke tıklayın:</p>
+                         <a href='{resetLink}'>Şifreyi Yenile</a>
+                         ",
+                IsBodyHtml = true
+            };
+
+            mail.To.Add(toEmail);
+
+            await client.SendMailAsync(mail);
         }
 
     }
