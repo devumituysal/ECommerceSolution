@@ -1,0 +1,47 @@
+﻿@model App.Models.DTO.Admin.AdminContactMessageDto
+
+@{
+    ViewData["Title"] = "Contact Message";
+}
+
+<div class="container-fluid">
+    <div class="card shadow-sm">
+        <div class="card-header">
+            <h4>Contact Message Detail</h4>
+        </div>
+
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">Name</dt>
+                <dd class="col-sm-9">@Model.Name</dd>
+
+                <dt class="col-sm-3">Email</dt>
+                <dd class="col-sm-9">
+                    <a href="mailto:@Model.Email">@Model.Email</a>
+                </dd>
+
+                <dt class="col-sm-3">Message</dt>
+                <dd class="col-sm-9">
+                    <div class="border rounded p-3 bg-light">
+                        @Model.Message
+                    </div>
+                </dd>
+
+                <dt class="col-sm-3">Created At</dt>
+                <dd class="col-sm-9">
+                    @Model.CreatedAt.ToString("dd.MM.yyyy HH:mm")
+                </dd>
+            </dl>
+        </div>
+
+        <div class="card-footer text-end">
+            <a asp-action="List" class="btn btn-secondary">Back</a>
+            <a asp-action="Delete"
+               asp-route-id="@Model.Id"
+               class="btn btn-danger"
+               onclick="return confirm('Delete this message?');">
+                Delete
+            </a>
+        </div>
+    </div>
+</div>

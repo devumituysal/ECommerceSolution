@@ -10,7 +10,9 @@ namespace App.Models.DTO.Admin
     {
         public int NewUsers { get; set; }          
         public int SellerRequests { get; set; }
+        public int NewProductComments { get; set; }
+        public int NewContactMessages { get; set; }
 
-        public int TotalCount => NewUsers + SellerRequests;
+        public int TotalCount => NewUsers + SellerRequests + NewContactMessages + NewProductComments;
     }
 }

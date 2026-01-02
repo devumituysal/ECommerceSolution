@@ -20,6 +20,9 @@ namespace App.Services.Abstract
         Task<Result<List<OrderListDto>>> GetAdminOrdersAsync(string jwt);
         Task<Result<List<ActiveSellerDto>>> GetActiveSellersAsync(string jwt);
         Task<Result<TotalEarningDto>> GetTotalEarningsAsync(string jwt);
+        Task<Result<List<AdminContactMessageDto>>> GetContactMessagesAsync(string jwt);
+        Task<Result<AdminContactMessageDto>> GetContactByIdAsync(string jwt, int id);
+        Task<Result> DeleteContactAsync(string jwt, int id);
 
     }
 }

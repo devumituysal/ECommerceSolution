@@ -1,0 +1,82 @@
+﻿@model List<App.Models.DTO.Admin.AdminContactMessageDto>
+
+@{
+    ViewData["Title"] = "Contact Messages";
+}
+
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col">
+            <h2 class="page-title">Contact Messages</h2>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+
+            @if (!Model.Any())
+            {
+                <div class="alert alert-info mb-0">
+                    No contact messages found.
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Message</th>
+                                <th>Created At</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (int i = 0; i < Model.Count; i++)
+                            {
+                                var item = Model[i];
+                                <tr>
+                                    <td>@(i + 1)</td>
+                                    <td>@item.Name</td>
+                                    <td>
+                                        <a href="mailto:@item.Email">
+                                            @item.Email
+                                        </a>
+                                    </td>
+                                    <td style="max-width: 350px;">
+                                        <span title="@item.Message">
+                                            @(item.Message.Length > 120 ? item.Message.Substring(0, 120) + "...": item.Message)
+                                            @if (!item.IsRead)
+                                            {
+                                                <span class="badge bg-warning text-dark ms-2">New</span>
+                                            }
+                                </span>
+                            </td>
+                            <td>@item.CreatedAt.ToString("dd.MM.yyyy HH:mm")</td>
+                            <td class="text-end">
+                                <a asp-action="Detail"
+                                   asp-route-id="@item.Id"
+                                   class="btn btn-sm btn-outline-primary">
+                                    View
+                                </a>
+
+                                        <a asp-action="Delete"
+                                           asp-route-id="@item.Id"
+                                           class="btn btn-sm btn-outline-danger"
+                                           onclick="return confirm('Are you sure you want to delete this message?');">
+                                            Delete
+                                        </a>
+                                    </td>
+                                </tr>
+                                                }
+                        </tbody>
+                    </table>
+                </div>
+            }
+
+        </div>
+    </div>
+</div>
