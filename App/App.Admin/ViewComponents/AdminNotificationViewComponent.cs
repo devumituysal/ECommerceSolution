@@ -15,12 +15,7 @@ namespace App.Admin.ViewComponents
 
         public async Task<IViewComponentResult> InvokeAsync()
         {
-            var jwt = HttpContext.Request.Cookies["access_token"];
-
-            if (string.IsNullOrEmpty(jwt))
-                return View(new AdminNotificationDto());
-
-            var dto = await _adminService.GetNotificationsAsync(jwt)
+            var dto = await _adminService.GetNotificationsAsync()
                       ?? new AdminNotificationDto();
 
             return View(dto);

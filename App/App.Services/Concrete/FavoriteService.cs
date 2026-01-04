@@ -2,6 +2,7 @@
 using App.Services.Abstract;
 using App.Services.Base;
 using Ardalis.Result;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,17 +16,16 @@ namespace App.Services.Concrete
 {
     public class FavoriteService : BaseService , IFavoriteService
     {
-        public FavoriteService(IHttpClientFactory httpClientFactory) : base(httpClientFactory)
+        public FavoriteService(IHttpClientFactory httpClientFactory, IHttpContextAccessor httpContextAccessor) : base(httpClientFactory, httpContextAccessor)
         {
             
         }
 
-        public async Task<bool> AddAsync(string jwt, int productId)
+        public async Task<bool> AddAsync(int productId)
         {
             var response = await SendAsync(
                 HttpMethod.Post,
-                $"/api/favorites/{productId}",
-                jwt
+                $"/api/favorites/{productId}"
             );
 
             if(response.IsSuccessStatusCode)
@@ -36,23 +36,21 @@ namespace App.Services.Concrete
             return false;
         }
 
-        public async Task<bool> RemoveAsync(string jwt, int productId)
+        public async Task<bool> RemoveAsync(int productId)
         {
             var response = await SendAsync(
                 HttpMethod.Delete,
-                $"/api/favorites/{productId}",
-                jwt
+                $"/api/favorites/{productId}"
             );
 
             return response.IsSuccessStatusCode;
         }
 
-        public async Task<bool> IsFavoriteAsync(string jwt, int productId)
+        public async Task<bool> IsFavoriteAsync(int productId)
         {
             var response = await SendAsync(
                 HttpMethod.Get,
-                $"/api/favorites/check/{productId}",
-                jwt
+                $"/api/favorites/check/{productId}"
             );
 
             if (!response.IsSuccessStatusCode)
@@ -75,12 +73,11 @@ namespace App.Services.Concrete
             return items ?? new List<MostFavoritedProductDto>();
         }
 
-        public async Task<Result<List<MyFavoriteProductDto>>> GetMyFavoritesAsync(string jwt)
+        public async Task<Result<List<MyFavoriteProductDto>>> GetMyFavoritesAsync()
         {
             var response = await SendAsync( 
                 HttpMethod.Get,
-                "/api/favorites/my", 
-                jwt
+                "/api/favorites/my"
             );
 
             if (response.StatusCode == HttpStatusCode.Unauthorized)

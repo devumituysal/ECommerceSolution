@@ -3,6 +3,7 @@ using App.Models.DTO.Product;
 using App.Services.Abstract;
 using App.Services.Base;
 using Ardalis.Result;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,17 +16,15 @@ namespace App.Services.Concrete
 {
     public class AdminService : BaseService , IAdminService
     {
-        public AdminService(IHttpClientFactory factory) : base(factory)
+        public AdminService(IHttpClientFactory factory, IHttpContextAccessor httpContextAccessor) : base(factory, httpContextAccessor)
         {
-
         }
 
-        public async Task<AdminNotificationDto?> GetNotificationsAsync(string jwt)
+        public async Task<AdminNotificationDto?> GetNotificationsAsync()
         {
             var response = await SendAsync(
                 HttpMethod.Get,
-                "api/admin/notifications",
-                jwt
+                "api/admin/notifications"
             );
 
             if (!response.IsSuccessStatusCode)
@@ -34,7 +33,7 @@ namespace App.Services.Concrete
             return await response.Content
                 .ReadFromJsonAsync<AdminNotificationDto>();
         }
-        public async Task<Result<List<ProductListItemDto>>> GetAdminProductsAsync(string jwt, int? categoryId, string? search)
+        public async Task<Result<List<ProductListItemDto>>> GetAdminProductsAsync(int? categoryId, string? search)
         {
             var url = "api/Admin/products";
             var queryParams = new List<string>();
@@ -50,8 +49,7 @@ namespace App.Services.Concrete
 
             var response = await SendAsync(
                 HttpMethod.Get,
-                url,
-                jwt
+                url
             );
 
             if (!response.IsSuccessStatusCode)
@@ -63,12 +61,11 @@ namespace App.Services.Concrete
             return Result.Success(products ?? new());
         }
 
-        public async Task<Result> DeleteAsync(string jwt, int productId)
+        public async Task<Result> DeleteAsync(int productId)
         {
             var response = await SendAsync(
                 HttpMethod.Delete,
-                $"api/Admin/products/{productId}",
-                jwt
+                $"api/Admin/products/{productId}"
             );
 
             if (response.StatusCode == HttpStatusCode.NotFound)
@@ -88,12 +85,11 @@ namespace App.Services.Concrete
         }
 
 
-        public async Task<Result> DisableProductAsync(string jwt, int productId)
+        public async Task<Result> DisableProductAsync(int productId)
         {
             var response = await SendAsync(
                 HttpMethod.Patch,
-                $"api/Admin/products/{productId}/disable",
-                jwt
+                $"api/Admin/products/{productId}/disable"
             );
 
             if (!response.IsSuccessStatusCode)
@@ -102,12 +98,11 @@ namespace App.Services.Concrete
             return Result.Success();
         }
 
-        public async Task<Result> EnableProductAsync(string jwt, int productId)
+        public async Task<Result> EnableProductAsync(int productId)
         {
             var response = await SendAsync(
                 HttpMethod.Patch,
-                $"api/Admin/products/{productId}/enable",
-                jwt
+                $"api/Admin/products/{productId}/enable"
             );
 
             if (!response.IsSuccessStatusCode)
@@ -116,13 +111,12 @@ namespace App.Services.Concrete
             return Result.Success();
         }
 
-        public async Task<Result<List<OrderListDto>>> GetAdminOrdersAsync(string jwt)
+        public async Task<Result<List<OrderListDto>>> GetAdminOrdersAsync()
         {
             
             var response = await SendAsync(
                 HttpMethod.Get,
-                "api/Admin/orders",
-                jwt
+                "api/Admin/orders"
             );
 
             if (!response.IsSuccessStatusCode)
@@ -134,12 +128,11 @@ namespace App.Services.Concrete
             return Result.Success(orders ?? new());
         }
 
-        public async Task<Result<List<ActiveSellerDto>>> GetActiveSellersAsync(string jwt)
+        public async Task<Result<List<ActiveSellerDto>>> GetActiveSellersAsync()
         {
             var response = await SendAsync(
                 HttpMethod.Get,
-                "api/Admin/active-sellers",
-                jwt
+                "api/Admin/active-sellers"
             );
 
             if (!response.IsSuccessStatusCode)
@@ -151,12 +144,11 @@ namespace App.Services.Concrete
             return Result.Success(data ?? new());
         }
 
-        public async Task<Result<TotalEarningDto>> GetTotalEarningsAsync(string jwt)
+        public async Task<Result<TotalEarningDto>> GetTotalEarningsAsync()
         {
             var response = await SendAsync(
                 HttpMethod.Get,
-                "api/Admin/total-earnings",
-                jwt
+                "api/Admin/total-earnings"
             );
 
             if (!response.IsSuccessStatusCode)
@@ -168,12 +160,11 @@ namespace App.Services.Concrete
             return Result.Success(data ?? new());
         }
 
-        public async Task<Result<List<AdminContactMessageDto>>> GetContactMessagesAsync(string jwt)
+        public async Task<Result<List<AdminContactMessageDto>>> GetContactMessagesAsync()
         {
             var response = await SendAsync(
                 HttpMethod.Get,
-                "api/Admin/contacts",
-                jwt
+                "api/Admin/contacts"
             );
 
             if (!response.IsSuccessStatusCode)
@@ -185,12 +176,11 @@ namespace App.Services.Concrete
             return Result.Success(messages ?? new());
         }
 
-        public async Task<Result<AdminContactMessageDto>> GetContactByIdAsync(string jwt, int id)
+        public async Task<Result<AdminContactMessageDto>> GetContactByIdAsync(int id)
         {
             var response = await SendAsync(
                 HttpMethod.Get,
-                $"api/admin/contacts/{id}",
-                jwt
+                $"api/admin/contacts/{id}"
             );
 
             if (response.StatusCode == HttpStatusCode.NotFound)
@@ -205,12 +195,11 @@ namespace App.Services.Concrete
             return Result.Success(data!);
         }
 
-        public async Task<Result> DeleteContactAsync(string jwt, int id)
+        public async Task<Result> DeleteContactAsync(int id)
         {
             var response = await SendAsync(
                 HttpMethod.Delete,
-                $"api/admin/contacts/{id}",
-                jwt
+                $"api/admin/contacts/{id}"
             );
 
             if (response.StatusCode == HttpStatusCode.NotFound)

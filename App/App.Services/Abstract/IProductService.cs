@@ -12,13 +12,13 @@ namespace App.Services.Abstract
 {
     public interface IProductService
     {
-        Task<Result<int>> CreateAsync(string jwt, CreateProductRequestDto dto);
-        Task<Result> UpdateAsync(string jwt, int productId, UpdateProductRequestDto dto);
-        Task<Result> DeleteAsync(string jwt, int productId);
-        Task<Result<List<ProductListItemDto>>> GetMyProductsAsync(string jwt);
-        Task<Result> UploadImagesAsync(string jwt, int productId, List<IFormFile> files);
-        Task<Result> DeleteImageAsync(string jwt, int productId, string fileName);
-        Task<Result<ProductDetailDto>> GetByIdAsync(string jwt, int productId);
+        Task<Result<int>> CreateAsync(CreateProductRequestDto dto);
+        Task<Result> UpdateAsync(int productId, UpdateProductRequestDto dto);
+        Task<Result> DeleteAsync(int productId);
+        Task<Result<List<ProductListItemDto>>> GetMyProductsAsync();
+        Task<Result> UploadImagesAsync(int productId, List<IFormFile> files);
+        Task<Result> DeleteImageAsync(int productId, string fileName);
+        Task<Result<ProductDetailDto>> GetByIdAsync(int productId);
 
         Task<Result<List<ProductListItemDto>>> GetPublicProductsAsync(int? categoryId, string? q);
         Task<Result<ProductDetailDto>> GetPublicByIdAsync(int productId);

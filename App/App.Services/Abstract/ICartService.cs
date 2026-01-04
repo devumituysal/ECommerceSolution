@@ -10,13 +10,13 @@ namespace App.Services.Abstract
 {
     public interface ICartService
     {
-        Task<Result<List<CartItemDto>>> GetMyCartAsync(string jwt);
+        Task<Result<List<CartItemDto>>> GetMyCartAsync();
 
-        Task<Result> AddProductAsync(string jwt, int productId,byte? quantity);
+        Task<Result> AddProductAsync(int productId,byte? quantity);
 
-        Task<Result> UpdateItemAsync(string jwt, int cartItemId, UpdateCartItemDto dto);
+        Task<Result> UpdateItemAsync(int cartItemId, UpdateCartItemDto dto);
 
-        Task<Result> RemoveItemAsync(string jwt, int cartItemId);
-        Task<Result> CheckoutAsync(string jwt);
+        Task<Result> RemoveItemAsync(int cartItemId);
+        Task<Result> CheckoutAsync();
     }
 }

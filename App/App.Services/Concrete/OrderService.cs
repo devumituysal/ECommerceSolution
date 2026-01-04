@@ -2,6 +2,7 @@
 using App.Services.Abstract;
 using App.Services.Base;
 using Ardalis.Result;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,21 +15,18 @@ namespace App.Services.Concrete
 {
     public class OrderService : BaseService , IOrderService
     {
-        public OrderService(IHttpClientFactory factory) : base(factory) 
+        public OrderService(IHttpClientFactory factory, IHttpContextAccessor httpContextAccessor) : base(factory, httpContextAccessor) 
         { 
         
         }
 
 
     // POST /api/order
-    public async Task<Result<string>> CreateAsync(
-            string jwt,
-            CreateOrderRequestDto createOrderRequestDto)
+    public async Task<Result<string>> CreateAsync(CreateOrderRequestDto createOrderRequestDto)
         {
             var response = await SendAsync(
                 HttpMethod.Post,
                 "api/order",
-                jwt,
                 createOrderRequestDto);
 
             if (response.StatusCode == HttpStatusCode.Unauthorized)
@@ -45,13 +43,12 @@ namespace App.Services.Concrete
         }
 
         // GET /api/order/my-orders
-        public async Task<Result<List<OrderDto>>> GetMyOrdersAsync(
-            string jwt)
+        public async Task<Result<List<OrderDto>>> GetMyOrdersAsync()
         {
             var response = await SendAsync(
                 HttpMethod.Get,
-                "api/order/my-orders",
-                jwt);
+                "api/order/my-orders"
+                );
 
             if (response.StatusCode == HttpStatusCode.Unauthorized)
                 return Result.Unauthorized();
@@ -66,14 +63,12 @@ namespace App.Services.Concrete
         }
 
         // GET /api/order/{orderCode}
-        public async Task<Result<OrderDetailsResponseDto>> GetOrderDetailsAsync(
-            string jwt,
-            string orderCode)
+        public async Task<Result<OrderDetailsResponseDto>> GetOrderDetailsAsync(string orderCode)
         {
             var response = await SendAsync(
                 HttpMethod.Get,
-                $"api/order/{orderCode}",
-                jwt);
+                $"api/order/{orderCode}"
+                );
 
             if (response.StatusCode == HttpStatusCode.NotFound)
                 return Result.NotFound();

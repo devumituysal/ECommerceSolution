@@ -15,12 +15,7 @@ namespace App.Admin.ViewComponents
 
         public async Task<IViewComponentResult> InvokeAsync()
         {
-            var jwt = HttpContext.Request.Cookies["access_token"];
-
-            if (string.IsNullOrEmpty(jwt))
-                return View(new TotalEarningViewModel());
-
-            var result = await _adminService.GetTotalEarningsAsync(jwt);
+            var result = await _adminService.GetTotalEarningsAsync();
 
             var model = result.IsSuccess
                 ? new TotalEarningViewModel

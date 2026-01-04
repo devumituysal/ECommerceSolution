@@ -3,6 +3,7 @@ using App.Models.DTO.Profile;
 using App.Services.Abstract;
 using App.Services.Base;
 using Ardalis.Result;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,12 +16,11 @@ namespace App.Services.Concrete
 {
     public class AuthService : BaseService , IAuthService
     {
-        public AuthService(IHttpClientFactory factory)
-            : base(factory)
+        public AuthService(IHttpClientFactory factory, IHttpContextAccessor httpContextAccessor)
+            : base(factory, httpContextAccessor)
         {
         }
 
-        // POST /api/auth/login
         public async Task<Result<LoginResponseDto>> LoginAsync(LoginRequestDto dto)
         {
             var response = await DataClient.PostAsJsonAsync(
@@ -46,7 +46,6 @@ namespace App.Services.Concrete
             return Result.Success(result!);
         }
 
-        // POST /api/auth/register
         public async Task<Result> RegisterAsync(RegisterRequestDto dto)
         {
             var response = await DataClient.PostAsJsonAsync(
@@ -62,7 +61,6 @@ namespace App.Services.Concrete
             return Result.Success();
         }
 
-        // POST /api/auth/forgot-password
         public async Task<Result> ForgotPasswordAsync(ForgotPasswordRequestDto dto)
         {
             var response = await DataClient.PostAsJsonAsync(
@@ -75,7 +73,6 @@ namespace App.Services.Concrete
             return Result.Success();
         }
 
-        // POST /api/auth/renew-password
         public async Task<Result> RenewPasswordAsync(RenewPasswordRequestDto dto)
         {
             var response = await DataClient.PostAsJsonAsync(
@@ -94,12 +91,12 @@ namespace App.Services.Concrete
             return Result.Success();
         }
 
-        public async Task<Result<ProfileDetailDto>> GetProfileAsync(string token)
+        public async Task<Result<ProfileDetailDto>> GetProfileAsync()
         {
-            DataClient.DefaultRequestHeaders.Authorization =
-                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-
-            var response = await DataClient.GetAsync("api/users/profile");
+            var response = await SendAsync(
+                HttpMethod.Get,
+                "api/users/profile"
+                );
 
             if (response.StatusCode == HttpStatusCode.Unauthorized)
                 return Result.Unauthorized();
@@ -111,5 +108,7 @@ namespace App.Services.Concrete
 
             return Result.Success(result!);
         }
+
+     
     }
 }

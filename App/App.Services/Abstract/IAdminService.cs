@@ -12,17 +12,17 @@ namespace App.Services.Abstract
 {
     public interface IAdminService
     {
-        Task<AdminNotificationDto?> GetNotificationsAsync(string jwt);
-        Task<Result<List<ProductListItemDto>>> GetAdminProductsAsync(string jwt, int? categoryId, string? search);
-        Task<Result> DeleteAsync(string jwt, int productId);
-        Task<Result> DisableProductAsync(string jwt ,int productId);
-        Task<Result> EnableProductAsync(string jwt, int productId);
-        Task<Result<List<OrderListDto>>> GetAdminOrdersAsync(string jwt);
-        Task<Result<List<ActiveSellerDto>>> GetActiveSellersAsync(string jwt);
-        Task<Result<TotalEarningDto>> GetTotalEarningsAsync(string jwt);
-        Task<Result<List<AdminContactMessageDto>>> GetContactMessagesAsync(string jwt);
-        Task<Result<AdminContactMessageDto>> GetContactByIdAsync(string jwt, int id);
-        Task<Result> DeleteContactAsync(string jwt, int id);
+        Task<AdminNotificationDto?> GetNotificationsAsync();
+        Task<Result<List<ProductListItemDto>>> GetAdminProductsAsync(int? categoryId, string? search);
+        Task<Result> DeleteAsync(int productId);
+        Task<Result> DisableProductAsync(int productId);
+        Task<Result> EnableProductAsync(int productId);
+        Task<Result<List<OrderListDto>>> GetAdminOrdersAsync();
+        Task<Result<List<ActiveSellerDto>>> GetActiveSellersAsync();
+        Task<Result<TotalEarningDto>> GetTotalEarningsAsync();
+        Task<Result<List<AdminContactMessageDto>>> GetContactMessagesAsync();
+        Task<Result<AdminContactMessageDto>> GetContactByIdAsync(int id);
+        Task<Result> DeleteContactAsync(int id);
 
     }
 }

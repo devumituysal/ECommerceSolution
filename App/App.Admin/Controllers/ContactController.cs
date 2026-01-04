@@ -18,12 +18,7 @@ namespace App.Admin.Controllers
 
         public async Task<IActionResult> List()
         {
-            var jwt = Request.Cookies["access_token"];
-
-            if (string.IsNullOrEmpty(jwt))
-                return Unauthorized();
-
-            var result = await _adminService.GetContactMessagesAsync(jwt);
+            var result = await _adminService.GetContactMessagesAsync();
 
             if (!result.IsSuccess)
                 return View(new List<AdminContactMessageDto>());
@@ -33,11 +28,7 @@ namespace App.Admin.Controllers
 
         public async Task<IActionResult> Detail(int id)
         {
-            var jwt = Request.Cookies["access_token"];
-            if (string.IsNullOrEmpty(jwt))
-                return Unauthorized();
-
-            var result = await _adminService.GetContactByIdAsync(jwt, id);
+            var result = await _adminService.GetContactByIdAsync(id);
 
             if (!result.IsSuccess)
                 return NotFound();
@@ -48,11 +39,7 @@ namespace App.Admin.Controllers
         [HttpGet]
         public async Task<IActionResult> Delete(int id)
         {
-            var jwt = Request.Cookies["access_token"];
-            if (string.IsNullOrEmpty(jwt))
-                return Unauthorized();
-
-            var result = await _adminService.DeleteContactAsync(jwt, id);
+            var result = await _adminService.DeleteContactAsync(id);
 
             TempData["Success"] = result.IsSuccess
                 ? "Message deleted successfully."

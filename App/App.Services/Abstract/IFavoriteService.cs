@@ -10,10 +10,10 @@ namespace App.Services.Abstract
 {
     public interface IFavoriteService 
     {
-        Task<bool> AddAsync(string jwt, int productId);
-        Task<bool> RemoveAsync(string jwt, int productId);
-        Task<bool> IsFavoriteAsync(string jwt, int productId);
+        Task<bool> AddAsync(int productId);
+        Task<bool> RemoveAsync(int productId);
+        Task<bool> IsFavoriteAsync(int productId);
         Task<List<MostFavoritedProductDto>> GetMostFavoritedAsync(int take);
-        Task<Result<List<MyFavoriteProductDto>>> GetMyFavoritesAsync(string jwt);
+        Task<Result<List<MyFavoriteProductDto>>> GetMyFavoritesAsync();
     }
 }

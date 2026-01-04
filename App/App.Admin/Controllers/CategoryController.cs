@@ -65,11 +65,6 @@ namespace App.Admin.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromForm] SaveCategoryViewModel newCategoryModel)
         {
-            var jwt = Request.Cookies["access_token"];
-
-            if (string.IsNullOrEmpty(jwt))
-                return RedirectToAction("Login", "Auth");
-
             if (!ModelState.IsValid)
                 return View(newCategoryModel);
 
@@ -80,7 +75,7 @@ namespace App.Admin.Controllers
                 IconCssClass = newCategoryModel.IconCssClass
             };
 
-            var result = await _categoryService.CreateAsync(jwt,dto);
+            var result = await _categoryService.CreateAsync(dto);
 
             if (!result.IsSuccess)
             {
@@ -125,11 +120,6 @@ namespace App.Admin.Controllers
         [FromRoute] int categoryId,
         [FromForm] SaveCategoryViewModel editCategoryModel)
         {
-            var jwt = Request.Cookies["access_token"];
-
-            if (string.IsNullOrEmpty(jwt))
-                return RedirectToAction("Login", "Auth");
-
             if (!ModelState.IsValid)
             {
                 editCategoryModel.Id = categoryId;
@@ -143,7 +133,7 @@ namespace App.Admin.Controllers
                 IconCssClass = editCategoryModel.IconCssClass
             };
 
-            var result = await _categoryService.UpdateAsync(categoryId, jwt, dto);
+            var result = await _categoryService.UpdateAsync(categoryId,dto);
 
             if (result.IsSuccess) 
             {
@@ -180,13 +170,7 @@ namespace App.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete([FromRoute] int categoryId)
         {
-           
-            var jwt = Request.Cookies["access_token"];
-
-            if (string.IsNullOrEmpty(jwt))
-                return RedirectToAction("Login", "Auth");
-
-            var result = await _categoryService.DeleteAsync(categoryId,jwt);
+            var result = await _categoryService.DeleteAsync(categoryId);
 
             if (result.IsSuccess)
             {

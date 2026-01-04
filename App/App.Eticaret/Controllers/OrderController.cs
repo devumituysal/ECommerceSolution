@@ -30,8 +30,8 @@ namespace App.Eticaret.Controllers
             if (!ModelState.IsValid)
             {
                 // Checkout view'ına geri dönerken CartItems listesini tekrar doldur
-                var jwt = Request.Cookies["access_token"];
-                var resultCart = await _cartService.GetMyCartAsync(jwt);
+               
+                var resultCart = await _cartService.GetMyCartAsync();
                 model.CartItems = resultCart?.Value?.Select(x => new CartItemViewModel
                 {
                     Id = x.Id,
@@ -44,24 +44,20 @@ namespace App.Eticaret.Controllers
                 return View("~/Views/Cart/Checkout.cshtml", model);
             }
 
-            var jwtToken = Request.Cookies["access_token"];
-
-            if (string.IsNullOrEmpty(jwtToken))
-                return RedirectToAction("Login", "Auth");
 
             var request = new CreateOrderRequestDto
             {
                 Address = model.Address
             };
 
-            var result = await _orderService.CreateAsync(jwtToken, request);
+            var result = await _orderService.CreateAsync(request);
 
             if (!result.IsSuccess)
             {
                 ModelState.AddModelError("", "Sipariş oluşturulamadı.");
 
                 // Hata durumunda da CartItems listesini doldur
-                var resultCart = await _cartService.GetMyCartAsync(jwtToken);
+                var resultCart = await _cartService.GetMyCartAsync();
                 model.CartItems = resultCart?.Value?.Select(x => new CartItemViewModel
                 {
                     Id = x.Id,
@@ -81,14 +77,7 @@ namespace App.Eticaret.Controllers
         [HttpGet("/order/{orderCode}/details")]
         public async Task<IActionResult> Details([FromRoute] string orderCode)
         {
-            var jwt = Request.Cookies["access_token"];
-
-            if (string.IsNullOrEmpty(jwt))
-            {
-                return RedirectToAction("Login", "Auth");
-            }
-
-            var result = await _orderService.GetOrderDetailsAsync(jwt, orderCode);
+            var result = await _orderService.GetOrderDetailsAsync(orderCode);
 
             var dto = result.Value;
 
