@@ -10,10 +10,12 @@ using System;
 public class PublicProductsController : ControllerBase
 {
     private readonly IDataRepository _repo;
+    private readonly IConfiguration _config;
 
-    public PublicProductsController(IDataRepository repo)
+    public PublicProductsController(IDataRepository repo,IConfiguration config)
     {
         _repo = repo;
+        _config = config;
     }
 
     // GET api/products  (home listing)
@@ -45,7 +47,8 @@ public class PublicProductsController : ControllerBase
                 ImageUrl = p.Images
                     .OrderBy(i => i.Id)
                     .Select(i => i.Url)
-                    .FirstOrDefault(),
+                    .FirstOrDefault()
+                    ?? $"{_config["ApiSettings:FileApiBaseUrl"]}/img/product/default.png",
                 SellerId = p.SellerId
             })
             .OrderByDescending(p => p.CreatedAt)
@@ -61,6 +64,7 @@ public class PublicProductsController : ControllerBase
         var product = await _repo.GetAll<ProductEntity>()
             .Include(p => p.Images)
             .Include(p => p.Category)
+            .Include(p => p.Seller)
             .FirstOrDefaultAsync(p => p.Id == productId);
 
         if (product == null)
@@ -70,6 +74,8 @@ public class PublicProductsController : ControllerBase
         {
             Id = product.Id,
             Name = product.Name,
+            SellerId= product.SellerId,
+            SellerName = product.Seller.FirstName + " " + product.Seller.LastName,
             Details = product.Details,
             Price = product.Price,
             StockAmount = product.StockAmount,

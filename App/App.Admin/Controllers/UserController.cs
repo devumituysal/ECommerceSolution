@@ -95,5 +95,21 @@ namespace App.Admin.Controllers
             return RedirectToAction(nameof(List));
         }
 
+        [HttpPost]
+        [Route("/user/{id:int}/revoke-seller")]
+        public async Task<IActionResult> RevokeSeller([FromRoute] int id)
+        {
+            var result = await _userService.RevokeSellerAsync(id);
+
+            if (!result.IsSuccess)
+            {
+                TempData["ErrorMessage"] = "Kullanıcının satıcılığı iptal edilemedi.";
+                return RedirectToAction(nameof(List));
+            }
+
+            TempData["SuccessMessage"] = "Kullanıcının satıcılığı başarıyla iptal edildi.";
+            return RedirectToAction(nameof(List));
+        }
+
     }
 }

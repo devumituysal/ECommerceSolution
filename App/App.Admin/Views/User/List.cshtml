@@ -73,6 +73,19 @@
                                 Approve Seller Request
                             </a>
                         }
+
+                        @if (user.Role == "seller")
+                        {
+                            <form asp-controller="User"
+                                  asp-action="RevokeSeller"
+                                  asp-route-id="@user.Id"
+                                  method="post"
+                                  style="display:inline">
+                                <button type="submit" class="btn btn-warning">
+                                    Revoke Seller
+                                </button>
+                            </form>
+                        }
                     </td>
                 </tr>
             }

@@ -153,6 +153,8 @@ namespace App.Eticaret.Controllers
             {
                 Id = dto.Id,
                 Name = dto.Name,
+                SellerId = dto.SellerId,
+                SellerName = dto.SellerName,
                 Details = dto.Details,
                 Price = dto.Price,
                 CategoryName = dto.CategoryName,

@@ -57,11 +57,31 @@ namespace App.Api.Data.Controllers
             }
 
             user.HasSellerRequest = false;
-            user.RoleId = 2; // Seller
+            user.RoleId = 2;
 
             await _repo.Update(user);
 
             return Ok(new { message = "Kullanıcı başarıyla onaylandı." });
+        }
+
+        [HttpPost("{id:int}/revoke-seller")]
+        public async Task<IActionResult> RevokeSeller([FromRoute] int id)
+        {
+            var user = await _repo.GetAll<UserEntity>()
+                .FirstOrDefaultAsync(u => u.Id == id);
+
+            if (user == null)
+                return NotFound();
+
+            if (user.RoleId != 2) 
+                return BadRequest("Kullanıcı satıcı değil.");
+
+            user.RoleId = 3;
+            user.HasSellerRequest = false;
+
+            await _repo.Update(user);
+
+            return Ok(new { message = "Kullanıcının satıcılığı iptal edildi." });
         }
 
         [HttpPost("{id:int}/enable")]
