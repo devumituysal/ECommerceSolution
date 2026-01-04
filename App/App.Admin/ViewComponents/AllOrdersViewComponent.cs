@@ -14,12 +14,7 @@ namespace App.Admin.ViewComponents
         }
         public async Task<IViewComponentResult> InvokeAsync()
         {
-            var jwt = HttpContext.Request.Cookies["access_token"];
-
-            if (string.IsNullOrEmpty(jwt))
-                return View(new List<OrderListViewModel>());
-
-            var result = await _adminService.GetAdminOrdersAsync(jwt);
+            var result = await _adminService.GetAdminOrdersAsync();
 
             if (!result.IsSuccess)
                 return View(new List<OrderListViewModel>());

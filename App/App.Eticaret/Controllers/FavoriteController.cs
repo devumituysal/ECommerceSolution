@@ -18,12 +18,7 @@ namespace App.Eticaret.Controllers
         [HttpGet]
         public async Task<IActionResult> Add(int productId)
         {
-            var jwt = HttpContext.Request.Cookies["access_token"];
-
-            if (string.IsNullOrEmpty(jwt))
-                return RedirectToAction("Login", "Auth");
-
-            await _favoriteService.AddAsync(jwt, productId);
+            await _favoriteService.AddAsync(productId);
 
             var prevUrl = Request.Headers.Referer.FirstOrDefault();
             return prevUrl is null
@@ -35,12 +30,7 @@ namespace App.Eticaret.Controllers
         [HttpGet]
         public async Task<IActionResult> Remove(int productId)
         {
-            var jwt = HttpContext.Request.Cookies["access_token"];
-
-            if (string.IsNullOrEmpty(jwt))
-                return RedirectToAction("Login", "Auth");
-
-            await _favoriteService.RemoveAsync(jwt, productId);
+            await _favoriteService.RemoveAsync(productId);
 
             var prevUrl = Request.Headers.Referer.FirstOrDefault();
             return prevUrl is null
@@ -52,12 +42,7 @@ namespace App.Eticaret.Controllers
         [HttpGet]
         public async Task<IActionResult> IsFavorite(int productId)
         {
-            var jwt = HttpContext.Request.Cookies["access_token"];
-
-            if (string.IsNullOrEmpty(jwt))
-                return Json(false);
-
-            var isFav = await _favoriteService.IsFavoriteAsync(jwt, productId);
+            var isFav = await _favoriteService.IsFavoriteAsync(productId);
             return Json(isFav);
         }
 
@@ -65,12 +50,7 @@ namespace App.Eticaret.Controllers
         [HttpGet]
         public async Task<IActionResult> MyFavorites()
         {
-            var jwt = HttpContext.Request.Cookies["access_token"];
-
-            if (string.IsNullOrEmpty(jwt))
-                return RedirectToAction("Login", "Auth");
-
-            var result = await _favoriteService.GetMyFavoritesAsync(jwt);
+            var result = await _favoriteService.GetMyFavoritesAsync();
 
             if (result.Status == Ardalis.Result.ResultStatus.Unauthorized)
                 return RedirectToAction("Login", "Auth");

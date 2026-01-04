@@ -103,7 +103,6 @@ namespace App.Eticaret.Controllers
             if (!result.IsSuccess || result.Value == null)
                 return View(new List<ProductListItemViewModel>());
 
-            var jwt = HttpContext.Request.Cookies["access_token"];
 
             var products = new List<ProductListItemViewModel>();
 
@@ -111,10 +110,8 @@ namespace App.Eticaret.Controllers
             {
                 bool isFavorite = false;
 
-                if (!string.IsNullOrEmpty(jwt))
-                {
-                    isFavorite = await _favoriteService.IsFavoriteAsync(jwt, p.Id);
-                }
+                isFavorite = await _favoriteService.IsFavoriteAsync(p.Id);
+               
 
                 products.Add(new ProductListItemViewModel
                 {
@@ -126,7 +123,6 @@ namespace App.Eticaret.Controllers
                     IsFavorite = isFavorite
                 });
             }
-
 
             return View(products);
         }
@@ -166,14 +162,11 @@ namespace App.Eticaret.Controllers
                 IsFavorite = false
             };
 
-            var jwt = HttpContext.Request.Cookies["access_token"] ?? string.Empty;
+            
+            productDetail.IsFavorite = await _favoriteService.IsFavoriteAsync(productId);
+            
 
-            if (!string.IsNullOrEmpty(jwt))
-            {
-                productDetail.IsFavorite = await _favoriteService.IsFavoriteAsync(jwt, productId);
-            }
-
-            var commentResult = await _commentService.GetAllAsync(jwt);
+            var commentResult = await _commentService.GetAllAsync();
 
                 if (commentResult.IsSuccess)
                 {

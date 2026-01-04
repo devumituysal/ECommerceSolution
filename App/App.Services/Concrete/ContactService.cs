@@ -2,6 +2,7 @@
 using App.Services.Abstract;
 using App.Services.Base;
 using Ardalis.Result;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,8 +14,8 @@ namespace App.Services.Concrete
 {
     public class ContactService : BaseService , IContactService
     {
-        public ContactService(IHttpClientFactory httpClientFactory)
-            : base(httpClientFactory)
+        public ContactService(IHttpClientFactory httpClientFactory, IHttpContextAccessor httpContextAccessor)
+            : base(httpClientFactory, httpContextAccessor)
         {
         }
 

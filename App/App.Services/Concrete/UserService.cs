@@ -2,6 +2,7 @@
 using App.Services.Abstract;
 using App.Services.Base;
 using Ardalis.Result;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,17 +15,17 @@ namespace App.Services.Concrete
 {
     public class UserService : BaseService, IUserService
     {
-        public UserService(IHttpClientFactory factory) : base(factory)
+        public UserService(IHttpClientFactory factory, IHttpContextAccessor httpContextAccessor) : base(factory, httpContextAccessor)
         {
 
         }
         
-        public async Task<Result<List<UserListItemDto>>> GetUsersAsync(string jwt)
+        public async Task<Result<List<UserListItemDto>>> GetUsersAsync()
         {
             var response = await SendAsync(
                 HttpMethod.Get,
-                "api/user/list",
-                jwt);
+                "api/user/list"
+                );
 
             if (response.StatusCode == HttpStatusCode.Unauthorized)
                 return Result.Unauthorized();
@@ -39,12 +40,12 @@ namespace App.Services.Concrete
         }
 
        
-        public async Task<Result> ApproveAsync(string jwt, int userId)
+        public async Task<Result> ApproveAsync(int userId)
         {
             var response = await SendAsync(
                 HttpMethod.Post,
-                $"api/user/{userId}/approve",
-                jwt);
+                $"api/user/{userId}/approve"
+                );
 
             if (response.StatusCode == HttpStatusCode.NotFound)
                 return Result.NotFound();
@@ -61,12 +62,12 @@ namespace App.Services.Concrete
             return Result.Success();
         }
 
-        public async Task<Result> EnableAsync(string jwt, int userId)
+        public async Task<Result> EnableAsync(int userId)
         {
             var response = await SendAsync(
                 HttpMethod.Post,
-                $"api/user/{userId}/enable",
-                jwt);
+                $"api/user/{userId}/enable"
+                );
 
             if (response.StatusCode == HttpStatusCode.NotFound)
                 return Result.NotFound();
@@ -85,12 +86,12 @@ namespace App.Services.Concrete
 
 
         
-        public async Task<Result> DisableAsync(string jwt, int userId)
+        public async Task<Result> DisableAsync(int userId)
         {
             var response = await SendAsync(
                 HttpMethod.Post,
-                $"api/user/{userId}/disable",
-                jwt);
+                $"api/user/{userId}/disable"
+                );
 
             if (response.StatusCode == HttpStatusCode.NotFound)
                 return Result.NotFound();

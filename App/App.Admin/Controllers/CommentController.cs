@@ -23,12 +23,7 @@ namespace App.Admin.Controllers
         [HttpGet]
         public async Task<IActionResult> List()
         {
-            var jwt = Request.Cookies["access_token"];
-
-            if (string.IsNullOrEmpty(jwt))
-                return RedirectToAction("Login", "Auth");
-
-            var result = await _commentService.GetAllAsync(jwt);
+            var result = await _commentService.GetAllAsync();
 
             if (!result.IsSuccess)
             {
@@ -62,12 +57,7 @@ namespace App.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Approve(int commentId)
         {
-            var jwt = Request.Cookies["access_token"];
-
-            if (string.IsNullOrEmpty(jwt))
-                return RedirectToAction("Login", "Auth");
-
-            var result = await _commentService.ApproveAsync(jwt, commentId);
+            var result = await _commentService.ApproveAsync(commentId);
 
             if (result.Status == ResultStatus.NotFound)
             {

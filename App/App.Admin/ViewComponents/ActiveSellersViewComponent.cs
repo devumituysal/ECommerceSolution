@@ -15,9 +15,7 @@ namespace App.Admin.ViewComponents
 
         public async Task<IViewComponentResult> InvokeAsync()
         {
-            var jwt = HttpContext.Request.Cookies["access_token"];
-
-            var result = await _adminService.GetActiveSellersAsync(jwt!);
+            var result = await _adminService.GetActiveSellersAsync();
 
             var model = result.IsSuccess
                 ? result.Value.Select(x => new ActiveSellerViewModel

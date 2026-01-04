@@ -2,6 +2,7 @@
 using App.Services.Abstract;
 using App.Services.Base;
 using Ardalis.Result;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,16 +16,15 @@ namespace App.Services.Concrete
 {
     public class ProfileService : BaseService, IProfileService
     {
-        public ProfileService(IHttpClientFactory httpClientFactory) : base(httpClientFactory)
+        public ProfileService(IHttpClientFactory httpClientFactory, IHttpContextAccessor httpContextAccessor) : base(httpClientFactory, httpContextAccessor)
         {
 
         }
-        public async Task<Result<ProfileDetailDto>> GetMyProfileAsync(string jwt)
+        public async Task<Result<ProfileDetailDto>> GetMyProfileAsync()
         {
             var response = await SendAsync(
                 HttpMethod.Get,
-                "api/profile",
-                jwt
+                "api/profile"
             );
 
             if (response.StatusCode == HttpStatusCode.Unauthorized)
@@ -41,12 +41,11 @@ namespace App.Services.Concrete
                 : Result.Success(profile);
         }
 
-        public async Task<Result> UpdateMyProfileAsync(string jwt, UpdateProfileDto dto)
+        public async Task<Result> UpdateMyProfileAsync(UpdateProfileDto dto)
         {
             var response = await SendAsync(
                 HttpMethod.Put,
                 "api/profile",
-                jwt,
                 dto
             );
 
@@ -80,12 +79,11 @@ namespace App.Services.Concrete
             return Result.Success();
         }
 
-        public async Task<Result> RequestSellerAsync(string jwt)
+        public async Task<Result> RequestSellerAsync()
         {
             var response = await SendAsync(
                 HttpMethod.Post,
-                "api/profile/request-seller",
-                jwt
+                "api/profile/request-seller"
             );
 
             if (response.StatusCode == HttpStatusCode.BadRequest)

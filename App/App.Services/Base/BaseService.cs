@@ -1,4 +1,7 @@
-﻿using System;
+﻿using App.Services.Abstract;
+using App.Services.Concrete;
+using Microsoft.AspNetCore.Http;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http.Headers;
@@ -13,25 +16,45 @@ namespace App.Services.Base
         protected HttpClient DataClient { get; }
         protected HttpClient FileClient { get; }
 
-        protected BaseService(IHttpClientFactory httpClientFactory)
+        private readonly IHttpContextAccessor _httpContextAccessor;
+
+        protected BaseService(IHttpClientFactory httpClientFactory,IHttpContextAccessor httpContextAccessor)
         {
             DataClient = httpClientFactory.CreateClient("DataApi");
             FileClient = httpClientFactory.CreateClient("FileApi");
+            _httpContextAccessor = httpContextAccessor;
         }
 
-        protected async Task<HttpResponseMessage> SendAsync(HttpMethod method,string route,string? jwt,object? body = null)
+        protected async Task<HttpResponseMessage> SendAsync(HttpMethod method,string route,object? body = null,bool useFileClient = false)
         {
+            var client = useFileClient ? FileClient : DataClient;
+
             var request = new HttpRequestMessage(method, route);
 
-            request.Headers.Authorization =
-                new AuthenticationHeaderValue("Bearer", jwt);
+            var token = _httpContextAccessor.HttpContext?
+                .User
+                .FindFirst("access_token")?
+                .Value;
+
+            if (!string.IsNullOrEmpty(token))
+            {
+                request.Headers.Authorization =
+                    new AuthenticationHeaderValue("Bearer", token);
+            }
 
             if (body is not null)
             {
-                request.Content = JsonContent.Create(body);
+                if (body is HttpContent httpContent)
+                {
+                    request.Content = httpContent; 
+                }
+                else
+                {
+                    request.Content = JsonContent.Create(body); 
+                }
             }
 
-            return await DataClient.SendAsync(request);
+            return await client.SendAsync(request);
         }
     }
 }

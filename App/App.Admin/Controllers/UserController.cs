@@ -24,12 +24,7 @@ namespace App.Admin.Controllers
 
         public async Task<IActionResult> List()
         {
-            var jwt = Request.Cookies["access_token"];
-
-            if (string.IsNullOrEmpty(jwt))
-                return RedirectToAction("Login", "Auth");
-
-            var result = await _userService.GetUsersAsync(jwt);
+           var result = await _userService.GetUsersAsync();
 
             if (!result.IsSuccess)
             {
@@ -58,11 +53,7 @@ namespace App.Admin.Controllers
         [Route("/user/{id:int}/enable")]
         public async Task<IActionResult> Enable(int id)
         {
-            var jwt = Request.Cookies["access_token"];
-            if (string.IsNullOrEmpty(jwt))
-                return RedirectToAction("Login", "Auth");
-
-            var result = await _userService.EnableAsync(jwt, id);
+            var result = await _userService.EnableAsync(id);
 
             if (!result.IsSuccess)
                 TempData["ErrorMessage"] = "Kullanıcı aktif edilemedi.";
@@ -77,11 +68,7 @@ namespace App.Admin.Controllers
         [Route("/user/{id:int}/disable")]
         public async Task<IActionResult> Disable(int id)
         {
-            var jwt = Request.Cookies["access_token"];
-            if (string.IsNullOrEmpty(jwt))
-                return RedirectToAction("Login", "Auth");
-
-            var result = await _userService.DisableAsync(jwt, id);
+            var result = await _userService.DisableAsync(id);
 
             if (!result.IsSuccess)
                 TempData["ErrorMessage"] = "Kullanıcı pasif edilemedi.";
@@ -96,12 +83,7 @@ namespace App.Admin.Controllers
         [HttpGet]
         public async Task<IActionResult> Approve([FromRoute] int id)
         {
-            var jwt = Request.Cookies["access_token"];
-
-            if (string.IsNullOrEmpty(jwt))
-                return RedirectToAction("Login", "Auth");
-
-            var result = await _userService.ApproveAsync(jwt, id);
+            var result = await _userService.ApproveAsync(id);
 
             if (!result.IsSuccess)
             {

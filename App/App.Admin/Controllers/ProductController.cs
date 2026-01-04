@@ -20,12 +20,7 @@ namespace App.Admin.Controllers
 
         public async Task<IActionResult> List(int? categoryId, string? search)
         {
-            var jwt = Request.Cookies["access_token"];
-
-            if (string.IsNullOrEmpty(jwt))
-                return RedirectToAction("Login", "Auth");
-
-            var result = await _adminService.GetAdminProductsAsync(jwt,categoryId,search);
+            var result = await _adminService.GetAdminProductsAsync(categoryId,search);
 
             if (!result.IsSuccess)
             {
@@ -51,12 +46,7 @@ namespace App.Admin.Controllers
         [HttpPost]
         public async Task<IActionResult> Delete(int id)
         {
-            var jwt = Request.Cookies["access_token"];
-
-            if (string.IsNullOrEmpty(jwt))
-                return RedirectToAction("Login", "Auth");
-
-            var result = await _adminService.DeleteAsync(jwt, id);
+            var result = await _adminService.DeleteAsync(id);
 
             if (!result.IsSuccess)
             {
@@ -84,12 +74,7 @@ namespace App.Admin.Controllers
         [HttpPost]
         public async Task<IActionResult> Disable(int id)
         {
-            var jwt = Request.Cookies["access_token"];
-
-            if (string.IsNullOrEmpty(jwt))
-                return RedirectToAction("Login", "Auth");
-
-            var result = await _adminService.DisableProductAsync(jwt, id);
+            var result = await _adminService.DisableProductAsync(id);
 
             if (!result.IsSuccess)
             {
@@ -108,12 +93,7 @@ namespace App.Admin.Controllers
         [HttpPost]
         public async Task<IActionResult> Enable(int id)
         {
-            var jwt = Request.Cookies["access_token"];
-
-            if (string.IsNullOrEmpty(jwt))
-                return RedirectToAction("Login", "Auth");
-
-            var result = await _adminService.EnableProductAsync(jwt, id);
+            var result = await _adminService.EnableProductAsync(id);
 
             if (!result.IsSuccess)
             {

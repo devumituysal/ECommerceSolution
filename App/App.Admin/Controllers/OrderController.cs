@@ -17,12 +17,7 @@ namespace App.Admin.Controllers
         }
         public async Task<IActionResult> List()
         {
-            var jwt = Request.Cookies["access_token"];
-
-            if (string.IsNullOrEmpty(jwt))
-                return RedirectToAction("Login", "Auth");
-
-            var result = await _adminService.GetAdminOrdersAsync(jwt);
+            var result = await _adminService.GetAdminOrdersAsync();
 
             if (!result.IsSuccess)
             {

@@ -2,6 +2,7 @@
 using App.Services.Abstract;
 using App.Services.Base;
 using Ardalis.Result;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,17 +15,16 @@ namespace App.Services.Concrete
 {
     public class CartService : BaseService , ICartService
     {
-        public CartService(IHttpClientFactory httpClientFactory) : base(httpClientFactory)
+        public CartService(IHttpClientFactory httpClientFactory, IHttpContextAccessor httpContextAccessor) : base(httpClientFactory, httpContextAccessor)
         {
 
         }
 
-        public async Task<Result<List<CartItemDto>>> GetMyCartAsync(string jwt)
+        public async Task<Result<List<CartItemDto>>> GetMyCartAsync()
         {
             var response = await SendAsync(
                 HttpMethod.Get,
-                "api/cart",
-                jwt
+                "api/cart"
             );
 
             if (response.StatusCode == HttpStatusCode.Unauthorized)
@@ -39,12 +39,11 @@ namespace App.Services.Concrete
             return Result.Success(items ?? new List<CartItemDto>());
         }
 
-        public async Task<Result> AddProductAsync(string jwt, int productId, byte? quantity)
+        public async Task<Result> AddProductAsync(int productId, byte? quantity)
         {
             var response = await SendAsync(
                 HttpMethod.Post,
-                $"api/cart/add/{productId}?quantity={quantity}",
-                jwt
+                $"api/cart/add/{productId}?quantity={quantity}"
             );
 
             if (response.StatusCode == HttpStatusCode.Unauthorized)
@@ -61,14 +60,12 @@ namespace App.Services.Concrete
 
 
         public async Task<Result> UpdateItemAsync(
-            string jwt,
             int cartItemId,
             UpdateCartItemDto dto)
         {
             var response = await SendAsync(
                 HttpMethod.Put,
                 $"api/cart/{cartItemId}",
-                jwt,
                 dto
             );
 
@@ -84,12 +81,11 @@ namespace App.Services.Concrete
             return Result.Success();
         }
 
-        public async Task<Result> RemoveItemAsync(string jwt, int cartItemId)
+        public async Task<Result> RemoveItemAsync(int cartItemId)
         {
             var response = await SendAsync(
                 HttpMethod.Delete,
-                $"api/cart/{cartItemId}",
-                jwt
+                $"api/cart/{cartItemId}"
             );
 
             if (response.StatusCode == HttpStatusCode.Unauthorized)
@@ -104,12 +100,11 @@ namespace App.Services.Concrete
             return Result.Success();
         }
 
-        public async Task<Result> CheckoutAsync(string jwt)
+        public async Task<Result> CheckoutAsync()
         {
             var response = await SendAsync(
                 HttpMethod.Post,
-                "api/cart/checkout",
-                jwt
+                "api/cart/checkout"
             );
 
             if (response.StatusCode == HttpStatusCode.Unauthorized)

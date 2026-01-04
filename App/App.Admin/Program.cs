@@ -25,11 +25,10 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
 
-
+builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie(options =>
-    {
+    .AddCookie(options =>{
         options.Cookie.Name = "auth-cookie"; 
         options.Cookie.HttpOnly = true;
         options.Cookie.IsEssential = true;

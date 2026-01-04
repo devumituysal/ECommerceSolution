@@ -101,30 +101,33 @@ namespace App.Eticaret.Controllers
                 return View(loginModel);
             }
 
-            var userDto = result.Value;
+            var user = result.Value;
 
-            var userVm = new LoginResponseViewModel
+            var claims = new List<Claim>
             {
-                Id = userDto.Id,
-                Email = userDto.Email,
-                FirstName = userDto.FirstName,
-                LastName = userDto.LastName,
-                Role = userDto.Role,
-                Token = userDto.Token
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim(ClaimTypes.Name, $"{user.FirstName} {user.LastName}"),
+                new Claim(ClaimTypes.Role, user.Role),
+                new Claim("access_token", user.Token)
             };
 
-            Response.Cookies.Append("access_token", userVm.Token, new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.Strict
-            });
+            var identity = new ClaimsIdentity(claims,CookieAuthenticationDefaults.AuthenticationScheme);
 
-            await LoginUser(userVm);
+            var principal = new ClaimsPrincipal(identity);
 
-            
-            if (userVm.Role == "admin")
-                return Redirect("https://localhost:7223/auth/login");
+            await HttpContext.SignInAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme,
+                principal,
+                new AuthenticationProperties
+                {
+                    IsPersistent = true,
+                    ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(30)
+                }
+            );
+
+            if (user.Role == "admin")
+                return Redirect("https://localhost:7223"); 
 
             return RedirectToAction("Index", "Home");
         }
@@ -224,29 +227,7 @@ namespace App.Eticaret.Controllers
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         }
 
-        private async Task LoginUser(LoginResponseViewModel user)
-        {
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Name, user.FirstName),
-                new Claim(ClaimTypes.Surname, user.LastName),
-                new Claim(ClaimTypes.Sid, user.Id.ToString()),
-                new Claim(ClaimTypes.Role, user.Role),
-                new Claim("login-time" , DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"))
-            };
-
-            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-
-            var authProperties = new AuthenticationProperties
-            {
-                ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(10),
-                IsPersistent = true // (beni hatırla)
-            };
-
-            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
-                new ClaimsPrincipal(claimsIdentity), authProperties);
-        }
+        
 
         [HttpGet]
         public IActionResult AccessDenied()

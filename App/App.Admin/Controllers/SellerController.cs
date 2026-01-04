@@ -17,12 +17,7 @@ namespace App.Admin.Controllers
         [HttpGet("active")]
         public async Task<IActionResult> ActiveSellers()
         {
-            var jwt = Request.Cookies["access_token"];
-
-            if (string.IsNullOrEmpty(jwt))
-                return RedirectToAction("Login", "Auth");
-
-            var result = await _adminService.GetActiveSellersAsync(jwt);
+           var result = await _adminService.GetActiveSellersAsync();
 
             if (!result.IsSuccess)
                 return View(new List<ActiveSellerViewModel>());

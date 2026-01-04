@@ -10,10 +10,10 @@ namespace App.Services.Abstract
 {
     public interface IUserService
     {
-        Task<Result<List<UserListItemDto>>> GetUsersAsync(string jwt);
-        Task<Result> ApproveAsync(string jwt, int userId);
-        Task<Result> EnableAsync(string jwt, int userId);
-        Task<Result> DisableAsync(string jwt, int userId);
+        Task<Result<List<UserListItemDto>>> GetUsersAsync();
+        Task<Result> ApproveAsync(int userId);
+        Task<Result> EnableAsync(int userId);
+        Task<Result> DisableAsync(int userId);
 
 
     }

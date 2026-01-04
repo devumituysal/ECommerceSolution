@@ -2,6 +2,7 @@
 using App.Services.Abstract;
 using App.Services.Base;
 using Ardalis.Result;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,7 +15,7 @@ namespace App.Services.Concrete
 {
     public class CategoryService : BaseService, ICategoryService
     {
-        public CategoryService(IHttpClientFactory httpClientFactory) : base(httpClientFactory)
+        public CategoryService(IHttpClientFactory httpClientFactory, IHttpContextAccessor httpContextAccessor) : base(httpClientFactory, httpContextAccessor)
         {
 
         }
@@ -34,9 +35,9 @@ namespace App.Services.Concrete
         }
 
         // POST /api/categories
-        public async Task<Result> CreateAsync(string jwt, SaveCategoryDto dto)
+        public async Task<Result> CreateAsync(SaveCategoryDto dto)
         {
-            var response = await SendAsync( HttpMethod.Post, "api/categories", jwt, dto);
+            var response = await SendAsync( HttpMethod.Post, "api/categories",dto);
 
             if (response.StatusCode == HttpStatusCode.BadRequest)
                 return Result.Invalid();
@@ -48,12 +49,11 @@ namespace App.Services.Concrete
         }
 
         // PUT /api/categories/{id}
-        public async Task<Result> UpdateAsync(int categoryId,string jwt,SaveCategoryDto dto)
+        public async Task<Result> UpdateAsync(int categoryId,SaveCategoryDto dto)
         {
             var response = await SendAsync(
                 HttpMethod.Put,
                 $"api/Categories/{categoryId}",
-                jwt,
                 dto
             );
 
@@ -76,10 +76,10 @@ namespace App.Services.Concrete
         }
 
         // DELETE /api/categories/{id}
-        public async Task<Result> DeleteAsync(int categoryId, string jwt)
+        public async Task<Result> DeleteAsync(int categoryId)
         {
 
-            var response = await SendAsync(HttpMethod.Delete,$"api/Categories/{categoryId}",jwt);
+            var response = await SendAsync(HttpMethod.Delete,$"api/Categories/{categoryId}");
 
             if (response.StatusCode == HttpStatusCode.NotFound)
                 return Result.NotFound();

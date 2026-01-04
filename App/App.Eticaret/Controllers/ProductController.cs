@@ -48,11 +48,6 @@ namespace App.Eticaret.Controllers
         [Authorize(Roles = "seller")]
         public async Task<IActionResult> Create([FromForm] ProductSaveViewModel newProductModel)
         {
-            var jwt = HttpContext.Request.Cookies["access_token"];
-
-            if (string.IsNullOrEmpty(jwt))
-                return RedirectToAction("Login", "Auth");
-
             // ❗ ModelState invalid → dropdown tekrar doldurulmalı
             if (!ModelState.IsValid)
             {
@@ -72,7 +67,7 @@ namespace App.Eticaret.Controllers
                 CategoryId = newProductModel.CategoryId
             };
 
-            var result = await _productService.CreateAsync(jwt, dto);
+            var result = await _productService.CreateAsync(dto);
 
             if (!result.IsSuccess)
             {
@@ -89,7 +84,7 @@ namespace App.Eticaret.Controllers
             if (newProductModel.Images != null && newProductModel.Images.Any())
             {
                 var uploadResult =
-                    await _productService.UploadImagesAsync(jwt, productId, newProductModel.Images.ToList());
+                    await _productService.UploadImagesAsync(productId, newProductModel.Images.ToList());
 
                 if (!uploadResult.IsSuccess)
                 {
@@ -110,12 +105,7 @@ namespace App.Eticaret.Controllers
         [Authorize(Roles = "seller")]
         public async Task<IActionResult> Edit([FromRoute] int productId)
         {
-            var jwt = HttpContext.Request.Cookies["access_token"];
-
-            if (string.IsNullOrEmpty(jwt))
-                return RedirectToAction("Login", "Auth");
-
-            var result = await _productService.GetByIdAsync(jwt, productId);
+            var result = await _productService.GetByIdAsync(productId);
 
             if (!result.IsSuccess)
                 return NotFound();
@@ -146,11 +136,6 @@ namespace App.Eticaret.Controllers
       [FromRoute] int productId,
       [FromForm] ProductSaveViewModel editProductModel)
         {
-            var jwt = HttpContext.Request.Cookies["access_token"];
-            if (string.IsNullOrEmpty(jwt))
-                return RedirectToAction("Login", "Auth");
-
-            
             if (!ModelState.IsValid)
             {
                 var categoriesResult = await _categoryService.GetAllAsync();
@@ -169,7 +154,7 @@ namespace App.Eticaret.Controllers
                 CategoryId = editProductModel.CategoryId
             };
 
-            var result = await _productService.UpdateAsync(jwt, productId, dto);
+            var result = await _productService.UpdateAsync(productId, dto);
 
             
             if (!result.IsSuccess)
@@ -192,12 +177,7 @@ namespace App.Eticaret.Controllers
         [Authorize(Roles = "seller")]
         public async Task<IActionResult> Delete(int productId)
         {
-            var jwt = HttpContext.Request.Cookies["access_token"];
-
-            if (string.IsNullOrEmpty(jwt))
-                return RedirectToAction("Login", "Auth");
-
-            var result = await _productService.DeleteAsync(jwt, productId);
+            var result = await _productService.DeleteAsync(productId);
 
             if (!result.IsSuccess)
             {
@@ -221,12 +201,8 @@ namespace App.Eticaret.Controllers
                 return RedirectToAction("MyProducts", "Profile");
             }
 
-            var jwt = HttpContext.Request.Cookies["access_token"];
-            if (string.IsNullOrEmpty(jwt))
-                return RedirectToAction("Login", "Auth");
-
             var result =
-                await _productService.UploadImagesAsync(jwt, productId, images);
+                await _productService.UploadImagesAsync(productId, images);
 
             if (!result.IsSuccess)
             {
@@ -247,13 +223,9 @@ namespace App.Eticaret.Controllers
                 TempData["ErrorMessage"] = "Silinecek görsel seçilmedi.";
                 return RedirectToAction("MyProducts", "Profile");
             }
-
-            var jwt = HttpContext.Request.Cookies["access_token"];
-            if (string.IsNullOrEmpty(jwt))
-                return RedirectToAction("Login", "Auth");
-
+           
             var result =
-                await _productService.DeleteImageAsync(jwt, productId, fileName);
+                await _productService.DeleteImageAsync(productId, fileName);
 
             if (!result.IsSuccess)
             {

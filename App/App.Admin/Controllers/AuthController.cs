@@ -13,7 +13,6 @@ namespace App.Admin.Controllers
     public class AuthController : Controller
     {
         private readonly IAuthService _authService;
-
         public AuthController(IAuthService authService)
         {
             _authService = authService;
@@ -39,15 +38,18 @@ namespace App.Admin.Controllers
                 return View(model);
             }
 
-            // 🔑 JWT'yi oku
-            var token = result.Value.Token;
-            var jwt = new JwtSecurityTokenHandler().ReadJwtToken(token);
+            var user = result.Value;
 
-            // 🔐 JWT içindeki claim'leri cookie identity'e taşı
-            var identity = new ClaimsIdentity(
-                jwt.Claims,
-                CookieAuthenticationDefaults.AuthenticationScheme
-            );
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim(ClaimTypes.Name, $"{user.FirstName} {user.LastName}"),
+                new Claim(ClaimTypes.Role, user.Role),
+                new Claim("access_token", user.Token)
+            };
+
+            var identity = new ClaimsIdentity(claims,CookieAuthenticationDefaults.AuthenticationScheme);
 
             var principal = new ClaimsPrincipal(identity);
 
@@ -56,10 +58,9 @@ namespace App.Admin.Controllers
                 principal,
                 new AuthenticationProperties
                 {
-                    IsPersistent = true,
+                    IsPersistent = true, 
                     ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(30)
-                }
-            );
+                }); 
 
             return RedirectToAction("Index", "Home");
         }

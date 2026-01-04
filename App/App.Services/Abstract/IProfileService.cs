@@ -10,8 +10,8 @@ namespace App.Services.Abstract
 {
     public interface IProfileService
     {
-        Task<Result<ProfileDetailDto>> GetMyProfileAsync(string jwt);
-        Task<Result> UpdateMyProfileAsync(string jwt, UpdateProfileDto dto);
-        Task<Result> RequestSellerAsync(string jwt);
+        Task<Result<ProfileDetailDto>> GetMyProfileAsync();
+        Task<Result> UpdateMyProfileAsync(UpdateProfileDto dto);
+        Task<Result> RequestSellerAsync();
     }
 }

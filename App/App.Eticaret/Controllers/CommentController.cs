@@ -20,11 +20,6 @@ namespace App.Eticaret.Controllers
         [HttpPost("comment/create")]
         public async Task<IActionResult> Create(int productId,SaveProductCommentViewModel newProductCommentModel)
         {
-            var jwt = Request.Cookies["access_token"];
-
-            if (string.IsNullOrEmpty(jwt))
-                return Unauthorized();
-
             if (!ModelState.IsValid)
             {
                 TempData["Error"] = "Please select a rating before submitting your comment.";
@@ -37,7 +32,7 @@ namespace App.Eticaret.Controllers
                 Text = newProductCommentModel.Text
             };
 
-            var result = await _commentService.CreateAsync(jwt, productId, dto);
+            var result = await _commentService.CreateAsync(productId, dto);
 
             if (result.Status == ResultStatus.NotFound)
             {

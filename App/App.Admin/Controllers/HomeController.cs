@@ -18,11 +18,6 @@ namespace App.Admin.Controllers
         }
         public IActionResult Index()
         {
-            var jwt = Request.Cookies["access_token"];
-
-            if (string.IsNullOrEmpty(jwt))
-                return RedirectToAction("Login", "Auth");
-
             return View();
         }
     }

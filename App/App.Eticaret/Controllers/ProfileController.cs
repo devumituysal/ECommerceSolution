@@ -36,11 +36,7 @@ namespace App.Eticaret.Controllers
             TempData.Remove("SuccessMessage");
             TempData.Remove("ErrorMessage");
 
-            var jwt = HttpContext.Request.Cookies["access_token"];
-            if (string.IsNullOrEmpty(jwt))
-                return RedirectToAction("Login", "Auth");
-
-            var profileResult = await _profileService.GetMyProfileAsync(jwt);
+            var profileResult = await _profileService.GetMyProfileAsync();
             if (!profileResult.IsSuccess)
                 return RedirectToAction("Login", "Auth");
 
@@ -64,10 +60,6 @@ namespace App.Eticaret.Controllers
             if (!ModelState.IsValid)
                 return RedirectToAction(nameof(Details));
 
-            var jwt = HttpContext.Request.Cookies["access_token"];
-            if (string.IsNullOrEmpty(jwt))
-                return RedirectToAction("Login", "Auth");
-
             var dto = new UpdateProfileDto
             {
                 FirstName = editMyProfileModel.FirstName,
@@ -75,7 +67,7 @@ namespace App.Eticaret.Controllers
                 Email = editMyProfileModel.Email
             };
 
-            var result = await _profileService.UpdateMyProfileAsync(jwt, dto);
+            var result = await _profileService.UpdateMyProfileAsync(dto);
 
             if (!result.IsSuccess)
             {
@@ -92,12 +84,7 @@ namespace App.Eticaret.Controllers
         [HttpGet("/my-orders")]
         public async Task<IActionResult> MyOrders()
         {
-            var jwt = HttpContext.Request.Cookies["access_token"];
-
-            if (string.IsNullOrEmpty(jwt))
-                return RedirectToAction("Login", "Auth");
-
-            var result = await _orderService.GetMyOrdersAsync(jwt);
+            var result = await _orderService.GetMyOrdersAsync();
 
             if (!result.IsSuccess)
             {
@@ -113,12 +100,7 @@ namespace App.Eticaret.Controllers
         [Authorize(Roles = "seller")]
         public async Task<IActionResult> MyProducts()
         {
-            var jwt = HttpContext.Request.Cookies["access_token"];
-
-            if (string.IsNullOrEmpty(jwt))
-                return RedirectToAction("Login", "Auth");
-
-            var result = await _productService.GetMyProductsAsync(jwt);
+            var result = await _productService.GetMyProductsAsync();
 
             if (!result.IsSuccess)
             {
@@ -133,12 +115,7 @@ namespace App.Eticaret.Controllers
         [HttpPost]
         public async Task<IActionResult> RequestSeller()
         {
-            var jwt = Request.Cookies["access_token"];
-
-            if (string.IsNullOrEmpty(jwt))
-                return RedirectToAction("Login", "Auth");
-
-            var result = await _profileService.RequestSellerAsync(jwt);
+            var result = await _profileService.RequestSellerAsync();
 
             if (!result.IsSuccess)
             {

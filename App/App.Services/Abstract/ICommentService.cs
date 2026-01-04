@@ -10,8 +10,8 @@ namespace App.Services.Abstract
 {
     public interface ICommentService
     {
-        Task<Result<List<CommentListItemDto>>> GetAllAsync(string jwt);
-        Task<Result> ApproveAsync(string jwt, int commentId);
-        Task<Result> CreateAsync(string jwt, int productId, CreateProductCommentRequestDto dto);
+        Task<Result<List<CommentListItemDto>>> GetAllAsync();
+        Task<Result> ApproveAsync(int commentId);
+        Task<Result> CreateAsync(int productId, CreateProductCommentRequestDto dto);
     }
 }

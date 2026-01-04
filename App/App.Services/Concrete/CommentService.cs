@@ -3,6 +3,7 @@ using App.Models.DTO.Product;
 using App.Services.Abstract;
 using App.Services.Base;
 using Ardalis.Result;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,15 +16,15 @@ namespace App.Services.Concrete
 {
     public class CommentService : BaseService , ICommentService
     {
-        public CommentService(IHttpClientFactory httpClientFactory) : base(httpClientFactory) 
+        public CommentService(IHttpClientFactory httpClientFactory, IHttpContextAccessor httpContextAccessor) : base(httpClientFactory, httpContextAccessor) 
         {
             
         }
 
         // GET /api/comment
-        public async Task<Result<List<CommentListItemDto>>> GetAllAsync(string jwt)
+        public async Task<Result<List<CommentListItemDto>>> GetAllAsync()
         {
-            var response = await SendAsync(HttpMethod.Get,"api/comment",jwt);
+            var response = await SendAsync(HttpMethod.Get,"api/comment");
 
             if (!response.IsSuccessStatusCode)
                 return Result.Error("Comments could not be loaded.");
@@ -35,13 +36,13 @@ namespace App.Services.Concrete
 
         // POST /api/comment/{id}/create
 
-        public async Task<Result> CreateAsync(string jwt,int productId,CreateProductCommentRequestDto dto)
+        public async Task<Result> CreateAsync(int productId,CreateProductCommentRequestDto dto)
         {
             var response = await SendAsync(
                 HttpMethod.Post,
                 $"api/comment/{productId}/create",
-                jwt,
-                dto);
+                dto
+                );
 
             if (response.StatusCode == HttpStatusCode.NotFound)
                 return Result.NotFound("Product not found.");
@@ -63,9 +64,9 @@ namespace App.Services.Concrete
         }
 
         // POST /api/comment/{id}/approve
-        public async Task<Result> ApproveAsync(string jwt, int commentId)
+        public async Task<Result> ApproveAsync(int commentId)
         {
-            var response = await SendAsync(HttpMethod.Post,$"api/comment/{commentId}/approve",jwt);
+            var response = await SendAsync(HttpMethod.Post,$"api/comment/{commentId}/approve");
 
             if (response.StatusCode == HttpStatusCode.NotFound)
                 return Result.NotFound();

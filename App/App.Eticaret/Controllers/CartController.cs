@@ -19,15 +19,10 @@ namespace App.Eticaret.Controllers
         [HttpPost("/add-to-cart")]
         public async Task<IActionResult> AddProduct(int productId, byte quantity)
         {
-            var jwt = HttpContext.Request.Cookies["access_token"];
-
-            if (string.IsNullOrEmpty(jwt))
-                return RedirectToAction("Login", "Auth");
-
             if (quantity < 1)
                 quantity = 1;
 
-            var result = await _cartService.AddProductAsync(jwt, productId, quantity);
+            var result = await _cartService.AddProductAsync(productId, quantity);
 
             if (!result.IsSuccess)
             {
@@ -54,12 +49,7 @@ namespace App.Eticaret.Controllers
         [HttpGet("/cart")]
         public async Task<IActionResult> Edit()
         {
-            var jwt = HttpContext.Request.Cookies["access_token"];
-
-            if (string.IsNullOrEmpty(jwt))
-                return RedirectToAction("Login", "Auth");
-
-            var result = await _cartService.GetMyCartAsync(jwt);
+            var result = await _cartService.GetMyCartAsync();
 
             if (!result.IsSuccess)
             {
@@ -84,17 +74,7 @@ namespace App.Eticaret.Controllers
         [HttpPost("/cart/update")]
         public async Task<IActionResult> UpdateCart(int cartItemId, byte quantity)
         {
-
-            var jwt = HttpContext.Request.Cookies["access_token"];
-
-            if (string.IsNullOrEmpty(jwt))
-                return RedirectToAction("Login", "Auth");
-
-            var result = await _cartService.UpdateItemAsync(
-                jwt,
-                cartItemId,
-                new UpdateCartItemDto { Quantity = quantity }
-            );
+            var result = await _cartService.UpdateItemAsync(cartItemId,new UpdateCartItemDto { Quantity = quantity });
 
             if (!result.IsSuccess)
             {
@@ -107,12 +87,7 @@ namespace App.Eticaret.Controllers
         [HttpPost("/cart/remove")]
         public async Task<IActionResult> Remove(int cartItemId)
         {
-            var jwt = HttpContext.Request.Cookies["access_token"];
-
-            if (string.IsNullOrEmpty(jwt))
-                return RedirectToAction("Login", "Auth");
-
-            var result = await _cartService.RemoveItemAsync(jwt, cartItemId);
+            var result = await _cartService.RemoveItemAsync(cartItemId);
 
             if (!result.IsSuccess)
             {
@@ -126,11 +101,7 @@ namespace App.Eticaret.Controllers
         [HttpGet("/checkout")]
         public async Task<IActionResult> Checkout()
         {
-            var jwt = HttpContext.Request.Cookies["access_token"];
-            if (string.IsNullOrEmpty(jwt))
-                return RedirectToAction("Login", "Auth");
-
-            var result = await _cartService.GetMyCartAsync(jwt);
+            var result = await _cartService.GetMyCartAsync();
             if (!result.IsSuccess || !result.Value.Any())
             {
                 TempData["ErrorMessage"] = "Your cart is empty.";
