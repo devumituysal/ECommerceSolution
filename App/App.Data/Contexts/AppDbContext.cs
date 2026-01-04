@@ -1,5 +1,6 @@
 ﻿using App.Data.Configurations;
 using App.Data.Entities;
+using App.Data.Seeds;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -43,56 +44,11 @@ namespace App.Data.Contexts
             modelBuilder.ApplyConfiguration(new ContactMessageEntityConfiguration());
             modelBuilder.ApplyConfiguration(new FavoriteEntityConfiguration());
 
-
-
-
-            modelBuilder.Entity<RoleEntity>().HasData(
-                new RoleEntity() { Id = 1, Name = "admin", CreatedAt = DateTime.UtcNow },
-                new RoleEntity() { Id = 2, Name = "seller", CreatedAt = DateTime.UtcNow },
-                new RoleEntity() { Id = 3, Name = "buyer", CreatedAt = DateTime.UtcNow }
-            );
-
-            modelBuilder.Entity<UserEntity>().HasData(
-                new UserEntity() { Id = 1, FirstName = "admin", LastName = "admin", Email = "admin@gmail.com", Enabled = true, IsBanned = false, RoleId = 1, Password = "AQAAAAIAAYagAAAAEH0gFVqsVLuAPXM/7gJ6gFdjfL3SYwdVAnCtoeodowDdKYFbnudwySNiePyQ66N7nA==", CreatedAt = DateTime.UtcNow },
-                new UserEntity() { Id = 2, FirstName = "seller", LastName = "seller", Email = "seller@gmail.com", Enabled = true, IsBanned = false, RoleId = 2, Password = "AQAAAAIAAYagAAAAEH0gFVqsVLuAPXM/7gJ6gFdjfL3SYwdVAnCtoeodowDdKYFbnudwySNiePyQ66N7nA==", CreatedAt = DateTime.UtcNow }
-            );
-
-            modelBuilder.Entity<CategoryEntity>().HasData(
-                    new CategoryEntity { Id = 1, Name = "Electronics", Color = "Blue", IconCssClass = "fa fa-fw fa-bolt", CreatedAt = DateTime.UtcNow },
-                    new CategoryEntity { Id = 2, Name = "Clothing", Color = "Red", IconCssClass = "fa fa-fw fa-shopping-bag", CreatedAt = DateTime.UtcNow },
-                    new CategoryEntity { Id = 3, Name = "Home", Color = "Green", IconCssClass = "fa fa-fw fa-home", CreatedAt = DateTime.UtcNow },
-                    new CategoryEntity { Id = 4, Name = "Books", Color = "Orange", IconCssClass = "fa fa-fw fa-book", CreatedAt = DateTime.UtcNow },
-                    new CategoryEntity { Id = 5, Name = "Health", Color = "Purple", IconCssClass = "fa fa-fw fa-heart", CreatedAt = DateTime.Now },
-                    new CategoryEntity { Id = 6, Name = "Sports", Color = "Yellow", IconCssClass = "fa fa-fw fa-trophy", CreatedAt = DateTime.UtcNow },
-                    new CategoryEntity { Id = 7, Name = "Toys", Color = "Pink", IconCssClass = "fa fa-fw fa-child", CreatedAt = DateTime.UtcNow },
-                    new CategoryEntity { Id = 8, Name = "Automotive", Color = "Grey", IconCssClass = "fa fa-fw fa-car", CreatedAt = DateTime.UtcNow },
-                    new CategoryEntity { Id = 9, Name = "Furniture", Color = "Brown", IconCssClass = "fa fa-fw fa-tree", CreatedAt = DateTime.UtcNow },
-                    new CategoryEntity { Id = 10, Name = "Food", Color = "Black", IconCssClass = "fa fa-fw fa-cutlery", CreatedAt = DateTime.UtcNow }
-            );
-
-            modelBuilder.Entity<ProductEntity>().HasData(
-                new ProductEntity
-                {
-                    Id = 1,
-                    SellerId = 2,
-                    CategoryId = 1, 
-                    Name = "Test Product",
-                    Price = 149.99m,
-                    Details = "This is a test product used for checking the Product Detail page.",
-                    StockAmount = 10,
-                    Enabled = true,
-                    CreatedAt = DateTime.UtcNow
-                }
-            );
-
-            modelBuilder.Entity<ProductImageEntity>().HasData(
-                new ProductImageEntity
-                {
-                    Id = 1,
-                    ProductId = 1,      
-                    Url = "https://localhost:7132/uploads/test-product.png"
-                }
-            );
+            modelBuilder.Entity<RoleEntity>().HasData(RoleSeed.Data);
+            modelBuilder.Entity<UserEntity>().HasData(UserSeed.Data);
+            modelBuilder.Entity<CategoryEntity>().HasData(CategorySeed.Data);
+            modelBuilder.Entity<ProductEntity>().HasData(ProductSeed.Data);
+            modelBuilder.Entity<ProductImageEntity>().HasData(ProductImageSeed.Data);
         }
     }
 }

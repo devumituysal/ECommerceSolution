@@ -12,10 +12,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="wwwroot\uploads\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\App.Models.DTO\App.Models.DTO.csproj" />
   </ItemGroup>
 
