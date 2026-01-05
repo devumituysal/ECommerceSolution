@@ -1,10 +1,8 @@
-﻿using App.Models.DTO.Order;
-using App.Models.DTO.Product;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace App.Eticaret.Models.ViewModels
 {
-    public class ProfileDetailsViewModel
+    public class ProfileEditViewModel
     {
         [Required, MaxLength(50)]
         public string FirstName { get; set; } = null!;
@@ -14,8 +12,5 @@ namespace App.Eticaret.Models.ViewModels
 
         [Required, MaxLength(256), EmailAddress]
         public string Email { get; set; } = null!;
-
-        public string Role { get; set; } 
-        public bool HasSellerRequest { get; set; }
     }
 }
