@@ -78,6 +78,15 @@ namespace App.Api.Data.Controllers
 
             user.RoleId = 3;
             user.HasSellerRequest = false;
+            
+            var products = await _repo.GetAll<ProductEntity>()
+                .Where(p => p.SellerId == user.Id)
+                .ToListAsync();
+
+            foreach (var product in products)
+            {
+                product.Enabled = false;
+            }
 
             await _repo.Update(user);
 

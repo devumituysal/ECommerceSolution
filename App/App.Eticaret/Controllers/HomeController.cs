@@ -120,9 +120,18 @@ namespace App.Eticaret.Controllers
                     Price = p.Price,
                     ImageUrl = p.ImageUrl,
                     CategoryName = p.CategoryName,
-                    IsFavorite = isFavorite
+                    IsFavorite = isFavorite,
                 });
             }
+
+            string? selectedCategoryName = null;
+
+            if (categoryId.HasValue && result.Value.Any())
+            {
+                selectedCategoryName = result.Value.First().CategoryName;
+            }
+
+            ViewBag.SelectedCategoryName = selectedCategoryName;
 
             return View(products);
         }

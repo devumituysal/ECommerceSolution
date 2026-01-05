@@ -4,6 +4,10 @@
 @inject ICategoryService CategoryService
 
 @{
+    var selectedCategoryName = ViewBag.SelectedCategoryName as string;
+}
+
+@{
     ViewData["Hero"] = "hero-normal";
     ViewData["Title"] = "Products";
 
@@ -25,11 +29,11 @@
         <div class="row">
             <div class="col-lg-12 text-center">
                 <div class="breadcrumb__text">
-                    <h2>Shop</h2>
-                    <div class="breadcrumb__option">
-                        <a asp-controller="Home" asp-action="Index">Home</a>
-                        <span>Products</span>
-                    </div>
+                    <h2>
+                        @(string.IsNullOrEmpty(selectedCategoryName)
+                                                ? "Shop"
+                                                : selectedCategoryName)
+                    </h2>
                 </div>
             </div>
         </div>
