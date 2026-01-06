@@ -1,4 +1,3 @@
-using App.Data.Contexts;
 using App.Data.Repositories.Extensions;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;

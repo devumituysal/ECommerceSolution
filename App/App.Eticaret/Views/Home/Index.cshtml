@@ -54,7 +54,7 @@
                                     @product.Name
                                 </a>
                             </h6>
-                            <h5>$@product.Price</h5>
+                            <h5>@product.Price.ToString("C")</h5>
                         </div>
                     </div>
                 </div>
@@ -104,7 +104,7 @@
 
                                 <div class="latest-product__item__text">
                                     <h6>@product.Name</h6>
-                                    <span>$@product.Price</span>
+                                    <span>@product.Price.ToString("C")</span>
                                 </div>
 
                             </a>
