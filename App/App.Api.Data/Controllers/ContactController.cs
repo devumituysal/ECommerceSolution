@@ -26,7 +26,9 @@ namespace App.Api.Data.Controllers
             {
                 Name = dto.Name,
                 Email = dto.Email,
-                Message = dto.Message
+                Message = dto.Message,
+                CreatedAt = DateTime.UtcNow,
+                
             };
 
             await _repo.Add(entity);

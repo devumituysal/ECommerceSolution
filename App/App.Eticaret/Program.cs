@@ -1,4 +1,3 @@
-using App.Data.Contexts;
 using App.Data.Repositories.Extensions;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
@@ -33,6 +32,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<IFavoriteService, FavoriteService>();
+builder.Services.AddScoped<ISellerService, SellerService>();
 
 builder.Services.AddHttpContextAccessor();
 

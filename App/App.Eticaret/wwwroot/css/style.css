@@ -1042,6 +1042,9 @@ ol {
 	display: flex;
 	align-items: center;
 	padding: 45px 0 40px;
+	min-height: 180px;
+	background-size: cover;
+	background-position: center;
 }
 
 .breadcrumb__text h2 {

@@ -90,7 +90,7 @@ namespace App.Eticaret.Controllers
         }
 
         [Route("/products/list")]
-        public async Task<IActionResult> Listing(int? categoryId, string? q,bool fromMyFavorites = false)
+        public async Task<IActionResult> Listing(int? categoryId, string? q, bool fromMyFavorites = false, int page = 1)
         {
            
             if(!fromMyFavorites)
@@ -98,21 +98,26 @@ namespace App.Eticaret.Controllers
                 TempData.Remove("ErrorFavorite");
             }
 
+            const int pageSize = 12;
+
             var result = await _productService.GetPublicProductsAsync(categoryId,q);
 
             if (!result.IsSuccess || result.Value == null)
                 return View(new List<ProductListItemViewModel>());
 
+            var totalCount = result.Value.Count;
+
+            var pagedProducts = result.Value
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
 
             var products = new List<ProductListItemViewModel>();
 
-            foreach (var p in result.Value)
+            foreach (var p in pagedProducts)
             {
-                bool isFavorite = false;
-
-                isFavorite = await _favoriteService.IsFavoriteAsync(p.Id);
+                bool isFavorite = await _favoriteService.IsFavoriteAsync(p.Id);
                
-
                 products.Add(new ProductListItemViewModel
                 {
                     Id = p.Id,
@@ -120,9 +125,22 @@ namespace App.Eticaret.Controllers
                     Price = p.Price,
                     ImageUrl = p.ImageUrl,
                     CategoryName = p.CategoryName,
-                    IsFavorite = isFavorite
+                    IsFavorite = isFavorite,
                 });
             }
+
+            string? selectedCategoryName = null;
+
+            if (categoryId.HasValue && result.Value.Any())
+            {
+                selectedCategoryName = result.Value.First().CategoryName;
+            }
+
+            ViewBag.SelectedCategoryName = selectedCategoryName;
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+            ViewBag.CategoryId = categoryId;
+            ViewBag.Query = q;
 
             return View(products);
         }
@@ -153,6 +171,8 @@ namespace App.Eticaret.Controllers
             {
                 Id = dto.Id,
                 Name = dto.Name,
+                SellerId = dto.SellerId,
+                SellerName = dto.SellerName,
                 Details = dto.Details,
                 Price = dto.Price,
                 CategoryName = dto.CategoryName,

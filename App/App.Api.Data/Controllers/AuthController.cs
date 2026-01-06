@@ -77,7 +77,7 @@ namespace App.Api.Data.Controllers
                 issuer: "App.Api.Data",
                 audience: "App",
                 claims: claims,
-                expires: DateTime.Now.AddMinutes(60),
+                expires: DateTime.UtcNow.AddMinutes(60),
                 signingCredentials: creds
             );
 

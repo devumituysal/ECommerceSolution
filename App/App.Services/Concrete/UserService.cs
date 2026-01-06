@@ -62,6 +62,28 @@ namespace App.Services.Concrete
             return Result.Success();
         }
 
+        public async Task<Result> RevokeSellerAsync(int userId)
+        {
+            var response = await SendAsync(
+                HttpMethod.Post,
+                $"api/user/{userId}/revoke-seller"
+            );
+
+            if (response.StatusCode == HttpStatusCode.NotFound)
+                return Result.NotFound();
+
+            if (response.StatusCode == HttpStatusCode.BadRequest)
+                return Result.Invalid();
+
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+                return Result.Unauthorized();
+
+            if (!response.IsSuccessStatusCode)
+                return Result.Error();
+
+            return Result.Success();
+        }
+
         public async Task<Result> EnableAsync(int userId)
         {
             var response = await SendAsync(

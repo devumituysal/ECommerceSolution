@@ -55,7 +55,7 @@ namespace App.Eticaret.Controllers
         }
 
         [HttpPost("/profile")]
-        public async Task<IActionResult> Edit([FromForm] ProfileDetailsViewModel editMyProfileModel)
+        public async Task<IActionResult> Edit([FromForm] ProfileEditViewModel editMyProfileModel)
         {
             if (!ModelState.IsValid)
                 return RedirectToAction(nameof(Details));

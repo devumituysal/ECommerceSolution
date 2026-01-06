@@ -44,29 +44,23 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             // her http isteği geldiğinde
             OnMessageReceived = context =>
             {
-                var accessToken = context.Request.Cookies["access_token"];
+                var authHeader = context.Request.Headers["Authorization"].FirstOrDefault();
 
-                if (!string.IsNullOrWhiteSpace(accessToken))
+                if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer "))
                 {
-                    context.Token = accessToken;
+                    context.Token = authHeader.Substring("Bearer ".Length).Trim();
+                    return Task.CompletedTask;
+                }
+
+                var cookieToken = context.Request.Cookies["access_token"];
+
+                if (!string.IsNullOrEmpty(cookieToken))
+                {
+                    context.Token = cookieToken;
                 }
 
                 return Task.CompletedTask;
             },
-
-            // Login.Path için;
-
-            OnChallenge = async context =>
-            {
-                // zorlama davranışını engelle
-                context.HandleResponse();
-
-                // Şu adrese yönlendir.
-                context.Response.Redirect("/Auth/Login");
-
-                await Task.CompletedTask;
-            }
-
 
         };
 

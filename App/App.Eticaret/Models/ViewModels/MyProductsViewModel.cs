@@ -9,6 +9,6 @@
         public byte Stock { get; set; }
         public bool HasDiscount { get; set; }
         public DateTime CreatedAt { get; set; }
-        public string? ImageUrl { get; set; }
+        public string? ImageUrl { get; set; } 
     }
 }

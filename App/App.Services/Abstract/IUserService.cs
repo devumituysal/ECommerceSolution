@@ -12,6 +12,7 @@ namespace App.Services.Abstract
     {
         Task<Result<List<UserListItemDto>>> GetUsersAsync();
         Task<Result> ApproveAsync(int userId);
+        Task<Result> RevokeSellerAsync(int userId);
         Task<Result> EnableAsync(int userId);
         Task<Result> DisableAsync(int userId);
 
