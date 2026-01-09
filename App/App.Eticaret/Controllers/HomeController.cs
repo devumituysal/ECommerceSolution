@@ -79,12 +79,12 @@ namespace App.Eticaret.Controllers
             { 
                 ModelState.AddModelError(
                     "",
-                    result.Errors.FirstOrDefault() ?? "Mesaj gönderilemedi."
+                    result.Errors.FirstOrDefault() ?? "The message could not be sent."
                 );
                 return View(contactViewModel);
             }
 
-            TempData["SuccessMessage"] = "Mesajýnýz baþarýyla gönderildi!";
+            TempData["SuccessMessage"] = "Your message has been sent successfully!";
             return RedirectToAction(nameof(Contact));
 
         }

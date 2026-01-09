@@ -8,12 +8,17 @@
 
     <h2 class="mb-4">@ViewData["Title"]</h2>
 
-    <!-- 🔔 SUCCESS MESSAGE (only profile updates) -->
     @if (TempData["ProfileSuccessMessage"] != null)
     {
         <div class="alert alert-success alert-dismissible fade show">
-            <strong>@TempData["ProfileSuccessMessage"]</strong>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            @TempData["ProfileSuccessMessage"]
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            @TempData["ErrorMessage"]
         </div>
     }
 
@@ -48,7 +53,6 @@
         </div>
     </div>
 
-
     <!-- ================= ACTION BUTTONS ================= -->
     <div class="card">
         <div class="card-header">
@@ -56,14 +60,12 @@
         </div>
         <div class="card-body d-flex gap-2 flex-wrap">
 
-            <!-- ALL USERS -->
             <a asp-controller="Profile"
                asp-action="MyOrders"
                class="btn btn-outline-primary">
                 📦 My Orders
             </a>
 
-            <!-- SELLER ONLY -->
             @if (User.IsInRole("seller"))
             {
                 <a asp-controller="Profile"
@@ -73,7 +75,6 @@
                 </a>
             }
 
-            <!-- BUYER → SELLER REQUEST -->
             @if (Model.Role == "buyer" && !Model.HasSellerRequest)
             {
                 <form asp-controller="Profile"
@@ -85,7 +86,6 @@
                 </form>
             }
 
-            <!-- REQUEST SENT MESSAGE -->
             @if (Model.Role == "buyer" && Model.HasSellerRequest)
             {
                 <div class="alert alert-info mb-0">

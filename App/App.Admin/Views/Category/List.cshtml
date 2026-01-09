@@ -29,7 +29,7 @@
         <div class="card">
             <div class="card-header d-flex">
                 <h4 class="card-title mr-auto mb-0">Kategoriler</h4>
-                <a asp-action="Create" class="btn btn-primary">Yeni Kategori Ekle</a>
+                <a asp-action="Create" class="btn btn-primary">Add New Category</a>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
@@ -50,7 +50,7 @@
                                            asp-action="Edit"
                                            asp-route-categoryId="@item.Id"
                                            class="btn btn-primary">
-                                            Düzenle
+                                            Edit
                                         </a>
 
                                         <form asp-action="Delete"
@@ -62,7 +62,7 @@
                                             @Html.AntiForgeryToken()
 
                                             <button type="submit" class="btn btn-danger btn-sm">
-                                                Sil
+                                                Delete
                                             </button>
                                         </form>
                                     </td>

@@ -34,7 +34,7 @@ namespace App.Admin.Controllers
 
             if (!result.IsSuccess)
             {
-                ModelState.AddModelError("", "Email veya şifre hatalı");
+                ModelState.AddModelError("", "Email or password is incorrect.");
                 return View(model);
             }
 

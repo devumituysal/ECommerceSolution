@@ -38,4 +38,11 @@
             }
         </tbody>
     </table>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info mt-3">
+            You haven’t placed any orders yet.
+        </div>
+    }
 </div>

@@ -54,20 +54,26 @@ namespace App.Eticaret.Controllers
 
             if (!result.IsSuccess)
             {
-                ModelState.AddModelError("", "Kayıt işlemi başarısız.");
+                ModelState.AddModelError("", "Registration failed.");
                 return View(newUser);
             }
 
-            return RedirectToAction(nameof(Login));
+            TempData["RegisterMessage"] = "Your registration was successful. You can log in after your account is approved.";
+
+            return RedirectToAction(nameof(Login),new { fromRegister = true });
         }
 
         [Route("/login")]
         [HttpGet]
-        public IActionResult Login(bool? fromRenewPassword = false)
+        public IActionResult Login(bool? fromRenewPassword = false, bool fromRegister = false)
         {
             if (fromRenewPassword != true)
             {
                 TempData.Remove("Success");
+            }
+            if(fromRegister != true)
+            {
+                TempData.Remove("RegisterMessage");
             }
             return View();
         }
@@ -157,12 +163,12 @@ namespace App.Eticaret.Controllers
 
             if (!result.IsSuccess)
             {
-                ModelState.AddModelError("", "Bir hata oluştu.");
+                ModelState.AddModelError("", "An error has occurred.");
                 return View(model);
             }
 
             ViewBag.SuccessMessage =
-                "Şifre sıfırlama maili gönderildi. Lütfen e-posta adresinizi kontrol edin.";
+                "A password reset email has been sent. Please check your email address.";
 
             ModelState.Clear();
             return View();
@@ -207,7 +213,7 @@ namespace App.Eticaret.Controllers
                 return View(renewPasswordViewModel);
             }
 
-            TempData["Success"] = "Şifreniz başarıyla yenilendi.";
+            TempData["Success"] = "Your password has been successfully reset.";
             return RedirectToAction(nameof(Login), new { fromRenewPassword = true });
         }
 
