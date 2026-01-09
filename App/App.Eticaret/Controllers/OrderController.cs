@@ -54,7 +54,7 @@ namespace App.Eticaret.Controllers
 
             if (!result.IsSuccess)
             {
-                ModelState.AddModelError("", "Sipariş oluşturulamadı.");
+                ModelState.AddModelError("", "The order could not be created.");
 
                 // Hata durumunda da CartItems listesini doldur
                 var resultCart = await _cartService.GetMyCartAsync();

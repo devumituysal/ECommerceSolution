@@ -48,7 +48,7 @@ namespace App.Eticaret.Controllers
         [Authorize(Roles = "seller")]
         public async Task<IActionResult> Create([FromForm] ProductSaveViewModel newProductModel)
         {
-            // ❗ ModelState invalid → dropdown tekrar doldurulmalı
+           
             if (!ModelState.IsValid)
             {
                 var categoriesResult = await _categoryService.GetAllAsync();
@@ -75,7 +75,7 @@ namespace App.Eticaret.Controllers
                 if (categoriesResult.IsSuccess)
                     newProductModel.Categories = categoriesResult.Value;
 
-                ModelState.AddModelError("", "Ürün oluşturulamadı.");
+                ModelState.AddModelError("", "The product could not be created.");
                 return View(newProductModel);
             }
 
@@ -92,12 +92,12 @@ namespace App.Eticaret.Controllers
                     if (categoriesResult.IsSuccess)
                         newProductModel.Categories = categoriesResult.Value;
 
-                    ModelState.AddModelError("", "Ürün görselleri yüklenemedi.");
+                    ModelState.AddModelError("", "Product images could not be uploaded.");
                     return View(newProductModel);
                 }
             }
 
-            TempData["SuccessMessage"] = "Ürün başarıyla oluşturuldu.";
+            TempData["SuccessMessage"] = "The product has been created successfully.";
             return RedirectToAction("MyProducts", "Profile");
         }
 
@@ -163,12 +163,12 @@ namespace App.Eticaret.Controllers
                 if (categoriesResult.IsSuccess)
                     editProductModel.Categories = categoriesResult.Value;
 
-                TempData["ErrorMessage"] = "Ürün güncellenemedi.";
+                TempData["ErrorMessage"] = "The product could not be updated.";
                 return View(editProductModel);
             }
 
             
-            TempData["SuccessMessage"] = "Ürün başarıyla güncellendi.";
+            TempData["SuccessMessage"] = "The product has been updated successfully.";
             return RedirectToAction("Edit", new { productId });
         }
 
@@ -181,11 +181,11 @@ namespace App.Eticaret.Controllers
 
             if (!result.IsSuccess)
             {
-                TempData["ErrorMessage"] = "Ürün silinemedi.";
+                TempData["ErrorMessage"] = "The product could not be deleted.";
                 return RedirectToAction("MyProducts", "Profile");
             };
 
-            TempData["SuccessMessage"] = "Ürün başarıyla silindi.";
+            TempData["SuccessMessage"] = "The product has been successfully deleted.";
             return RedirectToAction("MyProducts", "Profile");
 
         }
@@ -197,7 +197,7 @@ namespace App.Eticaret.Controllers
         {
             if (images == null || !images.Any())
             {
-                TempData["ErrorMessage"] = "Lütfen en az bir görsel seçin.";
+                TempData["ErrorMessage"] = "Please select at least one image.";
                 return RedirectToAction("MyProducts", "Profile");
             }
 
@@ -206,11 +206,11 @@ namespace App.Eticaret.Controllers
 
             if (!result.IsSuccess)
             {
-                TempData["ErrorMessage"] = "Görseller yüklenemedi.";
+                TempData["ErrorMessage"] = "Images could not be loaded.";
                 return RedirectToAction("MyProducts", "Profile");
             }
 
-            TempData["SuccessMessage"] = "Görseller başarıyla eklendi.";
+            TempData["SuccessMessage"] = "Images added successfully.";
             return RedirectToAction("MyProducts", "Profile");
         }
 
@@ -220,7 +220,7 @@ namespace App.Eticaret.Controllers
         {
             if (string.IsNullOrWhiteSpace(fileName))
             {
-                TempData["ErrorMessage"] = "Silinecek görsel seçilmedi.";
+                TempData["ErrorMessage"] = "No image has been selected to be deleted.";
                 return RedirectToAction("MyProducts", "Profile");
             }
            
@@ -229,11 +229,11 @@ namespace App.Eticaret.Controllers
 
             if (!result.IsSuccess)
             {
-                TempData["ErrorMessage"] = "Görsel silinemedi.";
+                TempData["ErrorMessage"] = "The image could not be deleted.";
                 return RedirectToAction("MyProducts", "Profile");
             }
 
-            TempData["SuccessMessage"] = "Görsel başarıyla silindi.";
+            TempData["SuccessMessage"] = "The image has been successfully deleted.";
             return RedirectToAction("MyProducts", "Profile");
         }
 

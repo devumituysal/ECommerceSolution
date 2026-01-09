@@ -2,7 +2,7 @@
 @model App.Eticaret.Models.ViewModels.ProductSaveViewModel
 
 @{
-    ViewData["Title"] = "Ürünü Düzenle";
+    ViewData["Title"] = "Edit Product";
 
     var categorySelectList = Model.Categories != null
         ? new SelectList(Model.Categories, "Id", "Name", Model.CategoryId)
@@ -14,13 +14,12 @@
 <div class="container">
     <div class="row">
         <div class="col-md-8 col-lg-6 mx-auto">
-            <h2 class="mb-3">Ürünü Düzenle</h2>
+            <h2 class="mb-3">Edit Product</h2>
 
             @if (TempData["SuccessMessage"] != null)
             {
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
                     @TempData["SuccessMessage"]
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             }
 
@@ -28,7 +27,6 @@
             {
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
                     @TempData["ErrorMessage"]
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             }
 
@@ -78,10 +76,10 @@
                     <a asp-action="MyProducts"
                        asp-controller="Profile"
                        class="btn btn-outline-secondary">
-                        Geri
+                        Back
                     </a>
                     <button type="submit" class="btn btn-primary">
-                        Kaydet
+                        Save
                     </button>
                 </div>
             </form>

@@ -57,7 +57,7 @@ namespace App.Eticaret.Controllers
 
             if (!result.IsSuccess)
             {
-                TempData["ErrorFavorite"] = "favorites could not be retrieved.";
+                TempData["ErrorFavorite"] = "Favorites could not be retrieved.";
                 return RedirectToAction("Listing", "Home", new { fromMyFavorites = true });
             }
 

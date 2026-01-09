@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
 
 namespace App.Eticaret.Controllers
 {
@@ -33,10 +34,8 @@ namespace App.Eticaret.Controllers
         [HttpGet("/profile")]
         public async Task<IActionResult> Details()
         {
-            TempData.Remove("SuccessMessage");
-            TempData.Remove("ErrorMessage");
-
             var profileResult = await _profileService.GetMyProfileAsync();
+
             if (!profileResult.IsSuccess)
                 return RedirectToAction("Login", "Auth");
 
@@ -58,7 +57,18 @@ namespace App.Eticaret.Controllers
         public async Task<IActionResult> Edit([FromForm] ProfileEditViewModel editMyProfileModel)
         {
             if (!ModelState.IsValid)
-                return RedirectToAction(nameof(Details));
+            {
+                var viewModel = new ProfileDetailsViewModel
+                {
+                    FirstName = editMyProfileModel.FirstName,
+                    LastName = editMyProfileModel.LastName,
+                    Email = editMyProfileModel.Email,
+                    Role = User.FindFirst(ClaimTypes.Role)?.Value,
+                    HasSellerRequest = false
+                };
+
+                return View("Details", viewModel);
+            }
 
             var dto = new UpdateProfileDto
             {
@@ -72,12 +82,13 @@ namespace App.Eticaret.Controllers
             if (!result.IsSuccess)
             {
                 TempData["ErrorMessage"] =
-                    result.Errors.FirstOrDefault() ?? "Profil güncellenemedi.";
+                    result.Errors.FirstOrDefault() ?? "The profile could not be updated.";
 
                 return RedirectToAction(nameof(Details));
             }
 
-            TempData["ProfileSuccessMessage"] = "Profiliniz başarıyla güncellendi.";
+            TempData["ProfileSuccessMessage"] = "Your profile has been successfully updated.";
+
             return RedirectToAction(nameof(Details));
         }
 
@@ -88,7 +99,7 @@ namespace App.Eticaret.Controllers
 
             if (!result.IsSuccess)
             {
-                TempData["ErrorMessage"] = "Siparişler alınamadı.";
+                TempData["ErrorMessage"] = "Orders could not be received";
                 return View(new List<OrderViewModel>());
             }
 
@@ -104,7 +115,7 @@ namespace App.Eticaret.Controllers
 
             if (!result.IsSuccess)
             {
-                TempData["ErrorMessage"] = "Ürünler alınamadı.";
+                TempData["ErrorMessage"] = "Products could not be received.";
                 return View(new List<ProductListItemDto>());
             }
 

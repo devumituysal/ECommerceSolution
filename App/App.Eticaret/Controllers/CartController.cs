@@ -131,7 +131,7 @@ namespace App.Eticaret.Controllers
             if (stockAdjusted)
             {
                 TempData["StockAdjusted"] =
-                    "Sepetinizdeki bazı ürünlerin adedi stok durumuna göre güncellendi. Lütfen siparişinizi kontrol ediniz.";
+                    "The quantities of some items in your cart have been updated based on stock availability. Please check your order.";
             }
 
             var checkoutModel = new CheckoutViewModel

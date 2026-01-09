@@ -28,7 +28,7 @@ namespace App.Admin.Controllers
 
             if (!result.IsSuccess)
             {
-                TempData["ErrorMessage"] = "Kullanıcılar alınamadı.";
+                TempData["ErrorMessage"] = "Failed to retrieve users.";
                 return View(new List<UserListItemViewModel>());
             }
 
@@ -56,9 +56,9 @@ namespace App.Admin.Controllers
             var result = await _userService.EnableAsync(id);
 
             if (!result.IsSuccess)
-                TempData["ErrorMessage"] = "Kullanıcı aktif edilemedi.";
+                TempData["ErrorMessage"] = "The user could not be activated.";
             else
-                TempData["SuccessMessage"] = "Kullanıcı aktif edildi.";
+                TempData["SuccessMessage"] = "User activated.";
 
             return RedirectToAction(nameof(List));
         }
@@ -71,9 +71,9 @@ namespace App.Admin.Controllers
             var result = await _userService.DisableAsync(id);
 
             if (!result.IsSuccess)
-                TempData["ErrorMessage"] = "Kullanıcı pasif edilemedi.";
+                TempData["ErrorMessage"] = "The user could not be deactivated.";
             else
-                TempData["SuccessMessage"] = "Kullanıcı pasif edildi.";
+                TempData["SuccessMessage"] = "The user has been deactivated.";
 
             return RedirectToAction(nameof(List));
         }
@@ -87,11 +87,11 @@ namespace App.Admin.Controllers
 
             if (!result.IsSuccess)
             {
-                TempData["ErrorMessage"] = "Kullanıcı onaylanamadı.";
+                TempData["ErrorMessage"] = "User verification failed.";
                 return RedirectToAction(nameof(List));
             }
 
-            TempData["SuccessMessage"] = "Kullanıcı başarıyla onaylandı.";
+            TempData["SuccessMessage"] = "The user has been successfully approved.";
             return RedirectToAction(nameof(List));
         }
 
@@ -103,11 +103,11 @@ namespace App.Admin.Controllers
 
             if (!result.IsSuccess)
             {
-                TempData["ErrorMessage"] = "Kullanıcının satıcılığı iptal edilemedi.";
+                TempData["ErrorMessage"] = "The user's reseller status could not be cancelled.";
                 return RedirectToAction(nameof(List));
             }
 
-            TempData["SuccessMessage"] = "Kullanıcının satıcılığı başarıyla iptal edildi.";
+            TempData["SuccessMessage"] = "The user's reseller status has been successfully cancelled.";
             return RedirectToAction(nameof(List));
         }
 
